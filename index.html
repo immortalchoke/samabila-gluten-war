@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Gluten War</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -103,9 +104,20 @@ const SPR={whole:[0,1,2,3].map(j=>img('spr'+j)),a:[0,1,2,3].map(j=>img('stubA'+j
   pod:[img('pod0'),img('pod1'),img('pod2')],jar:[img('jar0'),img('jar1'),img('jar2')],puff:[img('puff0'),img('puff1'),img('puff2')],
   box:[{"stubA":[0.0,-0.007,0.325,0.523],"stubB":[0.169,0.463,0.364,0.533],"bean":[0.296,0.082,0.267,0.246],"w":0.528},{"stubA":[-0.07,0.002,0.441,0.481],"stubB":[-0.015,0.429,0.521,0.571],"bean":[0.362,0.102,0.227,0.279],"w":0.504},{"stubA":[0.007,-0.002,0.347,0.509],"stubB":[0.15,0.399,0.251,0.599],"bean":[0.326,0.068,0.23,0.275],"w":0.481},{"stubA":[-0.048,0.005,0.359,0.48],"stubB":[-0.014,0.47,0.356,0.525],"bean":[0.292,0.112,0.195,0.287],"w":0.406}]};
 const SPR_H=70;
+/* Hit flash for the head: a bright white pop. Under steady streams (beam, noodles) it flickers instead of staying solid */
+function headFlash(e,im,x,y,w,h){if(!e.flash)return;const on=e.slurp>0?(S.tick%6)<3:true;if(!on)return;
+  g.save();g.globalAlpha=e.slurp>0?.6:flashA(e.flash);g.drawImage(whiteOf(im),x,y,w,h);g.restore();}
+/* Eating pulse: a smooth swell and shrink once per nom cycle (18 frames), peaking while her eyes are shut */
+function nomPulse(e){e=e||S.boss||{};return{x:e.sx||0,y:e.sy||0,r:e.sr||0};}
+/* Feeding frames: chomp (open, snap, chew) for single shots, slurp for the beam and noodles, and a happy face after a meal.
+   MOUTH_DY is where the mouth sits below the head's center, in game pixels, so streams can aim right into it */
+const EAT={nom:img('head-nom'),nomTop:img('head-nom-top'),tops:[img('head-calm-top'),img('head-angry-top')],open:img('head-open'),snap:img('head-snap'),chew:img('head-chew'),slurp:img('head-slurp'),happy:img('head-happy')},MOUTH_DY=24;
 const ART={ring:img('ring'),stars:[img('star0'),img('star1')],brick:img('brick'),soju:[img('soju0'),img('soju1')],stalk:img('stalk'),stalkTip:img('stalktip'),bulbs:[img('bulb0'),img('bulb1')],bulbBase:img('bulbbase'),flames:[0,1,2].map(i=>img('flame'+i)),half:img('rocket-half'),tofu:[0,1,2].map(i=>img('tofu'+i)),bul:Object.fromEntries(['cube','grain','broth','oil','fire'].map(n=>[n,[img('b-'+n+'0'),img('b-'+n+'1')]])),drum:img('drumstick'),chili:[0,1,2].map(i=>img('chili'+i)),charge:[img('charge-mid'),img('charge-full')],ham:[0,1,2].map(i=>img('goch'+i)),oil:[0,1,2,3].map(i=>img('oil'+i)),pot:[0,1,2].map(i=>img('pot'+i)),grimace:img('head-grimace'),tops:['pea','carrot','corn','onion'].map(n=>img('top-'+n)),anise:img('anise'),fish:img('fishcake'),rope:img('rope'),bundle:img('bundle'),tip:img('tip'),hero:img('rocket2'),tilt:img('rocket-tilt'),flame:img('flame'),packet:img('packet'),heads:['head-calm','head-angry','head-dead'].map(n=>img(n)),seg:img('seg'),tail:img('tail'),wheat:[img('wheat0'),img('wheat1')],boom:[0,1,2,3].map(i=>img('boom'+i)),bags:['korean','chicken','pho','multigrain'].map(n=>img('bag-'+n))};
 const loaded=i=>i&&i.complete&&i.naturalWidth>0;
 /* A red copy of a sprite, made once and cached, for the dragon's hit flash */
+const whiteOf=i=>{if(i._white)return i._white;const c=document.createElement('canvas');c.width=i.naturalWidth;c.height=i.naturalHeight;const x=c.getContext('2d');x.drawImage(i,0,0);x.globalCompositeOperation='source-in';x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);return i._white=c;};
+/* Hit flash strength: a full white pop on the first frame, fading over the next two */
+const flashA=f=>f>2?.92:f>1?.55:.25;
 const red=i=>{if(i._red)return i._red;const c=document.createElement('canvas');c.width=i.naturalWidth;c.height=i.naturalHeight;const x=c.getContext('2d');x.drawImage(i,0,0);x.globalCompositeOperation='source-atop';x.fillStyle='rgba(228,38,24,.36)';x.fillRect(0,0,c.width,c.height);return i._red=c;};
 
 /* ---------- Tuning: everything worth adjusting by feel lives here ---------- */
@@ -166,7 +178,7 @@ function fresh(){return{
   tick:0,t:0,li:0,press:0,cool:0,hold:0,rhythm:0,bolts:[],charge:0,heldT:0,beamT:0,beamMax:1,score:0,medals:0,shake:0,warn:0,
   p:{x:W/2,y:H-90,wi:0,lvl:1,lives:3,bombs:3,inv:90,flash:0,vx:0},
   en:[],shots:[],rings:[],bul:[],items:[],fx:[],boom:[],pops:[],swarm:[],props:[],nextProp:30,corpse:null,bomb:0,beam:false,boss:null,
-  chains:[],deb:[],puffs:[],comets:[],cling:[],opts:[],trail:[],loopH:[],rockBags:Math.random()<.5?1:2,rockKills:0,
+  chains:[],deb:[],puffs:[],comets:[],cling:[],opts:[],crumbs:[],trail:[],loopH:[],rockBags:Math.random()<.5?1:2,rockKills:0,
 };}
 function clampP(){const p=S.p;p.x=Math.max(16,Math.min(W-16,p.x));p.y=Math.max(30,Math.min(H-24,p.y));}
 const rnd=(a,b)=>a+Math.random()*(b-a);
@@ -287,22 +299,60 @@ function moveEnemy(e){
 }
 function moveBoss(e){
   if(e.leaving){
-    e.lv=(e.lv||0)+.03;e.y-=Math.min(3.4,.4+e.lv);e.x+=(W/2-e.x)*.02+Math.sin(S.tick*.07)*1.6;
-    /* The body keeps following the head's path as she flies off */
+    const F=e.fin;F.t++;
+    if(F.st==='circle'){
+      /* A big swooping loop around the screen */
+      F.a+=.042;const tx=W/2+Math.cos(F.a)*150,ty=300+Math.sin(F.a)*125;e.x+=(tx-e.x)*.12;e.y+=(ty-e.y)*.12;
+      /* Body pieces come loose one at a time from the tail, tumble for a moment, then pop */
+      e.segs.forEach((sg,i)=>{if(!sg.loose&&F.t>=18+i*13)sg.loose={t:0,vx:rnd(-1.4,1.4),vy:rnd(-.6,1.2),vr:rnd(-.08,.08)};});
+      if(F.t>=200){F.st='center';F.t=0;}
+    }else if(F.st==='center'){
+      e.x+=(W/2-e.x)*.05;e.y+=(250-e.y)*.05;
+      if(F.t===30)SFX.play('calm');
+      if(F.t>=200){F.st='leave';F.t=0;S.opts.forEach(o=>{o.mom=true;});S.endT=190;}
+    }else{
+      e.lv=(e.lv||0)+.03;e.y-=Math.min(3.6,.4+e.lv);e.x+=(W/2-e.x)*.02+Math.sin(S.tick*.07)*1.4;
+    }
     e.trail.push([e.x,e.y]);if(e.trail.length>SEGS*SEG_GAP+4)e.trail.shift();
-    for(const s of e.segs){const t=e.trail[Math.max(0,e.trail.length-1-s.n*SEG_GAP)];s.x=t[0];s.y=t[1];}
-    const tl=e.segs[0],nk=e.segs[1];tl.ang=Math.atan2(tl.y-nk.y,tl.x-nk.x)-Math.PI/2;
+    for(const sg of e.segs){
+      if(sg.loose){const L=sg.loose;if(sg.dead)continue;L.t++;sg.x+=L.vx;sg.y+=L.vy;L.vy+=.03;sg.ang=(sg.ang||0)+L.vr;
+        if(L.t===20){sg.dead=true;addBoom(sg.x,sg.y,rnd(100,130),0,'segboom');S.shake=Math.max(S.shake,6);}continue;}
+      const t=e.trail[Math.max(0,e.trail.length-1-sg.n*SEG_GAP)];sg.x=t[0];sg.y=t[1];}
+    const tl=e.segs[0],nk=e.segs[1];if(!tl.loose)tl.ang=Math.atan2(tl.y-nk.y,tl.x-nk.x)-Math.PI/2;
     return;}
   curSrc='boss';
+  /* Impact shake: a random jolt each frame that dies down fast */
+  for(const sg of e.segs)if(sg.shk)sg.shk=sg.shk>.2?sg.shk*.8:0;
+  e.shk=(e.shk||0)*.8;e.sx=rnd(-1,1)*e.shk;e.sy=rnd(-1,1)*e.shk*.7;e.sr=rnd(-1,1)*e.shk*.012;
   if(e.recoil!==undefined&&e.recoil>-10)e.recoil--;
+  if(e.chomp>0)e.chomp--;if(e.slurp>0)e.slurp--;
   /* The body follows the head's recent path, so the whole dragon snakes */
   e.trail.push([e.x,e.y]);
   for(const s of e.segs){const t=e.trail[Math.max(0,e.trail.length-1-s.n*SEG_GAP)];s.x=t[0];s.y=t[1];}
   const tl=e.segs[0],nk=e.segs[1];tl.ang=Math.atan2(tl.y-nk.y,tl.x-nk.x)-Math.PI/2;
   if(e.trail.length>SEGS*SEG_GAP+4)e.trail.shift();
   if(e.y<130&&!e.arrived){e.y+=2;return;}
-  e.arrived=true;e.a++;
-  e.x=W/2+Math.sin(e.a*.017)*150;e.y=130+(1-Math.cos(e.a*.034))*55;
+  e.arrived=true;
+  /* Bum rush: every few seconds she winds up (shaking, pulling back, mouth wide), then lunges at the spot you were in, then glides home.
+     It comes sooner as she gets hungrier (lower health). */
+  const home=a2=>[W/2+Math.sin(a2*.017)*150,130+(1-Math.cos(a2*.034))*55];
+  if(e.nextRush===undefined)e.nextRush=e.age+300;
+  if(!e.rush&&e.age>=e.nextRush&&S.p.alive!==false){e.rush={st:'charge',t:0,x0:e.x,y0:e.y};SFX.play('grunt',e.x);}
+  if(e.rush){const r=e.rush;r.t++;
+    if(r.st==='charge'){const k=r.t/50;e.x=r.x0+rnd(-1,1)*3*k;e.y=r.y0-22*Math.sin(k*Math.PI/2);
+      if(r.t>=50){r.st='go';r.t=0;r.tx=S.p.x;r.ty=Math.min(S.p.y,H-70);SFX.play('whoosh');}}
+    else if(r.st==='go'){const dx=r.tx-e.x,dy=r.ty-e.y,d=Math.hypot(dx,dy),sp=Math.min(11,2+r.t*.9);
+      if(d<=sp||r.t>70){e.x=r.tx;e.y=r.ty;r.st='bite';r.t=0;e.chomp=36;SFX.play('block',e.x);}else{e.x+=dx/d*sp;e.y+=dy/d*sp;}
+      if(dist(e.x,e.y+20,S.p.x,S.p.y)<44+T_HIT)hurt();}
+    else if(r.st==='bite'){if(dist(e.x,e.y+20,S.p.x,S.p.y)<40+T_HIT)hurt();if(r.t>=14){r.st='back';r.t=0;}}
+    else{const [hx,hy]=home(e.a),dx=hx-e.x,dy=hy-e.y,d=Math.hypot(dx,dy);
+      if(d<4){e.rush=null;const pc=e.hp/e.max;e.nextRush=e.age+(pc>.5?420:pc>.25?330:260)+Math.floor(rnd(0,90));}else{const sp=Math.min(6,1+d*.05);e.x+=dx/d*sp;e.y+=dy/d*sp;}}
+    return;}
+  e.a++;
+  [e.x,e.y]=home(e.a);
+  /* She leans over to catch a nearby laser beam in her mouth, then drifts back to her path when it stops */
+  let want=0;if(S.beam&&S.p.y>e.y){const dx=S.p.x-e.x;if(Math.abs(dx)<95)want=Math.max(-70,Math.min(70,dx));}
+  e.lean=(e.lean||0)+(want-(e.lean||0))*(want?.18:.06);e.x+=e.lean;
   const pct=e.hp/e.max,a=Math.atan2(S.p.y-e.y,S.p.x-e.x);
   e.phase=pct>.5?0:pct>.25?1:2;
   if(e.phase===0){
@@ -360,7 +410,7 @@ function fireWeapon(){
     S.beamT--;
     S.beam=true;const w=4+L*2.6,dps=(40+L*12)/60;
     if(S.tick%6===0)for(const c of S.comets){const h=cometHead(c);if(h.y<p.y&&Math.abs(h.x-p.x)<h.r+w)puffAt(p.x+rnd(-4,4),h.y+h.r*.5,30);}
-    for(const src of [p,...OP]){const stop=beamStop(src.x,src.y,w);for(const e of S.en)if(!e.dead&&e.y>-e.r&&e.y<src.y&&e.y+e.r>=stop&&Math.abs(e.x-src.x)<w+e.r){damage(e,dps*(src===p?1:OPT_DMG));if(S.tick%5===0)spark(e.x+rnd(-8,8),e.y+e.r*.6,'#c9a6ff');}}
+    for(const src of [p,...OP]){const stop=beamStop(src.x,src.y,w);for(const e of S.en)if(!e.dead&&e.y>-e.r&&e.y<src.y&&(e.type==='boss'?e.y+MOUTH_DY>=stop-1:e.y+e.r>=stop)&&Math.abs(e.x-src.x)<w+e.r){if(e.type==='boss')e.slurp=8;EATING_STREAM=true;damage(e,dps*(src===p?1:OPT_DMG));EATING_STREAM=false;if(S.tick%5===0)spark(e.x+rnd(-8,8),e.y+e.r*.6,'#c9a6ff');}}
   }
   if(fl==='noodle'&&beamOn){updateNoodles();for(const o of OP)noodleCore(o.x,o.y+6,o.chains,1,OPT_DMG);}
   else{S.chains.length=0;for(const o of OP)o.chains.length=0;}
@@ -391,7 +441,8 @@ function noodleCore(ox,oy,chains,count,dk){
     }
     const spreadOff=(c.k-(count-1)/2)*46,
       sway=Math.sin(S.tick*.05+c.k*2)*14;
-    const tx=c.target?c.target.x:rx+spreadOff+sway,ty=c.target?c.target.y:ry-reach;
+    const tb=c.target&&(c.target.type==='boss'?c.target:c.target.parent);if(tb)tb.slurp=8;
+    const tx=tb?tb.x:c.target?c.target.x:rx+spreadOff+sway,ty=tb?tb.y+MOUTH_DY:c.target?c.target.y:ry-reach;
     const len=Math.min(dist(rx,ry,tx,ty),reach),cx=rx+spreadOff*.2,cy=ry-len*.62;
     const n=c.nodes;n[0].x=n[0].px=rx;n[0].y=n[0].py=ry;
     for(let i=1;i<=NODES;i++){
@@ -416,11 +467,22 @@ function punch(e){if(e.hitT>5)return;if(e.type==='boss')SFX.play('grunt',e.x);el
 function hitPose(e){const t=11-(e.hitT||0);if(!e.hitT)return null;const k=e.r>24?.7:1;
   const sq=.16*k*Math.exp(-t*.45)*Math.sin(t*1.5);
   return{s:1+.46*k*Math.exp(-t*.36)*Math.cos(t*1.2),sx:1+sq,sy:1-sq,dy:-18*k*Math.exp(-t*.4),rot:e.kickDir*.26*k*Math.exp(-t*.38)*Math.cos(t*1.1)};}
+let EATING_STREAM=false;
+/* Food crumbs: little felt bits that spray off her face as she eats, in the color of whatever you're feeding her */
+const CRUMB_COL=[['#d8361e','#f26a3c','#a8231a'],['#c98a3a','#e8b25e','#8f5a24'],['#8fbf4a','#c9e58a','#5f8f2c'],['#f3ead2','#e9d9a8','#d9c287']];
+function crumbs(e,n,cols){cols=cols||CRUMB_COL[S.p.wi]||CRUMB_COL[0];
+  for(let i=0;i<n;i++){const a=rnd(-Math.PI*.95,-Math.PI*.05)+(Math.random()<.5?0:Math.PI*.0),sp=rnd(1.5,4.2);
+    if(S.crumbs.length>140)return;const side=Math.random()<.5?-1:1;
+    S.crumbs.push({x:e.x+side*rnd(10,26),y:e.y+MOUTH_DY+rnd(-4,6),vx:side*rnd(1.6,4.2),vy:rnd(-3.2,-.6),r:rnd(1.4,2.8),c:cols[Math.floor(Math.random()*cols.length)],life:Math.floor(rnd(28,48))});}}
 function damage(e,d){
   if(e.dead||e.y<-e.r)return;
   if(e.leaving||(e.parent&&e.parent.leaving))return;
   /* Hits on the body hurt the dragon at reduced strength, so the head is the real target */
-  if(e.parent){e.flash=3;punch(e);e=e.parent;d*=.3;if(e.dead)return;}
+  /* Body segments are armor now: you have to feed the head */
+  if(e.parent){const B=e.parent,n=e.n;for(const sg of B.segs){const d=Math.abs(sg.n-n);if(d<=1)sg.shk=Math.max(sg.shk||0,EATING_STREAM?(d?2:3.5):(d?4:8));}
+    if(!EATING_STREAM&&S.tick%3===0)puffAt(e.x+rnd(-8,8),e.y+e.r*.5,22);return;}
+  if(e.type==='boss')e.shk=Math.max(e.shk||0,EATING_STREAM||e.slurp>0?3.2:9);
+  if(e.type==='boss'){if(!EATING_STREAM&&!(e.slurp>0))crumbs(e,6);else if(S.tick!==e.crumbT&&S.tick%3===0){e.crumbT=S.tick;crumbs(e,2);}}
   e.hp-=d;e.flash=3;punch(e);
   if(e.type==='sprout'&&e.st===0&&e.hp<=0){
     SFX.play('snap',e.x);e.st=1;e.hp=3;e.snapT=S.tick;S.score+=10;
@@ -429,16 +491,19 @@ function damage(e,d){
     return;
   }
   /* The dragon grimaces for 14 frames, then can't again for 10, so steady fire makes him flinch in pulses */
-  if(e.type==='boss'&&(e.recoil===undefined||e.recoil<=-10))e.recoil=14;
+  if(e.type==='boss'&&!EATING_STREAM&&!(e.chomp>0&&e.chomp<36))e.chomp=36;
   if(e.hp<=0)kill(e);
 }
 function addBoom(x,y,s,wait=0,snd=null){S.boom.push({x,y,s,t:-wait,snd,q:Math.floor(rnd(0,4)),flip:Math.random()<.5});}
 function kill(e){
-  /* Secret ending: beat mom while her babies are with you and she doesn't explode. She calms down and flies off, and they follow her home */
-  if(e.type==='boss'&&S.opts.length&&!e.leaving){
-    SFX.play('calm');SFX.music(false,3.5);e.leaving=true;e.hp=1;e.phase=0;e.recoil=-10;S.score+=ENEMY.boss.score;S.bul.length=0;S.shake=8;S.p.inv=Math.max(S.p.inv,400);S.endT=260;
+  /* The ending: she's full. She swoops a big circle shedding her body, which bursts segment by segment, chewing slowly the whole time,
+     then settles in the middle to savor it and flies off. Baby dragons, if you have them, follow her home. */
+  if(e.type==='boss'&&!e.leaving){
+    SFX.play('bossdie',e.x);SFX.music(false,4);e.leaving=true;e.hp=1;e.phase=0;e.recoil=-10;e.rush=null;e.chomp=0;e.slurp=0;e.flash=0;e.shk=e.sx=e.sy=e.sr=0;e.segs.forEach(sg=>sg.shk=0);
+    e.fin={st:'circle',t:0,a:Math.atan2(e.y-300,e.x-W/2)};
+    S.score+=ENEMY.boss.score;S.bul.length=0;S.shake=10;S.p.inv=Math.max(S.p.inv,900);
     for(const q of S.en)if(q.type==='pearl'&&!q.dead){q.dead=true;addBoom(q.x,q.y,80);}
-    S.opts.forEach(o=>{o.mom=true;});return;
+    return;
   }
   e.dead=true;S.score+=ENEMY[e.type].score;
   SFX.play(e.type==='sprout'?'snap':e.type==='jar'?'smash':e.type==='boss'?'bossdie':e.type==='rock'?'segboom':e.r>18?'boom':'pop',e.x);
@@ -753,11 +818,13 @@ function step(){
       /* Spinning fish cakes grind: they keep biting every 8 frames while touching something */
       const k=e.parent||e;
       if(e.dead||e.delay>0||(r.hit.get(k)??-99)>S.tick-6)continue;
-      if(dist(r.x,r.y,e.x,e.y)<e.r+r.r){r.hit.set(k,S.tick);const d=r.dmg;damage(e,e.parent?d/.3:d);spark(r.x,r.y,'#ffc2d6');if(e.type==='pearl'&&r.out){r.out=false;puffAt(r.x,r.y,30);}}
+      if(dist(r.x,r.y,e.x,e.y)<e.r+r.r){r.hit.set(k,S.tick);const d=r.dmg;damage(e,e.parent?d/.3:d);spark(r.x,r.y,'#ffc2d6');if((e.type==='pearl'||e.parent)&&r.out){r.out=false;puffAt(r.x,r.y,30);}
+        /* A drumstick that hits her head gets eaten; body hits still bounce back */
+        if(e.type==='boss'&&!e.leaving){r.eaten=true;break;}}
     }
   }
   if(S.rings.some(r=>r.caught&&!r.home))SFX.play('catch',S.p.x);
-  S.rings=S.rings.filter(r=>!r.caught);
+  S.rings=S.rings.filter(r=>!r.caught&&!r.eaten);
 
   for(const e of S.en){
     if(e.flash>0)e.flash--;if(e.hitT>0)e.hitT--;
@@ -798,6 +865,8 @@ function step(){
   S.deb=S.deb.filter(d=>d.life>0);
   for(const q of S.puffs){q.t++;q.y+=BGV*.4;}S.puffs=S.puffs.filter(q=>q.t<21);
   updateComets();updateClouds();updateOptions();
+  for(const c of S.crumbs){c.x+=c.vx;c.y+=c.vy;c.vy+=.14;c.vx*=.98;c.life--;}S.crumbs=S.crumbs.filter(c=>c.life>0);
+  {const B=S.boss;if(B&&B.fin&&B.fin.st!=='leave'&&B.fin.t%22===0)crumbs(B,4,CRUMB_COL.flat());}
   for(const f of S.fx){f.x+=f.vx;f.y+=f.vy;f.life--;}
   S.fx=S.fx.filter(f=>f.life>0);
   if(S.fx.length>260)S.fx.splice(0,S.fx.length-260);
@@ -964,7 +1033,7 @@ function bagShape(x,y,c,ring,label){
   g.fillStyle=c.ink;g.font='600 9px "IBM Plex Mono",monospace';g.textAlign='center';g.fillText(label,0,3);
   g.restore();
 }
-function beamStop(x,y,w){let st=-99;for(const e of S.en)if(e.type==='pearl'&&!e.dead&&e.y<y&&Math.abs(e.x-x)<w+e.r*.8)st=Math.max(st,e.y);return st;}
+function beamStop(x,y,w,pearlsOnly){let st=-99;const B=S.boss;if(!pearlsOnly&&B&&!B.dead&&!B.leaving&&B.y>0&&B.y<y&&Math.abs(B.x-x)<w+30)st=B.y+MOUTH_DY;for(const e of S.en)if((e.type==='pearl'||(e.type==='seg'&&e.parent&&!e.parent.leaving))&&!e.dead&&e.y<y&&Math.abs(e.x-x)<w+e.r*.8)st=Math.max(st,e.y+(e.type==='seg'?e.r*.5:0));return st;}
 function drawBeamAt(px,py){
   const p=S.p;
     const w=(4+p.lvl*2.6)*Math.min(1,.3+S.beamT/15),j=Math.sin(S.tick*.5)*1.2;
@@ -1086,16 +1155,22 @@ function draw(){
     if(e.delay>0)continue;const d=ENEMY[e.type];const hp=e.type==='boss'?null:hitPose(e);
     g.save();if(hp){g.translate(e.x,e.y+hp.dy);g.rotate(hp.rot);g.scale(hp.s*hp.sx,hp.s*hp.sy);g.translate(-e.x,-e.y);}
     try{
-    const sprite=(im,w,h,a=0)=>{g.save();g.translate(e.x,e.y);g.rotate(a);g.drawImage(im,-w/2,-h/2,w,h);if(e.flash){g.globalCompositeOperation='lighter';g.globalAlpha=e.flash>2?.6:.3;g.drawImage(im,-w/2,-h/2,w,h);}g.restore();};
+    const sprite=(im,w,h,a=0)=>{g.save();g.translate(e.x,e.y);g.rotate(a);g.drawImage(im,-w/2,-h/2,w,h);if(e.flash){g.globalAlpha=flashA(e.flash);g.drawImage(whiteOf(im),-w/2,-h/2,w,h);}g.restore();};
     if(e.type==='boss'&&loaded(ART.heads[0])){
-      const hit=e.recoil>0,base=ART.heads[e.phase>0?1:0];
-      if(!hit){sprite(base,150,150);continue;}
-      const im=red(loaded(ART.grimace)?ART.grimace:base),k=Math.max(0,(e.recoil-7)/7);
-      g.save();g.translate(e.x+Math.sin(e.recoil*2.3)*3*k,e.y-k*9);g.rotate(Math.sin(e.recoil*1.7)*.07);g.drawImage(im,-75,-75,150,150);g.restore();continue;
+      const base=ART.heads[e.phase>0?1:0];let im=base,sc=1;
+      const incoming=[...S.shots,...S.rings.filter(r=>r.out),...S.bolts].some(q=>q.y>e.y+20&&q.y<e.y+190&&Math.abs(q.x-e.x)<70);
+      if(e.rush&&e.rush.st!=='back')im=EAT.open;
+      else if(e.slurp>0){const ph=Math.floor(S.tick/9)%2;im=ph?EAT.nom:base;e.nomBob=ph?1:0;}
+      else if(e.chomp>0){im=e.chomp>30?EAT.snap:e.chomp>12?(Math.floor(e.chomp/4)%2?EAT.chew:EAT.snap):EAT.happy;}
+      else if(incoming)im=EAT.open;
+      if(e.fin)im=e.fin.st==='leave'?EAT.happy:(Math.floor(e.fin.t/22)%2?EAT.chew:EAT.snap);
+      if(!loaded(im))im=base;
+      if(e.slurp>0&&!(e.rush&&e.rush.st!=='back')){const q=nomPulse(e);g.save();g.translate(e.x+q.x,e.y+q.y);g.rotate(q.r);g.drawImage(im,-75,-75,150,150);headFlash(e,im,-75,-75,150,150);g.restore();continue;}
+      {const q=nomPulse(e);g.save();g.translate(e.x+q.x,e.y+q.y);g.rotate(q.r);}g.drawImage(im,-75*sc,-75*sc,150*sc,150*sc);headFlash(e,im,-75*sc,-75*sc,150*sc,150*sc);g.restore();continue;
     }
     if(e.type==='seg'&&loaded(ART.seg)){
-      const hit=e.parent&&e.parent.recoil>0,tl=e.n===SEGS&&loaded(ART.tail),im=tl?ART.tail:ART.seg;
-      sprite(hit?red(im):im,tl?76:68,tl?76:68,tl?(e.ang||0):0);continue;
+      const tl=e.n===SEGS&&loaded(ART.tail),im=tl?ART.tail:ART.seg,k=e.shk||0,sz=tl?76:68;
+      g.save();g.translate(e.x+rnd(-1,1)*k,e.y+rnd(-1,1)*k*.7);g.rotate((tl?(e.ang||0):0)+rnd(-1,1)*k*.015);g.drawImage(im,-sz/2,-sz/2,sz,sz);g.restore();continue;
     }
     /* Tofu: pops up and ducks back into its tub in a loop, like whack-a-mole */
     if(e.type==='packet'&&loaded(ART.tofu[0])){const t=(S.tick+Math.floor(e.ph*30))%96;sprite(ART.tofu[t<44?0:t<52||t>=84?1:2],58,58);continue;}
@@ -1112,7 +1187,7 @@ function draw(){
       const pieces=e.st===0?[[SPR.whole[e.j],[0,0,bx.w,1],0]]:[[SPR.a[e.j],bx.stubA,-1],[SPR.b[e.j],bx.stubB,1]];
       const sep=e.st?Math.min(1,(S.tick-e.snapT)/6)*3:0;
       for(const [im,q,dir] of pieces){if(!loaded(im))continue;const x=(q[0]-bx.w/2)*SPR_H,y=(q[1]-.5)*SPR_H+dir*sep;
-        g.drawImage(im,x,y,q[2]*SPR_H,q[3]*SPR_H);if(e.flash){g.globalCompositeOperation='lighter';g.globalAlpha=.35;g.drawImage(im,x,y,q[2]*SPR_H,q[3]*SPR_H);g.globalCompositeOperation='source-over';g.globalAlpha=1;}}
+        g.drawImage(im,x,y,q[2]*SPR_H,q[3]*SPR_H);if(e.flash){g.globalAlpha=flashA(e.flash);g.drawImage(whiteOf(im),x,y,q[2]*SPR_H,q[3]*SPR_H);g.globalAlpha=1;}}
       g.restore();continue;
     }
     if(e.type==='pearl'&&loaded(PEARL)){e.grow=Math.min(1,(e.grow??1)+.05);const sz=54*e.grow,gw=e.fl>0?1:e.glow;
@@ -1184,7 +1259,7 @@ function draw(){
     g.beginPath();g.arc(p.x,p.y-58,4+c*16+pulse,0,7);g.fill();g.stroke();
     }
   }
-  if(S.beam){const w=4+p.lvl*2.6;for(const src of [...S.opts.map(o=>({x:o.x,y:o.y+8})),p]){const st=beamStop(src.x,src.y,w);g.save();if(st>-99){g.beginPath();g.rect(0,st,W,H);g.clip();if(S.tick%4===0)puffAt(src.x+rnd(-4,4),st+16,26);}drawBeamAt(src.x,src.y);g.restore();}}
+  if(S.beam){const w=4+p.lvl*2.6;for(const src of [...S.opts.map(o=>({x:o.x,y:o.y+8})),p]){const st=beamStop(src.x,src.y,w);g.save();if(st>-99){g.beginPath();g.rect(0,st,W,H);g.clip();const ps=beamStop(src.x,src.y,w,true);if(ps>-99&&ps>=st-1&&S.tick%4===0)puffAt(src.x+rnd(-4,4),st+16,26);}drawBeamAt(src.x,src.y);g.restore();}}
   g.fillStyle='#ffe2d6';g.strokeStyle='#e5401c';g.lineWidth=2;
   for(const s of S.shots){
     /* Chilis fly tip first along their path. Until the felt chilis exist, the toppings stand in */
@@ -1195,6 +1270,11 @@ function draw(){
     else{g.beginPath();g.arc(s.x,s.y,s.r,0,7);g.fill();g.stroke();}
   }
   drawNoodles();
+  /* Everything above the mouth, plus each upper tooth, drawn again over the streams: noodles and laser cover the lower jaw,
+     show through the gaps between the top teeth, and vanish behind them, like the logo */
+  {const B=S.boss;const tp=B&&(B.nomBob&&loaded(EAT.nomTop)?EAT.nomTop:EAT.tops[B.phase>0?1:0]);if(B&&!B.dead&&!B.leaving&&B.slurp>0&&!(B.rush&&B.rush.st!=='back')&&loaded(tp)){const q=nomPulse(B);g.save();g.translate(B.x+q.x,B.y+q.y);g.rotate(q.r);g.drawImage(tp,-75,-75,150,150);headFlash(B,tp,-75,-75,150,150);g.restore();}}
+  for(const c of S.crumbs){g.globalAlpha=Math.min(1,c.life/10);g.fillStyle='rgba(30,20,15,.55)';g.beginPath();g.arc(c.x,c.y,c.r+.9,0,6.283);g.fill();
+    g.fillStyle=c.c;g.beginPath();g.arc(c.x,c.y,c.r,0,6.283);g.fill();}g.globalAlpha=1;
   /* Baby dragon options: flapping, with a soft warm glow so they read as friendly */
   for(const o of S.opts){const im=BABY[Math.floor(S.tick/7)%2];if(!loaded(im))continue;const sz=64*Math.min(1,(S.tick-o.born)/12);
     const gl=g.createRadialGradient(o.x,o.y,2,o.x,o.y,30);gl.addColorStop(0,'rgba(255,214,120,.38)');gl.addColorStop(1,'rgba(255,214,120,0)');g.fillStyle=gl;g.fillRect(o.x-30,o.y-30,60,60);
@@ -1301,7 +1381,7 @@ function hud(){
   }
   if(S.warn>0&&S.warn%40<26){
     g.fillStyle='rgba(226,50,0,.88)';g.fillRect(0,H/2-44,W,88);
-    g.textAlign='center';g.font='900 40px Gooper,Georgia,serif';g.lineJoin='round';g.lineWidth=9;g.strokeStyle='#231f20';g.strokeText('WARNING',W/2,H/2+13);g.fillStyle='#fff';g.fillText('WARNING',W/2,H/2+13);
+    g.textAlign='center';g.font='900 36px Gooper,Georgia,serif';g.lineJoin='round';g.lineWidth=9;g.strokeStyle='#231f20';g.strokeText('FEED THE DRAGON',W/2,H/2+13);g.fillStyle='#fff';g.fillText('FEED THE DRAGON',W/2,H/2+13);
   }
 }
 
