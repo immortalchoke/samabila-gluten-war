@@ -1195,7 +1195,7 @@ function buildSet(){
     L(306,512,keycap(84,30,'SPACE'),'right');L(354,512,caption('BOMB',17),'right');r++;
     L(282,548,keycap(K,30,'P'),'right');L(306,548,caption('PAUSE',17),'right');
   }else{
-    L(64,486,()=>{const im=TITLE_IM.finger;if(loaded(im))g.drawImage(im,-20,-20,40,40);else{g.fillStyle='#f1e8d2';g.strokeStyle='#231f20';g.lineWidth=4;g.beginPath();g.arc(0,0,13,0,7);g.fill();g.stroke();}},'left');
+    L(64,486,()=>{const im=TITLE_IM.finger;if(loaded(im)){const h=46,w=im.naturalWidth/im.naturalHeight*h;g.drawImage(im,-w/2,-h/2,w,h);}else{g.fillStyle='#f1e8d2';g.strokeStyle='#231f20';g.lineWidth=4;g.beginPath();g.arc(0,0,13,0,7);g.fill();g.stroke();}},'left');
     L(88,486,caption('DRAG TO MOVE',17),'left');r++;
     L(88,518,caption('AUTO-FIRE IS ON',17),'right');r++;
     L(88,550,caption('TAP BOMB TO CLEAR THE SCREEN',14),'right');
