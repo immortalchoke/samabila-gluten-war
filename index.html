@@ -1477,22 +1477,26 @@ function start(){SFX.init();SFX.loadMusic();SFX.loadSamples();SFX.music(false,.3
 function end(win){
   if(mode!=='play')return;
   SFX.music(false,win?4:1.5);
-  mode='over';over.hidden=false;
   const bonus=S.medals*500+S.p.bombs*2000;
   if(win)S.score+=bonus;
+  /* Winning leads into the ending: the screen fades to warm cream and the ramen kitchen opens */
+  if(win){try{sessionStorage.setItem('gw-score',S.score);sessionStorage.setItem('gw-wi',S.p.wi);sessionStorage.setItem('gw-lvl',S.p.lvl);}catch(e){}mode='kitchen';over.hidden=true;kitchenT=0;return;}
+  mode='over';over.hidden=false;
   ot.textContent=win?'Stage clear':'Game over';
   om.textContent=win?`Score ${S.score}, including a ${bonus} bonus for medals and unused bombs.`:`Score ${S.score}.`;
   ok.textContent='';
   document.getElementById('go').textContent='Play again';
 }
 document.getElementById('go').onclick=start;
-let last=0,acc=0;
+let last=0,acc=0,kitchenT=0;
 function frame(ts){
   const dt=Math.min(ts-last,50);last=ts;
   SFX.suspend(mode==='play'&&paused);
-  if(mode==='play'&&!paused){acc+=dt;while(acc>=1000/60){step();acc-=1000/60;}}
+  if((mode==='play'||mode==='kitchen')&&!paused){acc+=dt;while(acc>=1000/60){step();acc-=1000/60;}}
   else if(mode==='title'){acc+=dt;while(acc>=1000/60){S.tick++;acc-=1000/60;}}
   draw();
+  if(mode==='kitchen'){kitchenT+=dt;g.save();g.setTransform(1,0,0,1,0,0);g.fillStyle=`rgba(255,246,228,${Math.min(1,kitchenT/1400)})`;g.fillRect(0,0,cv.width,cv.height);g.restore();
+    if(kitchenT>1700){mode='leaving';location.href='kitchen.html';}}
   requestAnimationFrame(frame);
 }
 addEventListener('pointerdown',()=>SFX.init());
