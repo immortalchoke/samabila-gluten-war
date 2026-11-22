@@ -1617,7 +1617,7 @@ const FW=['chili','drum','shallot','noodle'];
 const FEAST={art:FW.map(n=>img('feast/'+n)),
   L:{bg:img('feast/l-bg'),piles:img('feast/l-piles'),front:img('feast/l-piles-front'),fg:img('feast/l-fg'),
      d:FW.map(n=>img('feast/l-d-'+n)),chew:FW.map(n=>img('feast/l-chew-'+n))},
-  cam:{a:{x:448,y:640,z:1.02},b:{x:440,y:450,z:1.22},dur:11},
+  cam:{a:{x:448,y:650,z:1.0},b:{x:452,y:620,z:1.09},dur:11},
   lines:['The fire in his belly? Just the chili now.','He saved the drumstick for dessert.','One bite of shallot, and the fire went out.','He never did figure out where the noodles ended.']};
 const FE={wi:0,t:0,line:0,typed:0,hold:0,fade:1,out:0,now:0,steam:[]};
 function feastBegin(){Object.assign(FE,{wi:S.p.wi,t:0,line:0,typed:0,hold:0,fade:1,out:0,steam:[]});mode='feast';SFX.stage(true);}
