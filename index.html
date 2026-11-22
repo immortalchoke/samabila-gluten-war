@@ -1620,18 +1620,26 @@ const FEAST={art:FW.map(n=>img('feast/'+n)),
      d:FW.map(n=>img('feast/l-d-'+n)),chew:FW.map(n=>img('feast/l-chew-'+n))},
   cam:{a:{x:448,y:650,z:1.0},b:{x:452,y:620,z:1.09},dur:11},
   lines:['The fire in his belly? Just the chili now.','He saved the drumstick for dessert.','One bite of shallot, and the fire went out.','He never did figure out where the noodles ended.']};
-const FE={wi:0,t:0,line:0,typed:0,hold:0,fade:1,out:0,now:0,steam:[]};
-function feastBegin(){Object.assign(FE,{wi:S.p.wi,t:0,line:0,typed:0,hold:0,fade:1,out:0,steam:[]});mode='feast';SFX.stage(true);}
-function feastText(){return FE.line===0?FEAST.lines[FE.wi]:'Peace returned to the high plains. Now, cook your own.';}
-function feastPress(){if(FE.out||FE.t<.8)return;const tx=feastText();if(FE.typed<tx.length)FE.typed=tx.length;else feastNext();}
-function feastNext(){if(FE.line===0){FE.line=1;FE.typed=0;FE.hold=0;}else FE.out=.0001;}
+/* second ending shot: the town's new self-serve ramen hall, a wide felt set the camera pans across */
+const HALL={L:{bg:img('hall/bg'),st:img('hall/stations'),pil:img('hall/pillar')},IW:1376,IH:768,
+  cam:{a:{x:300,y:384,z:1},b:{x:940,y:400,z:1.1},dur:13},
+  spouts:[[893,457,500],[753,440,472],[650,425,452]],
+  bowls:[[885,500],[740,472],[640,452],[568,440],[525,428],[492,420],[462,413]],
+  lines:['The town flourished, and built a ramen hall. Samabila only.','Now, cook your own.']};
+const FE={wi:0,shot:0,t:0,line:0,typed:0,hold:0,fade:1,out:0,sw:0,now:0,steam:[],motes:[]};
+function feastBegin(){Object.assign(FE,{wi:S.p.wi,shot:0,t:0,line:0,typed:0,hold:0,fade:1,out:0,sw:0,steam:[],motes:[]});mode='feast';SFX.stage(true);}
+function feastText(){if(FE.shot===1)return HALL.lines[FE.line];return FE.line===0?FEAST.lines[FE.wi]:'Peace returned to the high plains.';}
+function feastPress(){if(FE.out||FE.sw||FE.t<.8)return;const tx=feastText();if(FE.typed<tx.length)FE.typed=tx.length;else feastNext();}
+function feastNext(){if(FE.line===0){FE.line=1;FE.typed=0;FE.hold=0;}else if(FE.shot===0)FE.sw=.0001;else FE.out=.0001;}
 function feastStep(dt){const s=dt/1000;FE.t+=s;FE.now+=dt;FE.fade=Math.max(0,FE.fade-s*1.4);
   if(FE.out){FE.out+=s*.8;if(FE.out>=1.2){mode='leaving';location.href='kitchen.html';}return;}
+  /* cream dip between the feast and the ramen hall */
+  if(FE.sw){FE.sw+=s*1.6;if(FE.sw>=1.1)Object.assign(FE,{shot:1,t:0,line:0,typed:0,hold:0,fade:1,sw:0,steam:[],motes:[]});return;}
   if(FE.t>1.2){const tx=feastText(),b=Math.floor(FE.typed);FE.typed=Math.min(tx.length,FE.typed+s*30);if(Math.floor(FE.typed)>b&&tx[Math.floor(FE.typed)-1]!==' ')SFX.click();
     if(FE.typed>=tx.length){FE.hold+=s;if(FE.hold>3)feastNext();}}}
 /* chew rhythm: three bites, then a beat with the mouth open to slurp. Returns [chewing?, squash 0..1] */
 function feastChew(T){const cyc=T%2.2;if(cyc>=1.2)return [false,0];const q=cyc%.4;return q<.22?[true,Math.sin(q/.22*Math.PI)]:[false,0];}
-function drawFeast(){const L=FEAST.L,wi=FE.wi,S0=FEAST.cam,T=FE.t,c=iCam(S0,Math.min(1,T/S0.dur));
+function drawFeast(){if(FE.shot===1){drawHall();return;}const L=FEAST.L,wi=FE.wi,S0=FEAST.cam,T=FE.t,c=iCam(S0,Math.min(1,T/S0.dur));
   g.save();g.fillStyle='#120c08';g.fillRect(0,0,W,H);g.restore();
   const layered=loaded(L.bg)&&loaded(L.piles)&&loaded(L.front)&&loaded(L.fg)&&loaded(L.d[wi]);
   if(!layered){iLayer(c,S0,0,()=>{const im=FEAST.art[wi]||FEAST.art[0];if(loaded(im))g.drawImage(im,0,0,IW,IH);});}
@@ -1645,6 +1653,29 @@ function drawFeast(){const L=FEAST.L,wi=FE.wi,S0=FEAST.cam,T=FE.t,c=iCam(S0,Math
     iLayer(c,S0,.12,()=>{g.drawImage(L.front,0,0,IW,IH);feastSteam();});
     iLayer(c,S0,.9,()=>g.drawImage(L.fg,0,0,IW,IH));}
   if(!layered)iLayer(c,S0,0,feastSteam);
+  if(FE.t>1.2)textBox(feastText(),FE.typed,FE.now);
+  const f=Math.max(FE.fade,Math.min(1,FE.out),Math.min(1,FE.sw));if(f>0){g.fillStyle=`rgba(255,246,228,${f})`;g.fillRect(0,0,W,H);}}
+/* the ramen hall: a slow pan from the glowing doors down the row of stations. The pillar sweeps past in front,
+   water pours, bowls steam, dust drifts in the light. */
+function hCam(p){const S0=HALL.cam,e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2,z=S0.a.z+(S0.b.z-S0.a.z)*e,k=H/HALL.IH*z,vw=W/k,vh=H/k;
+  let x=S0.a.x+(S0.b.x-S0.a.x)*e,y=S0.a.y+(S0.b.y-S0.a.y)*e;x=Math.max(vw/2,Math.min(HALL.IW-vw/2,x));y=Math.max(vh/2,Math.min(HALL.IH-vh/2,y));return {k,x,y,e};}
+function hLayer(c,d,fn){const a=HALL.cam.a,k=c.k*(1+d*c.e*.08),x=c.x+(c.x-a.x)*d*.5,y=c.y+(c.y-a.y)*d*.5;g.save();g.translate(W/2,H/2);g.scale(k,k);g.translate(-x,-y);fn();g.restore();}
+function drawHall(){const L=HALL.L,T=FE.t,c=hCam(Math.min(1,T/HALL.cam.dur)),IWh=HALL.IW,IHh=HALL.IH;
+  g.save();g.fillStyle='#120c08';g.fillRect(0,0,W,H);g.restore();
+  hLayer(c,0,()=>{if(loaded(L.bg))g.drawImage(L.bg,0,0,IWh,IHh);
+    /* the paper doors breathe a little warmer and cooler */
+    const gl=g.createRadialGradient(350,335,10,350,335,170);gl.addColorStop(0,`rgba(255,226,160,${.10+.05*Math.sin(T*1.1)})`);gl.addColorStop(1,'rgba(255,226,160,0)');g.fillStyle=gl;g.fillRect(150,150,400,380);});
+  hLayer(c,.08,()=>{if(loaded(L.st))g.drawImage(L.st,0,0,IWh,IHh);
+    /* water pouring from the near spouts */
+    HALL.spouts.forEach(([x,y0,y1],i)=>{const w=i===0?3:i===1?2.4:1.8;for(let j=0;j<3;j++){const yy=y0+((T*90+j*(y1-y0)/3+i*7)%(y1-y0));g.fillStyle='rgba(255,255,255,.55)';g.fillRect(x-w*.3,yy,w*.6,4);}
+      g.fillStyle='rgba(200,225,240,.45)';g.fillRect(x-w/2+Math.sin(T*20+i)*.3,y0,w,y1-y0);});
+    if(Math.random()<.5){const b=HALL.bowls[Math.floor(Math.random()*HALL.bowls.length)],sc=b[0]>800?1:b[0]>700?.8:.6;FE.steam.push({x:b[0]+rnd(-20,20)*sc,y:b[1]-4,vx:rnd(-.2,.2),vy:-rnd(.5,.9)*sc,r:rnd(5,8)*sc,life:0,sc});}
+    for(const q of FE.steam){q.life++;q.x+=q.vx+Math.sin((q.life+q.x)*.05)*.4;q.y+=q.vy;q.r+=.13*q.sc;const a=Math.sin(Math.min(1,q.life/110)*Math.PI)*.17;g.fillStyle=`rgba(255,250,240,${a})`;g.beginPath();g.arc(q.x,q.y,q.r,0,7);g.fill();}
+    FE.steam=FE.steam.filter(q=>q.life<110);
+    /* dust drifting through the light */
+    if(FE.motes.length<40)FE.motes.push({x:rnd(150,1300),y:rnd(120,560),vx:rnd(.05,.25),vy:rnd(-.08,.04),r:rnd(.8,2),ph:rnd(0,6)});
+    for(const m of FE.motes){m.x+=m.vx;m.y+=m.vy+Math.sin(T+m.ph)*.05;if(m.x>1376)m.x=100;g.fillStyle=`rgba(255,236,190,${.25+.2*Math.sin(T*2+m.ph)})`;g.beginPath();g.arc(m.x,m.y,m.r,0,7);g.fill();}});
+  hLayer(c,1.2,()=>{if(loaded(L.pil))g.drawImage(L.pil,0,0,IWh,IHh);});
   if(FE.t>1.2)textBox(feastText(),FE.typed,FE.now);
   const f=Math.max(FE.fade,Math.min(1,FE.out));if(f>0){g.fillStyle=`rgba(255,246,228,${f})`;g.fillRect(0,0,W,H);}}
 /* steam curling up off the pots (image pixels, drawn at the pot layer's depth) */
