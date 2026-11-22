@@ -1616,7 +1616,7 @@ let last=0,acc=0,kitchenT=0;
    version of the weapon you won with (or tangled in noodles for Multigrain). Two typed lines, then on to the kitchen. */
 const FW=['chili','drum','shallot','noodle'];
 const FEAST={art:FW.map(n=>img('feast/'+n)),
-  L:{bg:img('feast/l-bg'),piles:img('feast/l-piles'),front:img('feast/l-piles-front'),fg:img('feast/l-fg'),
+  L:{bg:img('feast/l-bg'),piles:img('feast/l-piles'),front:img('feast/l-piles-front'),fg:img('feast/l-fg'),floor:img('feast/l-floor'),
      d:FW.map(n=>img('feast/l-d-'+n)),chew:FW.map(n=>img('feast/l-chew-'+n))},
   cam:{a:{x:448,y:650,z:1.0},b:{x:452,y:620,z:1.09},dur:11},
   lines:['The fire in his belly? Just the chili now.','He saved the drumstick for dessert.','One bite of shallot, and the fire went out.','He never did figure out where the noodles ended.']};
@@ -1637,7 +1637,7 @@ function drawFeast(){const L=FEAST.L,wi=FE.wi,S0=FEAST.cam,T=FE.t,c=iCam(S0,Math
   if(!layered){iLayer(c,S0,0,()=>{const im=FEAST.art[wi]||FEAST.art[0];if(loaded(im))g.drawImage(im,0,0,IW,IH);});}
   else{
     iLayer(c,S0,0,()=>g.drawImage(L.bg,0,0,IW,IH));
-    iLayer(c,S0,.12,()=>g.drawImage(L.piles,0,0,IW,IH));
+    iLayer(c,S0,.12,()=>{g.drawImage(L.piles,0,0,IW,IH);if(loaded(L.floor))g.drawImage(L.floor,0,0,IW,IH);});
     /* the dragon: slow happy breathing, chew frames, a little squash on each bite, anchored at his coil */
     iLayer(c,S0,.22,()=>{const [chew,sq]=feastChew(T),br=Math.sin(T*2.1),im=chew&&loaded(L.chew[wi])?L.chew[wi]:L.d[wi];
       const ax=470,ay=930,sx=1+br*.006+sq*.018,sy=1+br*.01-sq*.026;
