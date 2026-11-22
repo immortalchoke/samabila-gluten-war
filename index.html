@@ -78,6 +78,7 @@ label input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--broth)}
       <button id="cyc" aria-pressed="true">Bags cycle flavor</button>
       <button id="auto" aria-pressed="false">Auto-fire</button>
       <button id="toboss">Skip to boss</button>
+      <button id="toend">Skip to ending</button>
       <button id="snd" aria-pressed="true">Sound</button>
       <button id="restart">Restart</button>
     </div>
@@ -1713,6 +1714,11 @@ function syncBench(){
 const tog=(id,k)=>{const b=document.getElementById(id);b.onclick=()=>{T[k]=!T[k];b.setAttribute('aria-pressed',T[k]);};};
 tog('god','god');tog('cyc','cycle');tog('auto','autoFire');
 document.getElementById('restart').onclick=start;
+/* jump straight to the win: keeps the weapon you're holding, so the feast shows that one */
+document.getElementById('toend').onclick=()=>{
+  if(mode!=='play')start();
+  S.en.length=0;S.bul.length=0;end(true);
+};
 document.getElementById('toboss').onclick=()=>{
   if(mode!=='play')start();
   S.en.length=0;S.bul.length=0;S.tick=77*60;S.li=LEVEL.findIndex(l=>l[0]>=77);
