@@ -981,3 +981,14 @@ function renderGuide(mode){const sv=S;S=Object.assign({},sv,{guideMode:true,pot:
   S=sv;}
 window.__k={guide:renderGuide,get S(){return S},step,draw,reset,input:(f,p)=>{fireDown=f;if(p)pressQueued=true;}};
 </script>
+<script>
+/* Phones: size the screen in plain pixels from the real window, fitted to the 2:3 game and centered, so no browser can
+   end up showing it at the canvas's own (much larger) size */
+(function(){if(!matchMedia('(pointer:coarse)').matches)return;
+  function fit(){const cab=document.querySelector('.cab'),cv=cab&&cab.querySelector('canvas');if(!cv)return;
+    const vw=document.documentElement.clientWidth||innerWidth,vh=innerHeight,w=Math.floor(Math.min(vw,vh*2/3)),h=Math.floor(w*1.5);
+    for(const el of [cab,cv]){el.style.width=w+'px';el.style.height=h+'px';}cab.style.aspectRatio='auto';cab.style.margin='0 auto';
+    const st=document.querySelector('.stack');if(st){st.style.width=w+'px';st.style.margin='0 auto';}}
+  addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,200));
+  if(document.readyState!=='loading')fit();else addEventListener('DOMContentLoaded',fit);addEventListener('load',fit);})();
+</script>

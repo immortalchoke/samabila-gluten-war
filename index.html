@@ -1,3 +1,5 @@
+<!doctype html>
+<html lang="en">
 <meta charset="utf-8">
 <title>The Gluten Conflict</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
@@ -1997,4 +1999,15 @@ over.hidden=true;SET=buildSet();document.fonts&&document.fonts.load('900 74px Go
 window.__g={get S(){return S},T,step,start,draw,get mode(){return mode},setPaused(v){paused=v}};
 requestAnimationFrame(t=>{last=t;frame(t);});
 })();
+</script>
+<script>
+/* Phones: size the screen in plain pixels from the real window, fitted to the 2:3 game and centered, so no browser can
+   end up showing it at the canvas's own (much larger) size */
+(function(){if(!matchMedia('(pointer:coarse)').matches)return;
+  function fit(){const cab=document.querySelector('.cab'),cv=cab&&cab.querySelector('canvas');if(!cv)return;
+    const vw=document.documentElement.clientWidth||innerWidth,vh=innerHeight,w=Math.floor(Math.min(vw,vh*2/3)),h=Math.floor(w*1.5);
+    for(const el of [cab,cv]){el.style.width=w+'px';el.style.height=h+'px';}cab.style.aspectRatio='auto';cab.style.margin='0 auto';
+    const st=document.querySelector('.stack');if(st){st.style.width=w+'px';st.style.margin='0 auto';}}
+  addEventListener('resize',fit);addEventListener('orientationchange',()=>setTimeout(fit,200));
+  if(document.readyState!=='loading')fit();else addEventListener('DOMContentLoaded',fit);addEventListener('load',fit);})();
 </script>
