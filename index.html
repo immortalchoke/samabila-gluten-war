@@ -170,6 +170,7 @@ const ENEMY={
   pearl:{r:24,hp:60,score:300,color:'#cfe2f3',label:''},
   rock:{r:34,hp:40,score:800,color:'#c9763a',label:''},
   jar:{r:28,hp:24,score:300,color:'#6b2a26',label:''},
+  ham:{r:24,hp:26,score:600,color:'#2f55b8',label:''},
 };
 
 /* ---------- Level timeline: seconds into the stage, and what arrives ---------- */
@@ -179,7 +180,7 @@ const LEVEL=[
   [2,arc(-1)],[5,arc(1)],[7,{f:'thicket',len:640}],[10,{f:'wheat',xs:[140,340]}],
   [15,arc(-1)],[15.6,arc(1)],[19,{f:'oil',xs:[130,350]}],[22,{f:'vee',x:240,n:5}],
   /* Countryside, past the windowsill */
-  [29,{f:'carrier',x:240,drop:'bag'}],[31,{f:'turret',xs:[110,370]}],
+  [29,{f:'carrier',x:240,drop:'bag'}],[31,{f:'ham',xs:[110,370]}],
   /* The jar yards: a quiet stretch to smash jars and power up fast */
   [33,{f:'yard',side:-1,cols:3,rows:3,drop:['medal','medal','medal','medal','medal','bag','medal','bomb','medal']}],
   [36,{f:'yard',side:1,cols:3,rows:3,drop:['bag','medal','medal','medal','life','medal','medal','medal','bag']}],
@@ -187,9 +188,9 @@ const LEVEL=[
   /* Then a flood of weak enemies to flex the new firepower on. Mostly non-shooters, so an under-powered player isn't mauled */
   [42,arc(-1,8)],[42.6,arc(1,8)],[44,{f:'sine',x:140,n:8}],[44.5,{f:'sine',x:340,n:8}],[46.5,arc(-1,8)],[47.1,arc(1,8)],
   [48.5,{f:'sine',x:240,n:10}],[50,{f:'vee',x:240,n:5}],[51.5,arc(-1,8)],[52.1,arc(1,8)],[53.5,{f:'sine',x:140,n:8}],[54,{f:'sine',x:340,n:8}],
-  [55.5,{f:'wheat',xs:[240]}],[57,arc(-1,8)],[57.6,arc(1,8)],
+  [55.5,{f:'ham',xs:[240]}],[57,arc(-1,8)],[57.6,arc(1,8)],
   /* Space, with sesame meteors */
-  [62,{f:'carrier',x:240,drop:'bag'}],[63,{f:'vee',x:140,n:5}],[63.5,{f:'vee',x:340,n:5}],[66,{f:'oil',xs:[90,390]}],
+  [62,{f:'carrier',x:240,drop:'bag'}],[63,{f:'vee',x:140,n:5}],[63.5,{f:'vee',x:340,n:5}],[66,{f:'ham',xs:[90,390]}],
   [68,{f:'carrier',x:120,drop:'medal'}],[70,{f:'wheat',xs:[130,350]}],[73,arc(-1,7)],[73.5,arc(1,7)],
   [77,{f:'warn'}],[80,{f:'boss'}],
 ];
@@ -267,6 +268,7 @@ function spawn(w){
     case 'turret':w.xs.forEach(x=>mk('turret',x,-30,{move:'ground',fire:{every:70,kind:'aim',n:1}}));break;
     case 'carrier':mk('carrier',w.x,-30,{move:'slow',drop:w.drop});break;
     case 'oil':w.xs.forEach((x,i)=>mk('oil',x,-40,{move:'oil',delay:i*20}));break;
+    case 'ham':w.xs.forEach((x,i)=>mk('ham',x,-40,{move:'ham',delay:i*24}));break;
     case 'warn':S.warn=170;SFX.play('warning');SFX.stage(false,2.5);SFX.music(true);break;
     case 'thicket':buildThicket(w.len);break;
     case 'boss':{
@@ -282,6 +284,8 @@ function spawn(w){
 }
 /* Each bullet remembers who fired it, so it can wear that enemy's felt shape */
 let curSrc='packet';
+/* the canned ham enemy: sealed, lid peeling, open with the ham out */
+const HAMCAN=[0,1,2].map(i=>img('hamcan'+i));
 const BUL_OF={packet:'cube',carrier:'cube',wheat:'grain',turret:'broth',oil:'oil',boss:'fire'};
 function shoot(x,y,a,s,kind=0){SFX.play('eshot',x);if(S.bul.length<320)S.bul.push({x,y,vx:Math.cos(a)*s*T.bulletSpeed,vy:Math.sin(a)*s*T.bulletSpeed,r:kind?6:5,kind,src:BUL_OF[curSrc]||'cube',spin:rnd(0,6)});}
 function enemyFire(e){
@@ -307,6 +311,13 @@ function moveEnemy(e){
       else if(e.age===58)e.fireT=S.tick;
       else if(e.age===64){curSrc='oil';const a=Math.atan2(S.p.y-e.y,S.p.x-e.x);for(let i=-2;i<=2;i++)shoot(e.x,e.y-20,a+i*.22,3);}
       else if(e.age>84){e.y+=4.6;e.x+=Math.max(-1.3,Math.min(1.3,S.p.x-e.x));}
+      break;
+    /* Canned ham (meat ramen's sidekick): drops in sealed, peels its lid back, then lobs fans of ham cubes at you
+       from the open can before sinking away */
+    case 'ham':
+      if(e.age<60)e.y+=2.2;
+      else if(e.age>=90&&e.age<=330&&(e.age-90)%60===0){curSrc='carrier';e.fireT=S.tick;const a=Math.atan2(S.p.y-e.y,S.p.x-e.x);for(let i=-1;i<=1;i++)shoot(e.x,e.y-14,a+i*.26,2.8);}
+      else if(e.age>360){e.y+=1.6;e.x+=Math.sin(e.age*.03)*.8;}
       break;
     case 'boss':moveBoss(e);break;
     /* Pearls orbit the head. Every few seconds one glows, then swings out toward the rocket like a flail and comes back */
@@ -359,7 +370,7 @@ function moveBoss(e){
   /* Bum rush: every few seconds she winds up (shaking, pulling back, mouth wide), then lunges at the spot you were in, then glides home.
      It comes sooner as she gets hungrier (lower health). */
   const home=a2=>[W/2+Math.sin(a2*.017)*150,130+(1-Math.cos(a2*.034))*55];
-  if(e.nextRush===undefined)e.nextRush=e.age+300;
+  if(e.nextRush===undefined)e.nextRush=e.age+480;
   if(!e.rush&&e.age>=e.nextRush&&S.p.alive!==false){e.rush={st:'charge',t:0,x0:e.x,y0:e.y};SFX.play('grunt',e.x);}
   if(e.rush){const r=e.rush;r.t++;
     if(r.st==='charge'){const k=r.t/50;e.x=r.x0+rnd(-1,1)*3*k;e.y=r.y0-22*Math.sin(k*Math.PI/2);
@@ -369,7 +380,7 @@ function moveBoss(e){
       if(dist(e.x,e.y+20,S.p.x,S.p.y)<44+T_HIT)hurt();}
     else if(r.st==='bite'){if(dist(e.x,e.y+20,S.p.x,S.p.y)<40+T_HIT)hurt();if(r.t>=14){r.st='back';r.t=0;}}
     else{const [hx,hy]=home(e.a),dx=hx-e.x,dy=hy-e.y,d=Math.hypot(dx,dy);
-      if(d<4){e.rush=null;const pc=e.hp/e.max;e.nextRush=e.age+(pc>.5?420:pc>.25?330:260)+Math.floor(rnd(0,90));}else{const sp=Math.min(6,1+d*.05);e.x+=dx/d*sp;e.y+=dy/d*sp;}}
+      if(d<4){e.rush=null;const pc=e.hp/e.max;e.nextRush=e.age+(pc>.5?720:pc>.25?560:440)+Math.floor(rnd(0,120));}else{const sp=Math.min(6,1+d*.05);e.x+=dx/d*sp;e.y+=dy/d*sp;}}
     return;}
   e.a++;
   [e.x,e.y]=home(e.a);
@@ -1408,6 +1419,7 @@ function draw(){
     /* Pot: the lid pops left then right with steam each time it fires, and rattles now and then */
     /* HAM: the lid peels back as it takes damage, and the meat pokes out just before it breaks */
     if(e.type==='carrier'&&loaded(ART.ham[0])){const f=e.hp/e.max;sprite(ART.ham[f>.66?0:f>.33?1:2],74,74);continue;}
+    if(e.type==='ham'&&loaded(HAMCAN[0])){const im=HAMCAN[e.age<70?0:e.age<84?1:2];sprite(im,62,62*im.naturalHeight/im.naturalWidth);continue;}
     if(e.type==='oil'&&loaded(ART.oil[0])){const since=S.tick-(e.fireT??-1e9);sprite(ART.oil[e.fireT===undefined?0:since<8?1:since<20?2:3],78,78);continue;}
     if(e.type==='turret'&&loaded(ART.pot[0])){
       const since=S.tick-(e.fireT??-99),rattle=Math.floor((S.tick+e.ph*40)/6)%9===0;
