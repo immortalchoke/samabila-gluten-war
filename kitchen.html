@@ -37,16 +37,21 @@ const POT={x:240,base:506,rx:62,ry:17,hgt:76,DEPTH:38};
 const KNOB={x:332,y:561,r:14};
 const potRim=()=>POT.base-POT.hgt;
 /* the coffee table's top surface in world space (from the table's place in the room photo): where spilled water can pool */
-const TOP={y0:521,y1:599,bl:161,br:364,bf:583,
+const TOP={y0:481,y1:634,bl:161,br:364,bf:583,
   /* the glass top is a trapezoid in perspective: narrower at the back edge, wider at the front (measured off the kitchen photo) */
-  inside(x,y){const t=clamp((y-521)/(599-521),0,1);return x>lerp(46,-7,t)&&x<lerp(428,488,t);}};
+  inside(x,y){const t=clamp((y-481)/(634-481),0,1);return x>lerp(45,-9,t)&&x<lerp(432,480,t);}};
 /* view zoom: the whole kitchen is drawn a bit smaller around the bottom-center of the screen, easing back to 1 for the hero shot */
-const VIEWK=.8;
+const VIEWK=1;
 function viewK(){return lerp(VIEWK,1,typeof S==='undefined'?0:heroE());}
 /* the camera is panned so the scene sits higher, leaving breathing room at the bottom; the pan eases out for the hero shot */
-const PAN=48;function panY(){return typeof S==='undefined'?PAN:PAN*(1-heroE());}
+const PAN=146,TILT=-656,TILT_T=200;
+/* the scene opens looking out the window at San Ramyeon's main street, then tilts down to the table */
+function tiltE(){if(typeof S==='undefined')return 1;const t=Math.min(1,S.t/TILT_T);return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+function panY(){if(typeof S==='undefined')return PAN;return PAN*(1-heroE())+TILT*(1-tiltE());}
 function viewL(){return 240-240/viewK();}function viewR(){return 240+240/viewK();}
-function viewTop(){return 720+(panY()-720)/viewK();}function viewBot(){return 720+(panY()-56)/viewK();}
+/* play bounds ignore the opening tilt, so the ship waits below and rises into view as the camera settles */
+function panBase(){return typeof S==='undefined'?PAN:PAN*(1-heroE());}
+function viewTop(){return 720+(panBase()-720)/viewK();}function viewBot(){return 720+(panBase()-56)/viewK();}
 /* the pitcher hovers left of the pot and tips on its bottom-right corner (the pivot), spout over the pot */
 const PIV={x:144,y:322};
 /* a gold aluminum kettle, in its own coordinates: pivot at the bottom-right of the body, spout on the right */
@@ -486,7 +491,7 @@ const cloth=(()=>{const c=document.createElement('canvas');c.width=c.height=40;c
   for(const [px,py,col] of [[10,10,'#e07a5f'],[30,30,'#e9b949']]){x.fillStyle=col;for(let a=0;a<6;a++){x.beginPath();x.arc(px+Math.cos(a*1.047)*3.4,py+Math.sin(a*1.047)*3.4,2.4,0,7);x.fill();}x.fillStyle='#fff';x.beginPath();x.arc(px,py,1.6,0,7);x.fill();}
   x.fillStyle='#7fb07a';x.beginPath();x.ellipse(30,10,4,2,.6,0,7);x.fill();x.beginPath();x.ellipse(10,30,4,2,-.6,0,7);x.fill();return g.createPattern(c,'repeat');})();
 /* felt art: the room plate, the coffee table and the fan */
-const ART={};for(const [k,src] of [['room','art/kitchen/room.jpg'],['table','art/kitchen/coffee-table.webp'],['fan','art/kitchen/fan.webp'],['hero','art/kitchen/hero.jpg'],['kplate','art/kitchen/kitchen.jpg'],['bowl-korean','art/kitchen/bowl-korean.jpg'],['bowl-chicken','art/kitchen/bowl-chicken.jpg'],['bowl-lite','art/kitchen/bowl-lite.jpg'],['bowl-pho','art/kitchen/bowl-pho.jpg']]){const im=new Image();im.src=src;ART[k]=im;}
+const ART={};for(const [k,src] of [['room','art/kitchen/room.jpg'],['table','art/kitchen/coffee-table.webp'],['fan','art/kitchen/fan.webp'],['hero','art/kitchen/hero.jpg'],['sr','art/kitchen/room-sr.webp'],['bowl-korean','art/kitchen/bowl-korean.jpg'],['bowl-chicken','art/kitchen/bowl-chicken.jpg'],['bowl-lite','art/kitchen/bowl-lite.jpg'],['bowl-pho','art/kitchen/bowl-pho.jpg']]){const im=new Image();im.src=src;ART[k]=im;}
 const ok=im=>im&&im.complete&&im.naturalWidth>0;
 /* everything is placed in the room photo's own pixels: the table between the sofa and the TV,
    then one camera zoom frames the table so a burner is about a third of its width */
@@ -494,10 +499,19 @@ const TBL={cx:420,top:860,w:380},FAN={x:560,base:830,h:95};
 const CAM={z:1.41,x0:420-240/1.41,y0:497};
 function camOn(){g.scale(CAM.z,CAM.z);g.translate(-CAM.x0,-CAM.y0);}
 /* the kitchen is one rendered photo (room, table, burner, empty pot); the separate pieces only come back for the plating transition */
+/* the San Ramyeon living room: one felt photo of the room, the window onto the town's main street and the coffee table,
+   placed in world space so its glass top lines up with TOP. The burner, pot and kettle are separate cut-outs on top. */
+const SR={x:-189.3,y:-738.5,w:864,h:1944,cut:460};
+function drawSR(part){const im=ART.sr;if(!ok(im))return false;
+  if(!part){g.drawImage(im,SR.x,SR.y,SR.w,SR.h);return true;}
+  /* for the plating transition the photo splits at the table's back edge: the room lifts away, the table drops */
+  const fy=(SR.cut-SR.y)/SR.h*im.naturalHeight;
+  if(part==='room')g.drawImage(im,0,0,im.naturalWidth,fy,SR.x,SR.y,SR.w,SR.cut-SR.y);
+  else g.drawImage(im,0,fy,im.naturalWidth,im.naturalHeight-fy,SR.x,SR.cut,SR.w,SR.y+SR.h-SR.cut);return true;}
 let KPF=null;
 function kplateF(){if(KPF)return KPF;const im=ART.kplate,c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const x=c.getContext('2d');x.drawImage(im,0,0);
   x.globalCompositeOperation='destination-out';const y0=c.height*.94,gr=x.createLinearGradient(0,y0,0,c.height);gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,1)');x.fillStyle=gr;x.fillRect(0,y0,c.width,c.height-y0);return KPF=c;}
-function usePlate(){return ok(ART.kplate)&&S.hero===0&&!S.guideMode;}
+function usePlate(){return ok(ART.sr)&&S.hero===0&&!S.guideMode;}
 function drawRoomImg(force){if(usePlate()&&!force)return;const im=ART.room;if(!ok(im)){drawRoom();return;}
   g.save();camOn();g.drawImage(im,0,0,768,1376);
   /* the fan on the floor by the TV, slowly turning its head */
@@ -693,12 +707,11 @@ function drawUI(){
 function draw(){
   g.clearRect(0,0,W,H);const e=heroE(),off=e*440,[hx,hy,sc]=heroT();
   /* the rendered kitchen photo, lifted by the pan; below its feathered bottom edge the separate room and table pieces continue the floor and legs */
-  if(usePlate()){g.save();g.translate(240,720-panY());g.scale(viewK(),viewK());g.translate(-240,-720);drawRoomImg(true);drawTable(true);g.restore();
-    g.drawImage(kplateF(),0,-panY(),W,H);}
+  if(usePlate()){g.save();g.translate(240,720-panY());g.scale(viewK(),viewK());g.translate(-240,-720);drawSR();g.restore();}
   if(e>0){const hp=bowlImg()||ART.hero,ha=ok(hp)?clamp((e-.85)/.15,0,1):0;if(ha<1)drawBackdrop(e);if(ha>0){g.globalAlpha=ha;g.drawImage(hp,-1.5,0,483,720);g.globalAlpha=1;}}
   const vk=viewK();g.save();g.translate(240,720-panY());g.scale(vk,vk);g.translate(-240,-720);
-  if(e<1){g.save();g.translate(0,-e*1100);if(e>0){g.beginPath();g.rect(-400,-900,1300,1460);g.clip();}drawRoomImg();g.restore();
-    g.save();g.translate(0,off);drawTable();g.restore();
+  if(e<1){g.save();g.translate(0,-e*1100);if(e>0){g.beginPath();g.rect(-400,-900,1300,1460);g.clip();}if(!(e>0&&drawSR('room')))drawRoomImg();g.restore();
+    g.save();g.translate(0,off);if(!(e>0&&drawSR('table')))drawTable();g.restore();
     g.save();g.translate(0,off);for(const p of S.puddles){g.fillStyle='rgba(150,200,230,.55)';g.beginPath();g.ellipse(p.x,p.y,p.w*.5,3+p.w*.04,0,0,7);g.fill();}
     drawBurner();g.restore();}
   g.save();g.translate(hx,hy);g.scale(sc,sc);g.translate(-POT.x,-POT.base);drawPot();
@@ -741,7 +754,7 @@ function spr(k,x,y,w,h,flash){const im=SPR[k];if(!ok(im))return false;if(h==null
 function sprC(k,w,flash){const im=SPR[k];if(!ok(im))return false;const h=w*im.naturalHeight/im.naturalWidth;return spr(k,-w/2,-h/2,w,h,flash);}
 const SB=.245,BIMG={ox:240-330*SB,oy:494-110*SB};
 function drawBurner(){if(!ok(SPR.burner)||!ok(SPR.knob))return drawBurnerOld();
-  if(!usePlate()){g.fillStyle='rgba(50,25,10,.3)';g.beginPath();g.ellipse(BIMG.ox+105,BIMG.oy+118,108,9,0,0,7);g.fill();
+  {g.fillStyle='rgba(50,25,10,.3)';g.beginPath();g.ellipse(BIMG.ox+105,BIMG.oy+118,108,9,0,0,7);g.fill();
   spr('burner',BIMG.ox,BIMG.oy,844*SB);}
   const fl=S.lit?1:S.flame;
   /* blue flames around the bottom of the pot; the back half of the ring is masked by the pot's body */
@@ -765,10 +778,10 @@ function drawBrick(R,inPot){if(!ok(SPR.brick)||!ok(SPR.nest))return drawBrickOld
 function drawNest(){if(!ok(SPR.nest))return;const b=surfBox();g.save();g.translate(b.x,b.cy);g.scale(1,.8);sprC('nest',b.rx*1.75);g.restore();}
 function drawPot(){const im=SPR.pot;if(!ok(im))return drawPotOld();
   const pot=S.pot,x=POT.x,rim=potRim();
-  if(S.hero<.85&&!usePlate()){g.fillStyle='rgba(50,25,10,.25)';g.beginPath();g.ellipse(x,POT.base-2,58,8,0,0,7);g.fill();}
+  if(S.hero<.85){g.fillStyle='rgba(50,25,10,.25)';g.beginPath();g.ellipse(x,POT.base-2,58,8,0,0,7);g.fill();}
   /* in the hero shot the photographed pot takes over, so the cut-out fades away as it lands */
   const pa=ok(ART.hero)?1-clamp((heroE()-.85)/.15,0,1):1;
-  if(pa>0&&!usePlate()){g.globalAlpha=pa;spr('pot',x-460*PS,rim-188*PS,932*PS);g.globalAlpha=1;}
+  if(pa>0){g.globalAlpha=pa;spr('pot',x-460*PS,rim-188*PS,932*PS);g.globalAlpha=1;}
   g.save();g.beginPath();g.ellipse(x,rim+PIN.dy,PIN.rx,PIN.ry,0,0,7);g.clip();
   /* once the finished bowl photo is showing, the drawn broth and noodles fade with the cut-out pot */
   const ca=finished()?pa:1;
