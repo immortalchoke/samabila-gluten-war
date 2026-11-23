@@ -359,7 +359,8 @@ function step(){
     S.pot.V=lerp(S.pot.V,.86,.04);for(let i=0;i<N;i++){S.pot.h[i]*=.9;S.pot.v[i]*=.9;}
     if(S.hero>=1){setStep(11);S.jars=TOPS.map((t,i)=>({t,x:40+i*64,y:96,pop:0,delay:i*6,wig:0,count:0}));}}
   if(S.jars)for(const j of S.jars){if(S.step>11||S.stepT>j.delay)j.pop=Math.min(1,j.pop+.08);j.wig=Math.max(0,j.wig-.05);}
-  if(S.step===11&&S.topHits>=3&&!S.pad)S.pad={x:418,y:668,t:0};
+  /* the landing pad is there from the start of toppings: a plain bowl is a fine finish */
+  if(S.step===11&&!S.pad)S.pad={x:418,y:668,t:0};
   for(const q of S.drop){q.t++;if(q.t>=22){q.done=true;S.added.push({k:q.k,i:q.i});}}S.drop=S.drop.filter(q=>!q.done);
   for(const f of S.flying){f.t++;if(f.t>=f.dur){f.done=true;S.tops.push({k:f.k,u:f.u,v:f.v,r:f.r,s:f.s});}}S.flying=S.flying.filter(f=>!f.done);
   if(S.step===12){S.flash=Math.max(0,S.flash-.035);if(S.stepT>40){setStep(13);document.getElementById('polrow').hidden=false;document.getElementById('hint').hidden=true;}}
@@ -678,6 +679,8 @@ function draw(){
     g.save();g.translate(0,off);for(const p of S.puddles){g.fillStyle='rgba(150,200,230,.55)';g.beginPath();g.ellipse(p.x,p.y,p.w*.5,3+p.w*.04,0,0,7);g.fill();}
     drawBurner();g.restore();}
   g.save();g.translate(hx,hy);g.scale(sc,sc);g.translate(-POT.x,-POT.base);drawPot();
+  /* the noodles in the pot are the target while they cook */
+  if(S.step===5&&S.brick)glow(POT.x,surfY(),Math.max(40,POT.rx*.72));
   for(const s of S.steam){const a=Math.sin(s.life/110*Math.PI)*(S.step>=10?.13:.22);g.fillStyle=`rgba(255,250,240,${a})`;g.beginPath();g.arc(s.x,s.y,s.r,0,7);g.fill();}
   g.restore();
   drawPitcher();
