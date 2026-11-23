@@ -1268,14 +1268,11 @@ function buildSet(){
   /* backdrop flats */
   add({k:'flat',half:0,x:0,y:0,exit:'left',delay:14});add({k:'flat',half:1,x:W/2,y:0,exit:'right',delay:14});
   /* the felt wordmark, hung on two wires, arching over the dragon */
-  add({k:'logo',x:W/2,y:70,exit:'fly',delay:0,wires:true,draw:()=>{const im=loaded(TITLE_IM.logo)?TITLE_IM.logo:TITLE_IM.logoFlat;if(!loaded(im))return;const w=310,h=im.naturalHeight/im.naturalWidth*w;g.drawImage(im,-w/2,-h/2,w,h);}});
-  /* the noodle-slurping dragon, a big prop that gets carried off */
-  add({k:'dragon',x:W/2,y:205,exit:'right',delay:8,draw:()=>{const im=TITLE_IM.dragon;if(!loaded(im))return;const h=262,w=im.naturalWidth/im.naturalHeight*h;
-    g.drawImage(im,-w/2,-h/2+(SET.striking?0:Math.sin(performance.now()/700)*2),w,h);}});
+  add({k:'logo',x:W/2,y:46,exit:'fly',delay:0,wires:true,draw:()=>{const im=loaded(TITLE_IM.logo)?TITLE_IM.logo:TITLE_IM.logoFlat;if(!loaded(im))return;const w=180,h=im.naturalHeight/im.naturalWidth*w;g.drawImage(im,-w/2,-h/2,w,h);}});
   /* title letters, each its own piece */
   g.save();
   /* every title letter is its own piece from the felt Gooper alphabet (art/font/A..Z); a missing letter draws in Gooper */
-  for(const [word,y,size] of [['THE',338,28],['GLUTEN',378,52],['CONFLICT',430,48]]){
+  for(const [word,y,size] of [['THE',452,22],['GLUTEN',487,44],['CONFLICT',531,42]]){
     g.font=`900 ${size}px Gooper,Georgia,serif`;const gap=size*.05,ws=[...word].map(c=>g.measureText(c).width),tw=ws.reduce((a,b)=>a+b,0)+gap*(word.length-1);let x=W/2-tw/2;
     [...word].forEach((c,i)=>{const cx=x+ws[i]/2;add({k:'letter',x:cx,y,exit:'fall',delay:4+P.filter(q=>q.k==='letter').length*3,dir:cx<W/2?-1:1,
       draw:()=>{const fim=TITLE_IM.font[c];if(loaded(fim)){const h=size*1.02,w=fim.naturalWidth/fim.naturalHeight*h;g.drawImage(fim,-w/2,-h/2,w,h);return;}
@@ -1298,7 +1295,7 @@ function buildSet(){
     L(88,550,caption('BOMB CLEARS THE SCREEN',15),'right');
   }
   /* the start prompt */
-  add({k:'prompt',x:W/2,y:516,exit:'fall',delay:0,dir:1,draw:()=>{if(!SET.striking&&Math.floor(performance.now()/450)%2)return;feltText(TOUCH?'TAP TO START':'PRESS ENTER TO START',0,0,19,'k');}});
+  add({k:'prompt',x:W/2,y:570,exit:'fall',delay:0,dir:1,draw:()=>{if(!SET.striking&&Math.floor(performance.now()/450)%2)return;feltText(TOUCH?'TAP TO START':'PRESS ENTER TO START',0,0,17,'k');}});
   return{P,t:0,striking:false};
 }
 /* Where a piece is at time t into the strike: a small lift first (like a stagehand getting a grip), then it moves off */
@@ -1311,12 +1308,39 @@ function piecePose(q,t){
     default:{const d=q.dir;return{x:q.x+d*go*1.4,y:q.y-lift*8+go*go*.42,r:d*go*go*.0022};}
   }
 }
+/* ---------- title diorama ----------
+   The felt ramen jet mid-dogfight over San Ramyeon: a felt sky and desert, wisps drifting across, the jet and the wheat
+   sheaves chasing it bobbing on their wires, and two banks of felt clouds rolling past at different speeds. It's painted
+   to its own canvas each frame so the two title flats can split it down the middle when the game starts. */
+const DIO={sky:img('title2/sky'),jet:img('title2/jet'),en:img('title2/enemies'),cl:img('title2/clouds'),w:[0,1,2,3,4,5].map(i=>img('title2/wisp'+i)),
+  wisps:[[120,.55,9,0],[205,.42,6,180],[300,.5,12,330],[90,.36,5,420],[255,.6,8,90],[355,.4,7,260]]};
+let DIOC=null;
+function dioBand(c,im,y,h,off){if(!loaded(im))return;const w=im.naturalWidth/im.naturalHeight*h,P=2*w;let x0=-(((off%P)+P)%P);
+  for(let x=x0,k=0;x<W;x+=w,k++){if(k%2){c.save();c.translate(x+w,y);c.scale(-1,1);c.drawImage(im,0,0,w,h);c.restore();}else c.drawImage(im,x,y,w,h);}}
+function dioFrame(){if(!DIOC){DIOC=document.createElement('canvas');DIOC.width=W*2;DIOC.height=H*2;}
+  const c=DIOC.getContext('2d'),t=performance.now()/1000,sc=H/1264,iw=848*sc,ox=(W-iw)/2;c.setTransform(2,0,0,2,0,0);
+  c.fillStyle='#5f7fb0';c.fillRect(0,0,W,H);
+  if(loaded(DIO.sky))c.drawImage(DIO.sky,ox-6+Math.sin(t*.07)*5,-6,iw+12,H+12);
+  /* wisps drift left to right across the sky and wrap */
+  DIO.wisps.forEach(([y,s0,v,ph],i)=>{const im=DIO.w[i];if(!loaded(im))return;const w=150*s0,h=im.naturalHeight/im.naturalWidth*w,x=((t*v+ph)%(W+w+60))-w-30;
+    c.globalAlpha=.85;c.drawImage(im,x,y+Math.sin(t*.4+i)*3,w,h);c.globalAlpha=1;});
+  /* the wheat sheaves give chase, swaying on their own rhythm */
+  if(loaded(DIO.en)){/* each piece cut from the enemy layer (its box in the photo's pixels) and placed clear of the title */
+    for(const [sx,sy,sw,sh,dx,dy,ph] of [[657,661,126,187,392,240,0],[353,728,148,194,382,382,2],[514,820,88,79,330,372,4]]){
+      const w=sw*sc,h=sh*sc;c.drawImage(DIO.en,sx,sy,sw,sh,dx+Math.sin(t*1.6+ph)*6,dy+Math.cos(t*1.2+ph)*5,w,h);}}
+  /* the jet bobs and rocks a little, its exhaust flickering */
+  if(loaded(DIO.jet)){const jx=Math.sin(t*1.1)*4,jy=Math.sin(t*.9)*6,jr=Math.sin(t*.8)*.025;c.save();c.translate(235+jx,320+jy);c.rotate(jr);c.translate(-235,-320);
+    c.drawImage(DIO.jet,ox,0,iw,H);c.globalCompositeOperation='lighter';
+    for(const [nx,ny] of [[286,222],[312,240]]){const a=.22+Math.random()*.14,gr=c.createRadialGradient(nx,ny,2,nx,ny,26);gr.addColorStop(0,`rgba(255,170,60,${a})`);gr.addColorStop(1,'rgba(255,120,30,0)');c.fillStyle=gr;c.fillRect(nx-26,ny-26,52,52);}
+    c.restore();}
+  /* two banks of felt clouds roll past along the bottom, the near one faster */
+  dioBand(c,DIO.cl,H-214,150,t*9);dioBand(c,DIO.cl,H-160,210,t*20+170);}
 function drawSet(){
   if(!SET)return;const T=SET.striking?SET.t:0;let alive=0;
   for(const q of SET.P){const p=piecePose(q,T);
     if(p.y>H+140||p.y<-200||p.x<-W||p.x>W*2)continue;alive++;
-    if(q.k==='flat'){const sb=loaded(TITLE_IM.bg)?TITLE_IM.bg:sunburst(),iw=sb.naturalWidth||sb.width,ih=sb.naturalHeight||sb.height;
-      g.save();g.translate(p.x-q.x,p.y-q.y);g.drawImage(sb,q.half*iw/2,0,iw/2,ih,q.half*W/2,0,W/2,H);
+    if(q.k==='flat'){if(!q.half)dioFrame();
+      g.save();g.translate(p.x-q.x,p.y-q.y);g.drawImage(DIOC,q.half*W,0,W,H*2,q.half*W/2,0,W/2,H);
       /* the cut edge between the two flats shows as a dark seam once they part */
       if(T>q.delay){g.fillStyle='#231f20';g.fillRect(q.half?W/2:W/2-3,0,3,H);}g.restore();continue;}
     if(q.wires){g.strokeStyle='rgba(35,31,32,.6)';g.lineWidth=1.2;g.beginPath();g.moveTo(p.x-120,p.y+20);g.lineTo(p.x-120,-10);g.moveTo(p.x+120,p.y+20);g.lineTo(p.x+120,-10);g.stroke();}
