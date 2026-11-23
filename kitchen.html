@@ -22,10 +22,27 @@ button,.btn{font:inherit;font-weight:700;font-size:15px;background:var(--chip);c
 .btn.shop{background:#e23200;border-color:#e23200;color:#fff}
 button:focus-visible,.btn:focus-visible{outline:2px solid #e69000;outline-offset:2px}
 [hidden]{display:none!important}
+.haspad .cab{width:min(100%,calc((100dvh - 110px - 160px)*.6667),480px)}
+.haspad #hint{display:none}
+/* On-screen controller under the screen on touch devices (or with ?pad=1), so fingers never cover the play area */
+.pad{display:none}
+.haspad .pad{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;height:150px;padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(#2a231e,#211b17);border:2px solid var(--line);border-radius:14px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.joy{position:relative;width:116px;height:116px;border-radius:50%;background:radial-gradient(circle at 50% 45%,#3a312a,#241d18 70%);border:2px solid #4c4038;box-shadow:inset 0 3px 10px rgba(0,0,0,.5);touch-action:none;flex:none}
+.joy .knob{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#f6ecd9,#d9c7a6);border:2px solid #231f20;box-shadow:0 4px 0 #8f7c60,0 6px 10px rgba(0,0,0,.4);pointer-events:none}
+.pbtns{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;gap:8px 12px;align-items:center;justify-items:center}
+.pbtn{border-radius:50%;border:2px solid #231f20;font:900 14px var(--display,Georgia),Georgia,serif;letter-spacing:.03em;color:#fff;touch-action:none;-webkit-tap-highlight-color:transparent;box-shadow:0 5px 0 rgba(0,0,0,.45);padding:0;cursor:pointer}
+.pbtn:active,.pbtn.on{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.45)}
+.pbtn.fire{grid-row:1/3;grid-column:2;width:84px;height:84px;background:radial-gradient(circle at 40% 35%,#ff6a3d,#e23200);font-size:16px}
+.pbtn.bomb{width:58px;height:58px;background:radial-gradient(circle at 40% 35%,#f4b13a,#e69000);color:#231f20}
+.pbtn.small{width:40px;height:40px;background:#3a312a;color:var(--ink,#f3e9dc);font-size:12px}
+
 p{margin:0;color:var(--muted);font-size:13px;max-width:480px;text-align:center}
 </style>
 <div class="wrap">
+<style>.haspad .wrap .pad{width:min(100%,calc((100dvh - 110px - 160px)*.6667),480px)}</style>
   <div class="cab"><canvas id="c" width="960" height="1440" tabindex="0" aria-label="Ramen cooking ending: shoot the kettle, burner, noodle box and seasoning to cook ramen"></canvas></div>
+  <div class="pad" id="pad" aria-label="Controller"><div class="joy" id="joy"><div class="knob"></div></div><div class="pbtns"><button class="pbtn fire" id="pfire">FIRE</button></div></div>
   <div class="row" id="polrow" hidden><button id="save">Save photo</button><button id="share">Share</button><a class="btn shop" id="shop" href="https://www.samabila.com/" target="_blank" rel="noopener">Shop Samabila</a><a class="btn" href="./">Play again</a></div>
   <p id="hint">Arrows or WASD to fly, hold Z to fire. On a phone, drag to fly. Steady fire is neat, mashing is messy.</p>
 </div>
@@ -98,7 +115,36 @@ addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;if(isFire(e.key))fi
 function pt(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};}
 cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);const p=pt(e);touch={px:p.x,py:p.y,sx:S.ship.x,sy:S.ship.y};pressQueued=true;fireDown=true;});
 cv.addEventListener('pointermove',e=>{if(!touch)return;const p=pt(e);S.ship.x=touch.sx+(p.x-touch.px)*1.2/viewK();S.ship.y=touch.sy+(p.y-touch.py)*1.2/viewK();});
-const up=()=>{touch=null;fireDown=false;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+const up=()=>{touch=null;fireDown=PAD.fire;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+
+/* ---------- on-screen controller ----------
+   A thumb stick on the left, FIRE and BOMB on the right. PAD.x/PAD.y is the stick (-1..1), PAD.fire is FIRE held.
+   Each page wires PAD.onFire / onBomb / onPause to its own actions. Dragging on the screen still works too. */
+const PAD={x:0,y:0,fire:false,onFire:null,onFireUp:null,onBomb:null,onPause:null};window.PAD=PAD;
+(function(){const on=matchMedia('(pointer:coarse)').matches||/[?&]pad=1/.test(location.search);if(!on)return;
+  document.documentElement.classList.add('haspad');
+  const joy=document.getElementById('joy');if(!joy)return;const knob=joy.querySelector('.knob');let jp=null;
+  const setJ=e=>{const r=joy.getBoundingClientRect(),R=r.width*.42;let dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);const d=Math.hypot(dx,dy);
+    if(d>R){dx*=R/d;dy*=R/d;}knob.style.transform=`translate(${dx}px,${dy}px)`;let x=dx/R,y=dy/R;const m=Math.hypot(x,y);
+    if(m<.15){x=y=0;}else{const k=(m-.15)/.85/m;x*=k;y*=k;}PAD.x=x;PAD.y=y;};
+  joy.addEventListener('pointerdown',e=>{e.preventDefault();jp=e.pointerId;joy.setPointerCapture(jp);setJ(e);});
+  joy.addEventListener('pointermove',e=>{if(e.pointerId===jp)setJ(e);});
+  const jEnd=e=>{if(e.pointerId!==jp)return;jp=null;PAD.x=PAD.y=0;knob.style.transform='';};
+  joy.addEventListener('pointerup',jEnd);joy.addEventListener('pointercancel',jEnd);
+  const btn=(id,down,up)=>{const b=document.getElementById(id);if(!b)return;
+    b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);b.classList.add('on');down&&down();});
+    const u=()=>{b.classList.remove('on');up&&up();};b.addEventListener('pointerup',u);b.addEventListener('pointercancel',u);
+    b.addEventListener('contextmenu',e=>e.preventDefault());};
+  btn('pfire',()=>{PAD.fire=true;PAD.onFire&&PAD.onFire();},()=>{PAD.fire=false;PAD.onFireUp&&PAD.onFireUp();});
+  btn('pbomb',()=>PAD.onBomb&&PAD.onBomb());
+  btn('ppause',()=>PAD.onPause&&PAD.onPause());
+})();
+PAD.onFire=()=>{pressQueued=true;fireDown=true;};PAD.onFireUp=()=>{fireDown=!!touch;};
+/* Phones only allow sound after a real tap, and on iPhone only on the finger lifting off, so the audio is (re)started on
+   every kind of tap. A one-sample silent buffer wakes the output; audioSession 'playback' lets sound play even with the
+   ringer switch on silent (iOS 17+). */
+(function(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
+  const u=()=>{try{SFX.unlock();}catch(e){}};for(const ev of ['touchend','pointerup','click','keydown'])addEventListener(ev,u,{capture:true,passive:true});})();
 
 /* ---------- helpers ---------- */
 function puff(x,y,c='#fff6d8'){for(let k=0;k<6;k++)S.puffs.push({x,y,vx:rnd(-2,2),vy:rnd(-2.5,.5),life:0,c});}
@@ -226,8 +272,10 @@ const SFX=(()=>{
   function music(on,fade=2.5){musWant=on;if(!ac)return;loadMusic();if(on){startMusic();return;}
     if(musSrc){const s=musSrc,gn=musGn,t=ac.currentTime;gn.gain.setValueAtTime(gn.gain.value,t);gn.gain.linearRampToValueAtTime(0,t+fade);s.stop(t+fade+.05);musSrc=null;musGn=null;}}
   function suspend(p){if(!ac)return;if(p&&ac.state==='running')ac.suspend();else if(!p&&ac.state==='suspended')ac.resume();}
+function unlock(){init();if(!ac)return;if(ac.state!=='running')ac.resume();if(!unlocked){unlocked=true;const b=ac.createBuffer(1,1,22050),s=ac.createBufferSource();s.buffer=b;s.connect(ac.destination);s.start(0);}}
+  let unlocked=false;
   function setMuted(m){muted=m;if(out)out.gain.setTargetAtTime(m?0:vol,ac.currentTime,.02);}
-  return{init,play,frame,setMuted,music,suspend,loadMusic,loadSamples,get musicOn(){return !!musSrc},get muted(){return muted},names:Object.keys(LIB)};
+  return{init,unlock,play,frame,setMuted,music,suspend,loadMusic,loadSamples,get musicOn(){return !!musSrc},get muted(){return muted},names:Object.keys(LIB)};
 })();
 window.SFX=SFX;
 /* Ending song: starts the moment the dragon falls and keeps playing through the ending shots and the kitchen until the
@@ -237,7 +285,7 @@ const ENDSONG=(()=>{const KEY='gw-end-t',VOL=.5;let el=null,on=false,pend=false;
   const save=()=>{if(el&&on)try{sessionStorage.setItem(KEY,el.currentTime.toFixed(2));}catch(e){}};
   function tryPlay(){if(!el||!on)return;el.muted=!!(window.SFX&&SFX.muted);const p=el.play();if(p&&p.catch)p.catch(()=>{pend=true;});}
   /* if the browser blocks playback until the player touches something, start on the first key or tap */
-  const kick=()=>{if(pend){pend=false;tryPlay();}};addEventListener('pointerdown',kick,true);addEventListener('keydown',kick,true);
+  const kick=()=>{if(pend){pend=false;tryPlay();}};for(const ev of ['pointerdown','touchend','click','keydown'])addEventListener(ev,kick,true);
   setInterval(()=>{if(el&&on){el.muted=!!(window.SFX&&SFX.muted);save();}},500);addEventListener('pagehide',save);
   function start(resume){if(on)return;on=true;if(!el){el=new Audio('music/ending.mp3');el.loop=true;el.volume=VOL;el.preload='auto';}
     let t=0;if(resume)try{t=parseFloat(sessionStorage.getItem(KEY))||0;}catch(e){}
@@ -383,6 +431,7 @@ function step(){
   S.t++;S.stepT++;const P=S.pit,pot=S.pot,sh=S.ship;
   /* ship */
   const sp=4;if(keys.arrowleft||keys.a)sh.x-=sp;if(keys.arrowright||keys.d)sh.x+=sp;if(keys.arrowup||keys.w)sh.y-=sp;if(keys.arrowdown||keys.s)sh.y+=sp;
+  sh.x+=PAD.x*sp*1.3/viewK();sh.y+=PAD.y*sp*1.3/viewK();
   sh.x=clamp(sh.x,viewL()+20,viewR()-20);sh.y=clamp(sh.y,viewTop()+30,viewBot());
   /* the landing pad: fly onto it and the rocket settles down and parks */
   /* when you're done with toppings, park on the pad to take the photo */

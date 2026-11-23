@@ -1,5 +1,6 @@
 <meta charset="utf-8">
 <title>The Gluten Conflict</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;600&family=Special+Elite&display=swap">
@@ -33,6 +34,24 @@ canvas{display:block;width:100%;height:100%;touch-action:none;user-select:none;-
 .over .keys{color:var(--muted);font-size:13px}
 .bombbtn{position:absolute;right:calc(10px + env(safe-area-inset-right,0px));bottom:10px;width:64px;height:64px;border-radius:50%;background:rgba(229,64,28,.75);color:var(--ink);border:2px solid var(--ink);font:900 12px var(--display);display:none}
 @media (pointer:coarse){.bombbtn{display:block}}
+.haspad .bombbtn{display:none!important}
+.stack{display:flex;flex-direction:column;gap:10px;flex:0 1 auto;min-width:0;width:min(100%,calc((100dvh - 32px)*.6667),480px)}
+.stack .cab{width:100%}
+.haspad .wrap{flex-direction:column;align-items:center}
+.haspad .stack{width:min(100%,calc((100dvh - 32px - 160px)*.6667),480px)}
+/* On-screen controller under the screen on touch devices (or with ?pad=1), so fingers never cover the play area */
+.pad{display:none}
+.haspad .pad{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;height:150px;padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(#2a231e,#211b17);border:2px solid var(--line);border-radius:14px;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.joy{position:relative;width:116px;height:116px;border-radius:50%;background:radial-gradient(circle at 50% 45%,#3a312a,#241d18 70%);border:2px solid #4c4038;box-shadow:inset 0 3px 10px rgba(0,0,0,.5);touch-action:none;flex:none}
+.joy .knob{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#f6ecd9,#d9c7a6);border:2px solid #231f20;box-shadow:0 4px 0 #8f7c60,0 6px 10px rgba(0,0,0,.4);pointer-events:none}
+.pbtns{display:grid;grid-template-columns:auto auto;grid-template-rows:auto auto;gap:8px 12px;align-items:center;justify-items:center}
+.pbtn{border-radius:50%;border:2px solid #231f20;font:900 14px var(--display,Georgia),Georgia,serif;letter-spacing:.03em;color:#fff;touch-action:none;-webkit-tap-highlight-color:transparent;box-shadow:0 5px 0 rgba(0,0,0,.45);padding:0;cursor:pointer}
+.pbtn:active,.pbtn.on{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.45)}
+.pbtn.fire{grid-row:1/3;grid-column:2;width:84px;height:84px;background:radial-gradient(circle at 40% 35%,#ff6a3d,#e23200);font-size:16px}
+.pbtn.bomb{width:58px;height:58px;background:radial-gradient(circle at 40% 35%,#f4b13a,#e69000);color:#231f20}
+.pbtn.small{width:40px;height:40px;background:#3a312a;color:var(--ink,#f3e9dc);font-size:12px}
+
 .bench{flex:1 1 300px;min-width:0;max-width:480px;background:var(--bench);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:16px}
 .bench h2{font:900 24px/1.2 var(--display);margin:0;color:var(--sam-white);-webkit-text-stroke:.22em var(--sam-yellow);paint-order:stroke fill;letter-spacing:.02em}
 .bench h3{font:600 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px;color:var(--muted)}
@@ -51,6 +70,7 @@ label input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--broth)}
 </style>
 
 <div class="wrap">
+  <div class="stack">
   <div class="cab">
     <canvas id="c" width="960" height="1440" aria-label="Vertical shooter game screen"></canvas>
     <div class="over" id="over">
@@ -60,6 +80,8 @@ label input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--broth)}
       <button class="go" id="go">Start</button>
     </div>
     <button class="bombbtn" id="bombbtn" aria-label="Drop bomb">BOMB</button>
+  </div>
+  <div class="pad" id="pad" aria-label="Controller"><div class="joy" id="joy"><div class="knob"></div></div><div class="pbtns"><button class="pbtn small" id="ppause" aria-label="Pause">II</button><button class="pbtn fire" id="pfire">FIRE</button><button class="pbtn bomb" id="pbomb">BOMB</button></div></div>
   </div>
 
   <aside class="bench" aria-label="Tuning controls">
@@ -374,7 +396,7 @@ function fireWeapon(){
   const p=S.p,fl=FLAVORS[p.wi].id,L=p.lvl;
   S.beam=false;
   /* Manual fire: every press fires right away, so tap speed sets the fire rate. Holding streams slower. */
-  const auto=T.autoFire,held=keys.KeyZ||keys.KeyJ||drag;
+  const auto=T.autoFire,held=keys.KeyZ||keys.KeyJ||drag||PAD.fire;
   if(S.cool>0)S.cool--;if(S.hold>0)S.hold--;
   if(S.rhythm>0)S.rhythm=Math.max(0,S.rhythm-.012);
   const volley=(cad,gap,holdGap)=>{
@@ -740,6 +762,8 @@ const SFX=(()=>{
     musSrc=ac.createBufferSource();musSrc.buffer=musBuf;musSrc.loop=true;musSrc.loopStart=MUS.loopStart;musSrc.loopEnd=MUS.loopEnd;musSrc.connect(musGn);musSrc.start();}
   function music(on,fade=2.5){musWant=on;if(!ac)return;loadMusic();if(on){startMusic();return;}
     if(musSrc){const s=musSrc,gn=musGn,t=ac.currentTime;gn.gain.setValueAtTime(gn.gain.value,t);gn.gain.linearRampToValueAtTime(0,t+fade);s.stop(t+fade+.05);musSrc=null;musGn=null;}}
+function unlock(){init();if(!ac)return;if(ac.state!=='running')ac.resume();if(!unlocked){unlocked=true;const b=ac.createBuffer(1,1,22050),s=ac.createBufferSource();s.buffer=b;s.connect(ac.destination);s.start(0);}}
+  let unlocked=false;
   function suspend(p){if(!ac)return;if(p&&ac.state==='running')ac.suspend();else if(!p&&ac.state==='suspended')ac.resume();}
   function setMuted(m){muted=m;if(out)out.gain.setTargetAtTime(m?0:vol,ac.currentTime,.02);}
   /* Stage theme: starts on the title's Enter, carries through the cutscene into the stage and loops the whole song.
@@ -752,7 +776,7 @@ const SFX=(()=>{
   /* typewriter key click for the cutscene text */
   function click(){if(!ac||muted)return;const n=ac.sampleRate*.02|0,b=ac.createBuffer(1,n,ac.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,6);
     const o=ac.createBufferSource();o.buffer=b;const f=ac.createBiquadFilter();f.type='bandpass';f.frequency.value=2600+Math.random()*900;const gn=ac.createGain();gn.gain.value=.5;o.connect(f).connect(gn).connect(out);o.start();}
-  return{init,play,frame,setMuted,music,stage,click,suspend,loadMusic,loadSamples,get musicOn(){return !!musSrc},get muted(){return muted},names:Object.keys(LIB)};
+  return{init,unlock,play,frame,setMuted,music,stage,click,suspend,loadMusic,loadSamples,get musicOn(){return !!musSrc},get muted(){return muted},names:Object.keys(LIB)};
 })();
 window.__sfx=SFX;window.SFX=SFX;
 /* Ending song: starts the moment the dragon falls and keeps playing through the ending shots and the kitchen until the
@@ -762,7 +786,7 @@ const ENDSONG=(()=>{const KEY='gw-end-t',VOL=.5;let el=null,on=false,pend=false;
   const save=()=>{if(el&&on)try{sessionStorage.setItem(KEY,el.currentTime.toFixed(2));}catch(e){}};
   function tryPlay(){if(!el||!on)return;el.muted=!!(window.SFX&&SFX.muted);const p=el.play();if(p&&p.catch)p.catch(()=>{pend=true;});}
   /* if the browser blocks playback until the player touches something, start on the first key or tap */
-  const kick=()=>{if(pend){pend=false;tryPlay();}};addEventListener('pointerdown',kick,true);addEventListener('keydown',kick,true);
+  const kick=()=>{if(pend){pend=false;tryPlay();}};for(const ev of ['pointerdown','touchend','click','keydown'])addEventListener(ev,kick,true);
   setInterval(()=>{if(el&&on){el.muted=!!(window.SFX&&SFX.muted);save();}},500);addEventListener('pagehide',save);
   function start(resume){if(on)return;on=true;if(!el){el=new Audio('music/ending.mp3');el.loop=true;el.volume=VOL;el.preload='auto';}
     let t=0;if(resume)try{t=parseFloat(sessionStorage.getItem(KEY))||0;}catch(e){}
@@ -806,6 +830,8 @@ function step(){
   if(S.warn>0)S.warn--;
   let dx=(keys.ArrowRight||keys.KeyD?1:0)-(keys.ArrowLeft||keys.KeyA?1:0),dy=(keys.ArrowDown||keys.KeyS?1:0)-(keys.ArrowUp||keys.KeyW?1:0);
   if(dx&&dy){dx*=.7071;dy*=.7071;}
+  /* the on-screen stick adds an analog push */
+  if(PAD.x||PAD.y){dx+=PAD.x;dy+=PAD.y;const m=Math.hypot(dx,dy);if(m>1){dx/=m;dy/=m;}}
   p.x+=dx*T.shipSpeed;p.y+=dy*T.shipSpeed;clampP();
   if(p.dragT>0)p.dragT--;
   p.vx=dx||(p.dragT>0?p.dragV:0);
@@ -1267,9 +1293,9 @@ function buildSet(){
     L(282,548,keycap(K,30,'P'),'right');L(306,548,caption('PAUSE',17),'right');
   }else{
     L(64,486,()=>{const im=TITLE_IM.finger;if(loaded(im)){const h=46,w=im.naturalWidth/im.naturalHeight*h;g.drawImage(im,-w/2,-h/2,w,h);}else{g.fillStyle='#f1e8d2';g.strokeStyle='#231f20';g.lineWidth=4;g.beginPath();g.arc(0,0,13,0,7);g.fill();g.stroke();}},'left');
-    L(88,486,caption('DRAG TO MOVE',17),'left');r++;
-    L(88,518,caption('AUTO-FIRE IS ON',17),'right');r++;
-    L(88,550,caption('TAP BOMB TO CLEAR THE SCREEN',14),'right');
+    L(88,486,caption('STICK OR DRAG TO MOVE',17),'left');r++;
+    L(88,518,caption('HOLD FIRE TO SHOOT',17),'right');r++;
+    L(88,550,caption('BOMB CLEARS THE SCREEN',15),'right');
   }
   /* the start prompt */
   add({k:'prompt',x:W/2,y:516,exit:'fall',delay:0,dir:1,draw:()=>{if(!SET.striking&&Math.floor(performance.now()/450)%2)return;feltText(TOUCH?'TAP TO START':'PRESS ENTER TO START',0,0,19,'k');}});
@@ -1794,6 +1820,37 @@ cv.addEventListener('pointermove',e=>{
 const stop=()=>{drag=null;if(S)S.p.vx=0;};
 cv.addEventListener('pointerup',stop);cv.addEventListener('pointercancel',stop);
 document.getElementById('bombbtn').addEventListener('pointerdown',e=>{e.preventDefault();dropBomb();});
+/* ---------- on-screen controller ----------
+   A thumb stick on the left, FIRE and BOMB on the right. PAD.x/PAD.y is the stick (-1..1), PAD.fire is FIRE held.
+   Each page wires PAD.onFire / onBomb / onPause to its own actions. Dragging on the screen still works too. */
+const PAD={x:0,y:0,fire:false,onFire:null,onFireUp:null,onBomb:null,onPause:null};window.PAD=PAD;
+(function(){const on=matchMedia('(pointer:coarse)').matches||/[?&]pad=1/.test(location.search);if(!on)return;
+  document.documentElement.classList.add('haspad');
+  const joy=document.getElementById('joy');if(!joy)return;const knob=joy.querySelector('.knob');let jp=null;
+  const setJ=e=>{const r=joy.getBoundingClientRect(),R=r.width*.42;let dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);const d=Math.hypot(dx,dy);
+    if(d>R){dx*=R/d;dy*=R/d;}knob.style.transform=`translate(${dx}px,${dy}px)`;let x=dx/R,y=dy/R;const m=Math.hypot(x,y);
+    if(m<.15){x=y=0;}else{const k=(m-.15)/.85/m;x*=k;y*=k;}PAD.x=x;PAD.y=y;};
+  joy.addEventListener('pointerdown',e=>{e.preventDefault();jp=e.pointerId;joy.setPointerCapture(jp);setJ(e);});
+  joy.addEventListener('pointermove',e=>{if(e.pointerId===jp)setJ(e);});
+  const jEnd=e=>{if(e.pointerId!==jp)return;jp=null;PAD.x=PAD.y=0;knob.style.transform='';};
+  joy.addEventListener('pointerup',jEnd);joy.addEventListener('pointercancel',jEnd);
+  const btn=(id,down,up)=>{const b=document.getElementById(id);if(!b)return;
+    b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);b.classList.add('on');down&&down();});
+    const u=()=>{b.classList.remove('on');up&&up();};b.addEventListener('pointerup',u);b.addEventListener('pointercancel',u);
+    b.addEventListener('contextmenu',e=>e.preventDefault());};
+  btn('pfire',()=>{PAD.fire=true;PAD.onFire&&PAD.onFire();},()=>{PAD.fire=false;PAD.onFireUp&&PAD.onFireUp();});
+  btn('pbomb',()=>PAD.onBomb&&PAD.onBomb());
+  btn('ppause',()=>PAD.onPause&&PAD.onPause());
+})();
+PAD.onFire=()=>{SFX.init();if(mode==='title'){introBegin();return;}if(mode==='intro'){introPress();return;}if(mode==='feast'){feastPress();return;}firePress();};
+PAD.onBomb=()=>{if(mode==='play')dropBomb();};
+PAD.onPause=()=>{if(mode==='play')paused=!paused;};
+/* Phones only allow sound after a real tap, and on iPhone only on the finger lifting off, so the audio is (re)started on
+   every kind of tap. A one-sample silent buffer wakes the output; audioSession 'playback' lets sound play even with the
+   ringer switch on silent (iOS 17+). */
+(function(){try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
+  const u=()=>{try{SFX.unlock();}catch(e){}};for(const ev of ['touchend','pointerup','click','keydown'])addEventListener(ev,u,{capture:true,passive:true});})();
+
 
 /* ---------- Tuning bench ---------- */
 const wb=document.getElementById('wbtns'),lb=document.getElementById('lbtns');
