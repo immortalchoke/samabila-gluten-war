@@ -703,7 +703,8 @@ const SFX=(()=>{
   function loadSamples(){if(sampLoading||!ac)return;sampLoading=true;
     const get=(u,cb)=>fetch(u).then(r=>r.arrayBuffer()).then(b=>new Promise((res,rej)=>ac.decodeAudioData(b,res,rej))).then(cb).catch(()=>{});
     SAMP.notes.forEach(o=>{get(`sfx/${o.n}-muted.wav`,b=>o.muted=b);get(`sfx/${o.n}-open.wav`,b=>o.open=b);});
-    get('sfx/8-block.wav',b=>SAMP.shot=b);FX_NAMES.forEach(n=>get(`sfx/${n}.wav`,b=>FX[n]=b));get('sfx/6-block.wav',b=>SAMP.block[0]=b);get('sfx/7-block.wav',b=>SAMP.block[1]=b);}
+    get('sfx/8-block.wav',b=>SAMP.shot=b);FX_NAMES.forEach(n=>get(`sfx/${n}.wav`,b=>FX[n]=b));get('sfx/6-block.wav',b=>SAMP.block[0]=b);get('sfx/7-block.wav',b=>SAMP.block[1]=b);
+    for(const [n,files] of Object.entries(REC_FILES))files.forEach((f,i)=>get(`sfx/${f}.wav`,b=>{(REC[n]=REC[n]||[])[i]=b;}));}
   const FX={},FX_NAMES=['bomb','boss_damage_1','boss_damage_2','boss_die','enemy_die_2','enemy_die_3','laser_shot','laser_shot_2','laser_shot_3','player_die','laser_beam','enemy_shot'],fxLast={};
   function fx(names,pan,v,rate=1){const ready=names.filter(n=>FX[n]);if(!ready.length)return false;const key=names.join();
     let i;do{i=Math.floor(Math.random()*ready.length);}while(ready.length>1&&ready[i]===fxLast[key]);fxLast[key]=ready[i];
@@ -751,8 +752,13 @@ const SFX=(()=>{
   /* Repeats of the same sound closer than this many ms are dropped, so rapid fire doesn't pile up */
   const GAP={eshot:110,bossdie:400,bomb:200,death:300,block:45,hit:45,shot:55,puff:90,snap:30,grunt:220,medal:40,pop:70,catch:60,bolt:40};
   let chargeOsc=null,chargeGn=null,beamOsc=null,beamGn=null;
-  function play(name,x){if(!ac||muted||!LIB[name])return;const now=performance.now();if(GAP[name]&&now-(last[name]||0)<GAP[name])return;last[name]=now;
-    LIB[name](x===undefined?0:(x/W-.5)*1.4);}
+  /* Recorded sounds (Billy's) replace the synth voice for these names. Sprout snap has five takes, picked at random and
+     nudged in pitch so a run of breaks never sounds the same twice */
+  const REC={},REC_FILES={medal:['s_medal'],item:['s_item'],life:['s_life'],smash:['s_smash'],catch:['s_catch'],rang:['s_rang'],bag:['s_bag'],snap:['s_snap0','s_snap1','s_snap2','s_snap3','s_snap4']},REC_VOL={rang:.7,catch:.8,snap:.9,medal:.8};
+  function playRec(name,pan){const bs=(REC[name]||[]).filter(Boolean);if(!bs.length)return false;const src=ac.createBufferSource();src.buffer=bs[Math.floor(Math.random()*bs.length)];
+    src.playbackRate.value=name==='snap'?.85+Math.random()*.35:.97+Math.random()*.06;const gn=bus(pan,false);gn.gain.value=REC_VOL[name]||1;src.connect(gn);src.start();return true;}
+  function play(name,x){if(!ac||muted||(!LIB[name]&&!REC[name]))return;const now=performance.now();if(GAP[name]&&now-(last[name]||0)<GAP[name])return;last[name]=now;
+    const pan=x===undefined?0:(x/W-.5)*1.4;if(playRec(name,pan))return;if(LIB[name])LIB[name](pan);}
   /* Continuous voices: the laser charge whine and the beam buzz follow game state every frame */
   let prevC=0;
   function frame(st){if(!ac)return;const t=ac.currentTime,c=(!muted&&st.charge)||0;if(c>=1&&prevC<1)play('full',st.p.x);prevC=c;
@@ -1888,7 +1894,7 @@ document.getElementById('bombbtn').addEventListener('pointerdown',e=>{e.preventD
 /* ---------- on-screen controller ----------
    A thumb stick on the left, FIRE and BOMB on the right. PAD.x/PAD.y is the stick (-1..1), PAD.fire is FIRE held.
    Each page wires PAD.onFire / onBomb / onPause to its own actions. Dragging on the screen still works too. */
-const PAD={x:0,y:0,fire:false,onFire:null,onFireUp:null,onBomb:null,onPause:null};window.PAD=PAD;
+const PAD={x:0,y:0,fire:false,onDrag:null,onFire:null,onFireUp:null,onBomb:null,onPause:null};window.PAD=PAD;
 (function(){const on=matchMedia('(pointer:coarse)').matches||/[?&]pad=1/.test(location.search);if(!on)return;
   document.documentElement.classList.add('haspad');
   const joy=document.getElementById('joy');if(!joy)return;const knob=joy.querySelector('.knob');let jp=null;
@@ -1896,9 +1902,13 @@ const PAD={x:0,y:0,fire:false,onFire:null,onFireUp:null,onBomb:null,onPause:null
     if(d>R){dx*=R/d;dy*=R/d;}knob.style.transform=`translate(${dx}px,${dy}px)`;let x=dx/R,y=dy/R;const m=Math.hypot(x,y);
     /* digital, like WASD: past a small dead zone the stick snaps to one of 8 directions at full speed */
     if(m<.25){x=y=0;}else{const a=Math.round(Math.atan2(y,x)/(Math.PI/4))*(Math.PI/4);x=Math.round(Math.cos(a));y=Math.round(Math.sin(a));if(x&&y){x*=.7071;y*=.7071;}}PAD.x=x;PAD.y=y;};
-  joy.addEventListener('pointerdown',e=>{e.preventDefault();jp=e.pointerId;try{joy.setPointerCapture(jp);}catch(_){}setJ(e);});
-  joy.addEventListener('pointermove',e=>{if(e.pointerId===jp)setJ(e);});
-  const jEnd=e=>{if(e.pointerId!==jp)return;jp=null;PAD.x=PAD.y=0;knob.style.transform='';};
+  /* the stick works like a trackpad: the jet moves exactly as far as your thumb does, the same as dragging on the screen.
+     The knob follows your thumb from where you touched down and springs back on release. */
+  let last=null,org=null;
+  joy.addEventListener('pointerdown',e=>{e.preventDefault();jp=e.pointerId;try{joy.setPointerCapture(jp);}catch(_){}last={x:e.clientX,y:e.clientY};org=last;knob.style.transition='none';});
+  joy.addEventListener('pointermove',e=>{if(e.pointerId!==jp)return;const dx=e.clientX-last.x,dy=e.clientY-last.y;last={x:e.clientX,y:e.clientY};
+    if(dx||dy)PAD.onDrag&&PAD.onDrag(dx,dy);const r=joy.getBoundingClientRect().width*.3;let ox=e.clientX-org.x,oy=e.clientY-org.y;const d=Math.hypot(ox,oy);if(d>r){ox*=r/d;oy*=r/d;}knob.style.transform=`translate(${ox}px,${oy}px)`;});
+  const jEnd=e=>{if(e.pointerId!==jp)return;jp=null;PAD.x=PAD.y=0;knob.style.transition='transform .12s ease-out';knob.style.transform='';};
   joy.addEventListener('pointerup',jEnd);joy.addEventListener('pointercancel',jEnd);
   const btn=(id,down,up)=>{const b=document.getElementById(id);if(!b)return;
     b.addEventListener('pointerdown',e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId);}catch(_){}b.classList.add('on');down&&down();});
@@ -1910,6 +1920,7 @@ const PAD={x:0,y:0,fire:false,onFire:null,onFireUp:null,onBomb:null,onPause:null
 })();
 PAD.onFire=()=>{SFX.init();if(mode==='title'){introBegin();return;}if(mode==='intro'){introPress();return;}if(mode==='feast'){feastPress();return;}firePress();};
 PAD.onBomb=()=>{if(mode==='play')dropBomb();};
+PAD.onDrag=(dx,dy)=>{if(mode!=='play'||!S)return;const k=W/cv.getBoundingClientRect().width;if(dx){S.p.dragV=Math.sign(dx);S.p.dragT=8;}S.p.x+=dx*k;S.p.y+=dy*k;clampP();};
 PAD.onPause=()=>{if(mode==='play')paused=!paused;};
 /* Phones only allow sound after a real tap, and on iPhone only on the finger lifting off, so the audio is (re)started on
    every kind of tap. A one-sample silent buffer wakes the output; audioSession 'playback' lets sound play even with the
