@@ -147,7 +147,7 @@ const PAD={x:0,y:0,fire:false,onDrag:null,onFire:null,onFireUp:null,onBomb:null,
   btn('ppause',()=>PAD.onPause&&PAD.onPause());
 })();
 PAD.onFire=()=>{pressQueued=true;fireDown=true;};
-PAD.onDrag=(dx,dy)=>{const r=cv.getBoundingClientRect(),k=W/r.width*1.2/viewK();S.ship.x+=dx*k;S.ship.y+=dy*k;};PAD.onFireUp=()=>{fireDown=!!touch;};
+PAD.onDrag=(dx,dy)=>{const r=cv.getBoundingClientRect(),k=W/r.width*2.6/viewK();S.ship.x+=dx*k;S.ship.y+=dy*k;};PAD.onFireUp=()=>{fireDown=!!touch;};
 /* Phones only allow sound after a real tap, and on iPhone only on the finger lifting off, so the audio is (re)started on
    every kind of tap. A one-sample silent buffer wakes the output; audioSession 'playback' lets sound play even with the
    ringer switch on silent (iOS 17+). */

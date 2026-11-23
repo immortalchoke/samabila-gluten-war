@@ -1920,7 +1920,9 @@ const PAD={x:0,y:0,fire:false,onDrag:null,onFire:null,onFireUp:null,onBomb:null,
 })();
 PAD.onFire=()=>{SFX.init();if(mode==='title'){introBegin();return;}if(mode==='intro'){introPress();return;}if(mode==='feast'){feastPress();return;}firePress();};
 PAD.onBomb=()=>{if(mode==='play')dropBomb();};
-PAD.onDrag=(dx,dy)=>{if(mode!=='play'||!S)return;const k=W/cv.getBoundingClientRect().width;if(dx){S.p.dragV=Math.sign(dx);S.p.dragT=8;}S.p.x+=dx*k;S.p.y+=dy*k;clampP();};
+/* the pad is much smaller than the screen, so thumb travel is scaled up: one swipe across the pad crosses the whole screen */
+const PAD_GAIN=2.6;
+PAD.onDrag=(dx,dy)=>{if(mode!=='play'||!S)return;const k=W/cv.getBoundingClientRect().width*PAD_GAIN;if(dx){S.p.dragV=Math.sign(dx);S.p.dragT=8;}S.p.x+=dx*k;S.p.y+=dy*k;clampP();};
 PAD.onPause=()=>{if(mode==='play')paused=!paused;};
 /* Phones only allow sound after a real tap, and on iPhone only on the finger lifting off, so the audio is (re)started on
    every kind of tap. A one-sample silent buffer wakes the output; audioSession 'playback' lets sound play even with the
