@@ -126,13 +126,14 @@ const PAD={x:0,y:0,fire:false,onFire:null,onFireUp:null,onBomb:null,onPause:null
   const joy=document.getElementById('joy');if(!joy)return;const knob=joy.querySelector('.knob');let jp=null;
   const setJ=e=>{const r=joy.getBoundingClientRect(),R=r.width*.42;let dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);const d=Math.hypot(dx,dy);
     if(d>R){dx*=R/d;dy*=R/d;}knob.style.transform=`translate(${dx}px,${dy}px)`;let x=dx/R,y=dy/R;const m=Math.hypot(x,y);
-    if(m<.15){x=y=0;}else{const k=(m-.15)/.85/m;x*=k;y*=k;}PAD.x=x;PAD.y=y;};
-  joy.addEventListener('pointerdown',e=>{e.preventDefault();jp=e.pointerId;joy.setPointerCapture(jp);setJ(e);});
+    /* digital, like WASD: past a small dead zone the stick snaps to one of 8 directions at full speed */
+    if(m<.25){x=y=0;}else{const a=Math.round(Math.atan2(y,x)/(Math.PI/4))*(Math.PI/4);x=Math.round(Math.cos(a));y=Math.round(Math.sin(a));if(x&&y){x*=.7071;y*=.7071;}}PAD.x=x;PAD.y=y;};
+  joy.addEventListener('pointerdown',e=>{e.preventDefault();jp=e.pointerId;try{joy.setPointerCapture(jp);}catch(_){}setJ(e);});
   joy.addEventListener('pointermove',e=>{if(e.pointerId===jp)setJ(e);});
   const jEnd=e=>{if(e.pointerId!==jp)return;jp=null;PAD.x=PAD.y=0;knob.style.transform='';};
   joy.addEventListener('pointerup',jEnd);joy.addEventListener('pointercancel',jEnd);
   const btn=(id,down,up)=>{const b=document.getElementById(id);if(!b)return;
-    b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);b.classList.add('on');down&&down();});
+    b.addEventListener('pointerdown',e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId);}catch(_){}b.classList.add('on');down&&down();});
     const u=()=>{b.classList.remove('on');up&&up();};b.addEventListener('pointerup',u);b.addEventListener('pointercancel',u);
     b.addEventListener('contextmenu',e=>e.preventDefault());};
   btn('pfire',()=>{PAD.fire=true;PAD.onFire&&PAD.onFire();},()=>{PAD.fire=false;PAD.onFireUp&&PAD.onFireUp();});
