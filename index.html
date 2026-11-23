@@ -1206,14 +1206,37 @@ function sunburst(){if(SUN)return SUN;const c=document.createElement('canvas');c
   for(let i=0;i<9000;i++){x.fillStyle=Math.random()<.5?'rgba(255,220,180,.06)':'rgba(60,10,0,.07)';x.fillRect(Math.random()*W,Math.random()*H,rnd(1,3),rnd(.5,1.2));}
   const v=x.createRadialGradient(cx,cy,150,cx,cy,560);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(35,10,0,.55)');x.fillStyle=v;x.fillRect(0,0,W,H);
   return SUN=c;}
+/* ---------- felt lettering ----------
+   White felt letters with a black ('k') or red ('r') felt outline, cut from Billy's felt alphabet sheets (art/font2).
+   h is the cap height in px; text is drawn uppercase. A character with no felt piece yet (V, for now) falls back to
+   Gooper drawn in the same white-with-outline style so words never have a hole. */
+const FELT={"k":{"A":["k-A",-0.017,1.038,1.045],"B":["k-B",-0.017,1.031,0.99],"C":["k-C",-0.038,1.066,0.983],"D":["k-D",-0.024,1.038,1.059],"E":["k-E",-0.024,1.052,0.962],"F":["k-F",-0.017,1.038,0.962],"G":["k-G",-0.028,1.059,1.031],"H":["k-H",-0.021,1.038,1.066],"I":["k-I",-0.021,1.038,0.627],"J":["k-J",-0.021,1.045,0.962],"K":["k-K",-0.021,1.045,1.031],"L":["k-L",-0.014,1.024,0.92],"M":["k-M",-0.021,1.043,1.277],"N":["k-N",-0.028,1.05,1.057],"O":["k-O",-0.05,1.092,1.064],"P":["k-P",-0.021,1.035,0.972],"Q":["k-Q",-0.05,1.199,1.121],"R":["k-R",-0.021,1.035,1.021],"S":["k-S",-0.021,1.042,0.895],"T":["k-T",-0.021,1.042,1.021],"U":["k-U",-0.014,1.035,1.028],"W":["k-W",-0.014,1.021,1.329],"X":["k-X",-0.021,1.035,1.0],"Y":["k-Y",-0.014,1.021,1.014],"Z":["k-Z",-0.021,1.049,0.93],"0":["k-0",-0.02,1.049,0.911],"1":["k-1",-0.02,1.03,0.702],"2":["k-2",-0.026,1.049,0.872],"3":["k-3",-0.02,1.036,0.872],"4":["k-4",-0.013,1.023,0.885],"5":["k-5",-0.026,1.049,0.859],"6":["k-6",-0.023,1.039,0.857],"7":["k-7",-0.016,1.019,0.844],"8":["k-8",-0.016,1.026,0.877],"9":["k-9",-0.016,1.039,0.883],"!":["k-excl",-0.023,1.045,0.506],"?":["k-q",-0.029,1.065,0.805],".":["k-dot",0.463,0.505,0.491],",":["k-comma",0.427,0.698,0.52],"'":["k-apos",-0.078,0.683,0.512],"-":["k-dash",0.27,0.448,0.719],"&":["k-amp",-0.107,1.196,1.238],":":["k-colon",0.036,0.918,0.505]},"r":{"A":["r-A",-0.021,1.041,1.048],"B":["r-B",-0.014,1.021,0.993],"C":["r-C",-0.041,1.068,0.993],"D":["r-D",-0.021,1.027,1.062],"E":["r-E",-0.027,1.055,0.979],"F":["r-F",-0.021,1.041,0.973],"G":["r-G",-0.031,1.065,1.045],"H":["r-H",-0.017,1.038,1.072],"I":["r-I",-0.024,1.045,0.646],"J":["r-J",-0.017,1.045,0.969],"K":["r-K",-0.024,1.045,1.045],"L":["r-L",-0.017,1.038,0.928],"M":["r-M",-0.014,1.035,1.273],"N":["r-N",-0.028,1.056,1.063],"O":["r-O",-0.049,1.098,1.063],"P":["r-P",-0.021,1.042,0.965],"Q":["r-Q",-0.042,1.21,1.14],"R":["r-R",-0.021,1.042,1.021],"S":["r-S",-0.035,1.062,0.91],"T":["r-T",-0.021,1.035,1.035],"U":["r-U",-0.014,1.042,1.035],"W":["r-W",-0.014,1.028,1.34],"X":["r-X",-0.021,1.042,1.007],"Y":["r-Y",-0.014,1.021,1.028],"Z":["r-Z",-0.028,1.056,0.938],"0":["r-0",-0.02,1.039,0.948],"1":["r-1",-0.013,1.02,0.693],"2":["r-2",-0.02,1.039,0.895],"3":["r-3",-0.02,1.039,0.889],"4":["r-4",-0.013,1.013,0.915],"5":["r-5",-0.033,1.052,0.889],"6":["r-6",-0.02,1.039,0.889],"7":["r-7",-0.013,1.033,0.876],"8":["r-8",-0.02,1.039,0.915],"9":["r-9",-0.026,1.052,0.902],"!":["r-excl",-0.007,1.02,0.549],"?":["r-q",-0.039,1.065,0.817],".":["r-dot",0.464,0.522,0.536],",":["r-comma",0.42,0.703,0.551],"'":["r-apos",-0.109,0.652,0.529],"-":["r-dash",0.246,0.478,0.768],"&":["r-amp",-0.065,1.138,1.196],":":["r-colon",0.022,0.949,0.543]}};
+const FELT_IM={};function feltIm(col,ch){const g=FELT[col][ch];if(!g)return null;const k=g[0];if(!FELT_IM[k])FELT_IM[k]=Object.assign(new Image(),{src:'art/font2/'+k+'.webp'});return FELT_IM[k];}
+const FELT_OL={k:'#231f20',r:'#e23200'};
+function feltAdv(col,ch,h,c=g){if(ch===' ')return h*.34;const gl=FELT[col][ch];if(gl)return gl[3]*h*.9;c.font=`900 ${h/.7}px Gooper,Georgia,serif`;return c.measureText(ch).width+h*.12;}
+function feltWidth(txt,h,col='k',c=g){txt=String(txt).toUpperCase();let w=0;for(const ch of txt)w+=feltAdv(col,ch,h,c);return w;}
+/* y is the middle of the cap height */
+function feltText(txt,x,y,h,col='k',align='center',c=g){txt=String(txt).toUpperCase();const tw=feltWidth(txt,h,col,c);let cx=align==='center'?x-tw/2:align==='right'?x-tw:x;const top=y-h/2;
+  for(const ch of txt){const adv=feltAdv(col,ch,h,c);if(ch!==' '){const gl=FELT[col][ch],im=feltIm(col,ch);
+      if(gl&&loaded(im)){const w=gl[3]*h;c.drawImage(im,cx+(adv-w)/2,top+gl[1]*h,w,gl[2]*h);}
+      else{c.save();c.font=`900 ${h/.7}px Gooper,Georgia,serif`;c.textAlign='center';c.textBaseline='alphabetic';c.lineJoin='round';c.lineWidth=h*.24;c.strokeStyle=FELT_OL[col];
+        c.strokeText(ch,cx+adv/2,top+h);c.fillStyle='#fff';c.fillText(ch,cx+adv/2,top+h);c.restore();}}
+    cx+=adv;}}
+/* the same lettering for page elements (headline, buttons): drawn to a small canvas and dropped in as an image */
+function feltHTML(el,txt,col,h){el.setAttribute('aria-label',txt);const T=String(txt).toUpperCase(),ims=[...new Set([...T].map(ch=>feltIm(col,ch)).filter(Boolean))];
+  const paint=()=>{const sc=2,pad=h*.3,cv2=document.createElement('canvas');let c=cv2.getContext('2d');const w=feltWidth(T,h,col,c);
+    cv2.width=Math.ceil((w+pad*2)*sc);cv2.height=Math.ceil((h+pad*2)*sc);c=cv2.getContext('2d');c.scale(sc,sc);feltText(T,pad,pad+h/2,h,col,'left',c);
+    const im=new Image();im.src=cv2.toDataURL();im.alt='';im.style.width=(w+pad*2)+'px';im.style.maxWidth='100%';im.style.height='auto';im.style.display='block';im.style.margin='0 auto';el.replaceChildren(im);};
+  paint();Promise.all(ims.map(i=>i.complete?0:new Promise(r=>{i.addEventListener('load',r,{once:true});i.addEventListener('error',r,{once:true});}))).then(paint);
+  if(document.fonts)document.fonts.load('900 40px Gooper').then(paint);}
 function keycap(w,h,label,arrow){return()=>{
   const im=w>60?TITLE_IM.keyWide:arrow!==undefined?TITLE_IM.arrow:TITLE_IM.key;
   if(loaded(im)){g.save();if(arrow!==undefined)g.rotate(arrow);g.drawImage(im,-w/2-3,-h/2-3,w+6,h+7);g.restore();}
   else{g.fillStyle='#231f20';g.beginPath();g.roundRect(-w/2-3,-h/2-3,w+6,h+10,10);g.fill();g.fillStyle='#b9a98a';g.beginPath();g.roundRect(-w/2,-h/2+4,w,h+3,8);g.fill();
     g.fillStyle='#f1e8d2';g.beginPath();g.roundRect(-w/2,-h/2,w,h,8);g.fill();
     if(arrow!==undefined){g.save();g.rotate(arrow);g.fillStyle='#231f20';g.beginPath();g.moveTo(0,-9);g.lineTo(9,6);g.lineTo(-9,6);g.closePath();g.fill();g.restore();}}
-  if(label){g.fillStyle='#231f20';g.font=`900 ${w>60?15:19}px Gooper,Georgia,serif`;g.textAlign='center';g.textBaseline='middle';g.fillText(label,0,1);}};}
-function caption(txt,size=19){return()=>{g.font=`900 ${size}px Gooper,Georgia,serif`;g.textAlign='left';g.textBaseline='middle';g.lineJoin='round';g.lineWidth=6;g.strokeStyle='#231f20';g.strokeText(txt,0,0);g.fillStyle='#fff';g.fillText(txt,0,0);};}
+  if(label)feltText(label,0,1,w>60?13:16,'k');};}
+function caption(txt,size=19){return()=>feltText(txt,0,0,size*.95,'k','left');}
 function buildSet(){
   const P=[],add=(o)=>{P.push(Object.assign({rot:0,dir:1},o));};
   /* backdrop flats */
@@ -1237,7 +1260,7 @@ function buildSet(){
   let r=0;const L=(xx,y,draw,exit)=>add({k:'ctl',x:xx,y,exit,delay:22+r*5,draw});
   if(!TOUCH){
     const K=32;L(84,480,keycap(K,30,'',0),'left');L(48,514,keycap(K,30,'',-Math.PI/2),'left');L(84,514,keycap(K,30,'',Math.PI),'left');L(120,514,keycap(K,30,'',Math.PI/2),'left');
-    L(146,488,caption('MOVE',18),'left');L(146,510,caption('or WASD',13),'left');r++;
+    L(146,488,caption('MOVE',18),'left');L(146,510,caption('OR WASD',13),'left');r++;
     L(282,476,keycap(K,30,'Z'),'right');L(306,476,caption('FIRE',17),'right');r++;
     L(306,512,keycap(84,30,'SPACE'),'right');L(354,512,caption('BOMB',17),'right');r++;
     L(282,548,keycap(K,30,'P'),'right');L(306,548,caption('PAUSE',17),'right');
@@ -1248,8 +1271,7 @@ function buildSet(){
     L(88,550,caption('TAP BOMB TO CLEAR THE SCREEN',14),'right');
   }
   /* the start prompt */
-  add({k:'prompt',x:W/2,y:584,exit:'fall',delay:0,dir:1,draw:()=>{if(!SET.striking&&Math.floor(performance.now()/450)%2)return;g.font='900 20px Gooper,Georgia,serif';g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';g.lineWidth=7;g.strokeStyle='#231f20';
-    const t=TOUCH?'TAP TO START':'PRESS ENTER TO START';g.strokeText(t,0,0);g.fillStyle='#fff';g.fillText(t,0,0);}});
+  add({k:'prompt',x:W/2,y:584,exit:'fall',delay:0,dir:1,draw:()=>{if(!SET.striking&&Math.floor(performance.now()/450)%2)return;feltText(TOUCH?'TAP TO START':'PRESS ENTER TO START',0,0,19,'k');}});
   return{P,t:0,striking:false};
 }
 /* Where a piece is at time t into the strike: a small lift first (like a stagehand getting a grip), then it moves off */
@@ -1425,7 +1447,7 @@ function draw(){
     /* Extra life: a small rocket, the same icon as the lives in the top bar */
     else if(i.kind==='life'&&loaded(ART.hero)){pickupHalo(i.x,i.y,24);g.save();g.translate(i.x,i.y+Math.sin(S.tick*.1)*2);g.rotate(Math.sin(S.tick*.07)*.15);g.drawImage(ART.hero,-12,-15,25,30);g.restore();
       /* Gooper 1UP tag under the rocket, outlined so it reads over any background */
-      g.save();g.font='900 13px Gooper,Georgia,serif';g.textAlign='center';g.lineJoin='round';g.lineWidth=5;g.strokeStyle='#231f20';g.strokeText('1UP',i.x,i.y+27);g.fillStyle='#e69000';g.fillText('1UP',i.x,i.y+27);g.restore();}
+      feltText('1UP',i.x,i.y+23,13,'k');}
     else{pickupHalo(i.x,i.y,22);g.fillStyle=i.kind==='bomb'?'#e5401c':'#ff7fa0';g.strokeStyle='#fff';g.lineWidth=2;g.beginPath();g.arc(i.x,i.y,15,0,7);g.fill();g.stroke();g.fillStyle='#fff';g.textAlign='center';g.font='900 13px Gooper,Georgia,serif';g.fillText(i.kind==='bomb'?'B':'1UP',i.x,i.y+5);}
   }
   /* the jet only appears once the stage starts, not on the title screen */
@@ -1519,7 +1541,7 @@ function hud(){
   }
   if(S.warn>0&&S.warn%40<26){
     g.fillStyle='rgba(226,50,0,.88)';g.fillRect(0,H/2-44,W,88);
-    g.textAlign='center';g.font='900 36px Gooper,Georgia,serif';g.lineJoin='round';g.lineWidth=9;g.strokeStyle='#231f20';g.strokeText('FEED THE DRAGON',W/2,H/2+13);g.fillStyle='#fff';g.fillText('FEED THE DRAGON',W/2,H/2+13);
+    feltText('FEED THE DRAGON',W/2,H/2,34,'k');
   }
 }
 
@@ -1610,6 +1632,7 @@ window.__intro={IN,get FE(){return FE},get mode(){return mode},feastBegin:()=>fe
 
 /* ---------- Flow ---------- */
 const over=document.getElementById('over'),ot=document.getElementById('ot'),om=document.getElementById('om'),ok=document.getElementById('ok');
+feltHTML(ot,'The Gluten Conflict','r',46);feltHTML(document.getElementById('go'),'Start','k',18);
 function start(){ENDSONG.stop();SFX.init();SFX.loadMusic();SFX.loadSamples();SFX.music(false,.3);SFX.stage(true);S=fresh();mode='play';paused=false;over.hidden=true;syncBench();
   /* Strike the set: the rocket is already in place, so no blink-in */
   if(SET&&!SET.striking){SET.striking=true;SET.t=0;S.p.inv=0;}}
@@ -1622,10 +1645,10 @@ function end(win){
   /* Winning leads into the ending: the screen fades to warm cream and the ramen kitchen opens */
   if(win){try{sessionStorage.setItem('gw-score',S.score);sessionStorage.setItem('gw-wi',S.p.wi);sessionStorage.setItem('gw-lvl',S.p.lvl);}catch(e){}mode='tofeast';over.hidden=true;kitchenT=0;return;}
   mode='over';over.hidden=false;
-  ot.textContent=win?'Stage clear':'Game over';
+  feltHTML(ot,win?'Stage clear':'Game over','r',46);
   om.textContent=win?`Score ${S.score}, including a ${bonus} bonus for medals and unused bombs.`:`Score ${S.score}.`;
   ok.textContent='';
-  document.getElementById('go').textContent='Play again';
+  feltHTML(document.getElementById('go'),'Play again','k',18);
 }
 document.getElementById('go').onclick=start;
 let last=0,acc=0,kitchenT=0;
