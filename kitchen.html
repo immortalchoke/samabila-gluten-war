@@ -37,14 +37,14 @@ const POT={x:240,base:506,rx:62,ry:17,hgt:76,DEPTH:38};
 const KNOB={x:332,y:561,r:14};
 const potRim=()=>POT.base-POT.hgt;
 /* the coffee table's top surface in world space (from the table's place in the room photo): where spilled water can pool */
-const TOP={y0:481,y1:634,bl:161,br:364,bf:583,
+const TOP={y0:436,y1:666,bl:161,br:364,bf:583,
   /* the glass top is a trapezoid in perspective: narrower at the back edge, wider at the front (measured off the kitchen photo) */
-  inside(x,y){const t=clamp((y-481)/(634-481),0,1);return x>lerp(45,-9,t)&&x<lerp(432,480,t);}};
+  inside(x,y){const t=clamp((y-436)/(666-436),0,1);return x>lerp(89,20,t)&&x<lerp(395,442,t);}};
 /* view zoom: the whole kitchen is drawn a bit smaller around the bottom-center of the screen, easing back to 1 for the hero shot */
 const VIEWK=.88;
 function viewK(){return lerp(VIEWK,1,typeof S==='undefined'?0:heroE());}
 /* the camera is panned so the scene sits higher, leaving breathing room at the bottom; the pan eases out for the hero shot */
-const PAN=94,TILT=-500,TILT_T=200;
+const PAN=94,TILT=-343,TILT_T=200;
 /* the scene opens looking out the window at San Ramyeon's main street, then tilts down to the table */
 function tiltE(){if(typeof S==='undefined')return 1;const t=Math.min(1,S.t/TILT_T);return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
 function panY(){if(typeof S==='undefined')return PAN;return PAN*(1-heroE())+TILT*(1-tiltE());}
@@ -501,7 +501,7 @@ function camOn(){g.scale(CAM.z,CAM.z);g.translate(-CAM.x0,-CAM.y0);}
 /* the kitchen is one rendered photo (room, table, burner, empty pot); the separate pieces only come back for the plating transition */
 /* the San Ramyeon living room: one felt photo of the room, the window onto the town's main street and the coffee table,
    placed in world space so its glass top lines up with TOP. The burner, pot and kettle are separate cut-outs on top. */
-const SR={x:-189.3,y:-738.5,w:864,h:1944,cut:460};
+const SR={x:-181.2,y:-442.4,w:846,h:1512,cut:416};
 function drawSR(part){const im=ART.sr;if(!ok(im))return false;
   if(!part){g.drawImage(im,SR.x,SR.y,SR.w,SR.h);return true;}
   /* for the plating transition the photo splits at the table's back edge: the room lifts away, the table drops */
