@@ -450,10 +450,10 @@ function step(){
     /* drops only pool on the tabletop: past its edges they keep falling out of view, and over the burner they land in front of it */
     if(d.y>=d.floor&&!d.onFloor&&!(Math.abs(d.x-POT.x)<POT.rx+4&&d.y<POT.base+4)&&!TOP.inside(d.x,d.floor)){
       /* missed the glass: clear of the table it lands on the carpet, otherwise it drips off out of sight */
-      if(d.x<TOP.fl||d.x>TOP.fr){d.floor=rnd(TOP.floorY[0],TOP.floorY[1]);d.onFloor=true;}else d.floor=1e4;}
+      if(d.x<TOP.fl||d.x>TOP.fr){d.floor=rnd(TOP.floorY[0],TOP.floorY[1]);d.onFloor=true;d.fl=true;}else d.floor=1e4;}
     if(d.y>=d.floor&&!d.onFloor&&d.x>TOP.bl&&d.x<TOP.br&&d.floor<TOP.bf){d.floor=rnd(TOP.bf,TOP.y1);}
     if(d.y>=d.floor&&!(Math.abs(d.x-POT.x)<POT.rx+4&&d.y<POT.base+4)){d.dead=true;S.spilled+=d.vol*.95;
-      let pd=S.puddles.find(q=>Math.abs(q.x-d.x)<q.w*.6+6&&Math.abs(q.y-d.floor)<12);if(!pd){pd={x:d.x,y:d.floor,w:4,v:Math.random()*8|0};S.puddles.push(pd);}pd.w=Math.min(70,pd.w+.45);if(d.vy>5&&Math.random()<.2)crown(d.x,d.floor,false);}}
+      let pd=S.puddles.find(q=>Math.abs(q.x-d.x)<q.w*.6+6&&Math.abs(q.y-d.floor)<12);if(!pd){pd={x:d.x,y:d.floor,w:4,v:Math.random()*8|0,fl:!!d.onFloor};S.puddles.push(pd);}pd.w=Math.min(70,pd.w+.45);if(d.vy>5&&Math.random()<.2)crown(d.x,d.floor,false);}}
   if(S.crowns){for(const c of S.crowns)c.t++;S.crowns=S.crowns.filter(c=>c.t<16);}
   S.drops=S.drops.filter(d=>{if(d.dead)return false;if(d.x>-20&&d.x<W+20&&d.y<H+20)return true;S.spilled+=d.vol*.95;return false;});
   /* step 1: flame. each hit raises it, it sinks between hits, and once it tops out it stays on */
@@ -529,7 +529,16 @@ function crown(x,y,big){S.crowns=S.crowns||[];if(S.crowns.length<14)S.crowns.pus
 let KPF=null;
 function kplateF(){if(KPF)return KPF;const im=ART.kplate,c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const x=c.getContext('2d');x.drawImage(im,0,0);
   x.globalCompositeOperation='destination-out';const y0=c.height*.94,gr=x.createLinearGradient(0,y0,0,c.height);gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(0,0,0,1)');x.fillStyle=gr;x.fillRect(0,y0,c.width,c.height-y0);return KPF=c;}
-function drawPuddles(){for(const p of S.puddles){
+/* the coffee table cut out of the room photo (outline traced in the photo's pixels), drawn over carpet puddles so water
+   on the floor sits behind the table's rail and legs */
+const TBL_OUT=[[381,1250],[850,1250],[985,1590],[985,1690],[919,1720],[919,1906],[825,1906],[825,1720],[387,1720],[387,1906],[300,1906],[300,1720],[225,1690],[225,1590]];
+let TCUT=null;
+function tableCut(){if(TCUT)return TCUT;const im=ART.sr;if(!ok(im))return null;const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const x=c.getContext('2d');
+  const k=im.naturalWidth/1240;x.beginPath();TBL_OUT.forEach(([a,b],i)=>i?x.lineTo(a*k,b*k):x.moveTo(a*k,b*k));x.closePath();x.clip();x.drawImage(im,0,0);return TCUT=c;}
+function drawPuddles(){drawPuddleSet(S.puddles.filter(p=>p.fl));
+  if(S.puddles.some(p=>p.fl)){const c=tableCut();if(c)g.drawImage(c,SR.x,SR.y,SR.w,SR.h);}
+  drawPuddleSet(S.puddles.filter(p=>!p.fl));}
+function drawPuddleSet(list){for(const p of list){
     if(wOk('pud')&&wOk('dots')){const small=p.w<10,im=small?WTR.dots[p.v%3]:WTR.pud[p.v],w=small?16:p.w*1.15,h=w*im.naturalHeight/im.naturalWidth*(small?.6:.5);
       g.globalAlpha=.92;g.drawImage(im,p.x-w/2,p.y-h/2,w,h);g.globalAlpha=1;}
     else{g.fillStyle='rgba(150,200,230,.55)';g.beginPath();g.ellipse(p.x,p.y,p.w*.5,3+p.w*.04,0,0,7);g.fill();}}}
