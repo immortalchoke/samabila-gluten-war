@@ -1268,7 +1268,10 @@ function buildSet(){
   /* backdrop flats */
   add({k:'flat',half:0,x:0,y:0,exit:'left',delay:14});add({k:'flat',half:1,x:W/2,y:0,exit:'right',delay:14});
   /* the felt wordmark, hung on two wires, arching over the dragon */
-  add({k:'logo',x:W/2,y:46,exit:'fly',delay:0,wires:true,draw:()=>{const im=loaded(TITLE_IM.logo)?TITLE_IM.logo:TITLE_IM.logoFlat;if(!loaded(im))return;const w=180,h=im.naturalHeight/im.naturalWidth*w;g.drawImage(im,-w/2,-h/2,w,h);}});
+  add({k:'logo',x:W/2,y:34,exit:'fly',delay:0,wires:true,draw:()=>{const im=loaded(TITLE_IM.logo)?TITLE_IM.logo:TITLE_IM.logoFlat;if(!loaded(im))return;const w=140,h=im.naturalHeight/im.naturalWidth*w;g.drawImage(im,-w/2,-h/2,w,h);}});
+  /* the noodle-slurping dragon under the wordmark, now a small badge above the jet */
+  add({k:'dragon',x:W/2,y:104,exit:'fly',delay:2,draw:()=>{const im=TITLE_IM.dragon;if(!loaded(im))return;const h=118,w=im.naturalWidth/im.naturalHeight*h;
+    g.drawImage(im,-w/2,-h/2+(SET.striking?0:Math.sin(performance.now()/700)*2),w,h);}});
   /* title letters, each its own piece */
   g.save();
   /* every title letter is its own piece from the felt Gooper alphabet (art/font/A..Z); a missing letter draws in Gooper */
@@ -1322,7 +1325,7 @@ function dioFrame(){if(!DIOC){DIOC=document.createElement('canvas');DIOC.width=W
   c.fillStyle='#5f7fb0';c.fillRect(0,0,W,H);
   if(loaded(DIO.sky))c.drawImage(DIO.sky,ox-6+Math.sin(t*.07)*5,-6,iw+12,H+12);
   /* wisps drift left to right across the sky and wrap */
-  DIO.wisps.forEach(([y,s0,v,ph],i)=>{const im=DIO.w[i];if(!loaded(im))return;const w=150*s0,h=im.naturalHeight/im.naturalWidth*w,x=((t*v+ph)%(W+w+60))-w-30;
+  DIO.wisps.forEach(([y,s0,v,ph],i)=>{if(i<2)return;const im=DIO.w[i];if(!loaded(im))return;const w=150*s0,h=im.naturalHeight/im.naturalWidth*w,x=((t*v+ph)%(W+w+60))-w-30;
     c.globalAlpha=.85;c.drawImage(im,x,y+Math.sin(t*.4+i)*3,w,h);c.globalAlpha=1;});
   /* the wheat sheaves give chase, swaying on their own rhythm */
   if(loaded(DIO.en)){/* each piece cut from the enemy layer (its box in the photo's pixels) and placed clear of the title */
@@ -1334,7 +1337,10 @@ function dioFrame(){if(!DIOC){DIOC=document.createElement('canvas');DIOC.width=W
     for(const [nx,ny] of [[286,222],[312,240]]){const a=.22+Math.random()*.14,gr=c.createRadialGradient(nx,ny,2,nx,ny,26);gr.addColorStop(0,`rgba(255,170,60,${a})`);gr.addColorStop(1,'rgba(255,120,30,0)');c.fillStyle=gr;c.fillRect(nx-26,ny-26,52,52);}
     c.restore();}
   /* two banks of felt clouds roll past along the bottom, the near one faster */
-  dioBand(c,DIO.cl,H-214,150,t*9);dioBand(c,DIO.cl,H-160,210,t*20+170);}
+  dioBand(c,DIO.cl,H-168,124,t*9);dioBand(c,DIO.cl,H-116,170,t*20+170);}
+/* two wisps drift in front of the logo and dragon, for depth; they thin out as the set is struck */
+function dioFront(a){const t=performance.now()/1000;[[38,.7,11,40],[120,.55,8,300]].forEach(([y,s0,v,ph],i)=>{const im=DIO.w[i];if(!loaded(im))return;
+  const w=150*s0,h=im.naturalHeight/im.naturalWidth*w,x=((t*v+ph)%(W+w+60))-w-30;g.globalAlpha=.9*a;g.drawImage(im,x,y+Math.sin(t*.5+i)*3,w,h);g.globalAlpha=1;});}
 function drawSet(){
   if(!SET)return;const T=SET.striking?SET.t:0;let alive=0;
   for(const q of SET.P){const p=piecePose(q,T);
@@ -1346,7 +1352,7 @@ function drawSet(){
     if(q.wires){g.strokeStyle='rgba(35,31,32,.6)';g.lineWidth=1.2;g.beginPath();g.moveTo(p.x-120,p.y+20);g.lineTo(p.x-120,-10);g.moveTo(p.x+120,p.y+20);g.lineTo(p.x+120,-10);g.stroke();}
     g.save();g.translate(p.x,p.y);g.rotate(p.r);
     if(q.k==='letter'&&!SET.striking){g.translate(0,Math.sin(performance.now()/500+q.x*.03)*2);}
-    q.draw();g.restore();}
+    q.draw();g.restore();if(q.k==='dragon')dioFront(SET.striking?Math.max(0,1-T/30):1);}
   if(SET.striking&&alive===0)SET=null;
 }
 function draw(){
