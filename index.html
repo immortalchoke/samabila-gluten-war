@@ -1319,7 +1319,7 @@ function buildSet(){
   /* title letters, each its own piece */
   g.save();
   /* every title letter is its own piece from the felt Gooper alphabet (art/font/A..Z); a missing letter draws in Gooper */
-  for(const [word,y,size] of [['THE',452,22],['GLUTEN',487,44],['CONFLICT',531,42]]){
+  for(const [word,y,size] of [['THE',430,22],['GLUTEN',465,44],['CONFLICT',509,42]]){
     g.font=`900 ${size}px Gooper,Georgia,serif`;const gap=size*.05,ws=[...word].map(c=>g.measureText(c).width),tw=ws.reduce((a,b)=>a+b,0)+gap*(word.length-1);let x=W/2-tw/2;
     [...word].forEach((c,i)=>{const cx=x+ws[i]/2;add({k:'letter',x:cx,y,exit:'fall',delay:4+P.filter(q=>q.k==='letter').length*3,dir:cx<W/2?-1:1,
       draw:()=>{const fim=TITLE_IM.font[c];if(loaded(fim)){const h=size*1.02,w=fim.naturalWidth/fim.naturalHeight*h;g.drawImage(fim,-w/2,-h/2,w,h);return;}
@@ -1328,21 +1328,17 @@ function buildSet(){
   g.restore();
   /* the controls, as keycaps and captions, in two columns */
   /* the controls sit at the bottom of the screen; the start prompt goes between them and the title */
-  let r=0;const CY=124,L=(xx,y,draw,exit)=>add({k:'ctl',x:xx,y:y+CY,exit,delay:22+r*5,draw});
+  let r=0;const CY=134,L=(xx,y,draw,exit)=>add({k:'ctl',x:xx,y:y+CY,exit,delay:22+r*5,draw});
   if(!TOUCH){
     const K=32;L(84,480,keycap(K,30,'',0),'left');L(48,514,keycap(K,30,'',-Math.PI/2),'left');L(84,514,keycap(K,30,'',Math.PI),'left');L(120,514,keycap(K,30,'',Math.PI/2),'left');
     L(146,488,caption('MOVE',18),'left');L(146,510,caption('OR WASD',13),'left');r++;
     L(282,476,keycap(K,30,'Z'),'right');L(306,476,caption('FIRE',17),'right');r++;
     L(306,512,keycap(84,30,'SPACE'),'right');L(354,512,caption('BOMB',17),'right');r++;
     L(282,548,keycap(K,30,'P'),'right');L(306,548,caption('PAUSE',17),'right');
-  }else{
-    L(64,486,()=>{const im=TITLE_IM.finger;if(loaded(im)){const h=46,w=im.naturalWidth/im.naturalHeight*h;g.drawImage(im,-w/2,-h/2,w,h);}else{g.fillStyle='#f1e8d2';g.strokeStyle='#231f20';g.lineWidth=4;g.beginPath();g.arc(0,0,13,0,7);g.fill();g.stroke();}},'left');
-    L(88,486,caption('DRAG TO MOVE AND FIRE',17),'left');r++;
-    L(88,518,caption('TAP FOR SINGLE SHOTS',17),'right');r++;
-    L(88,550,caption('TAP BOMB TO CLEAR THE SCREEN',14),'right');
   }
+  /* phones: no control hints, the drag target in play teaches it */
   /* the start prompt */
-  add({k:'prompt',x:W/2,y:570,exit:'fall',delay:0,dir:1,draw:()=>{if(!SET.striking&&Math.floor(performance.now()/450)%2)return;feltText(TOUCH?'TAP TO START':'PRESS ENTER TO START',0,0,17,'k');}});
+  add({k:'prompt',x:W/2,y:TOUCH?600:574,exit:'fall',delay:0,dir:1,draw:()=>{if(!SET.striking&&Math.floor(performance.now()/450)%2)return;feltText(TOUCH?'TAP TO START':'PRESS ENTER TO START',0,0,17,'k');}});
   P.filter(q=>q.k==='letter').forEach((q,i)=>q.li=i);
   return{P,t:0,striking:false,born:performance.now(),made:performance.now(),ready:false};
 }
