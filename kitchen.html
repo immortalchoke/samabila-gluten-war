@@ -66,6 +66,7 @@ const AUTO=11,MINGAP=3,K=.007,DAMP=.1;
 /* the four Samabila seasonings, named as on samabila.com */
 const FLAVORS=[{n:'Korean',bw:'korean',cap:'My Korean Ramen',k:'pk-red',c:'#e0452c',b:[236,178,128]},{n:'Chicken',bw:'chicken',cap:'My Chicken Ramen',k:'pk-yellow',c:'#e9a93a',b:[236,208,140]},
   {n:'Chicken Lite',bw:'lite',cap:'My Chicken Lite Ramen',k:'pk-green',c:'#a8c63f',b:[238,224,176]},{n:'Pho',bw:'pho',cap:'My Viet Beef Ph\u1edf',k:'pk-purple',c:'#7b3f9a',b:[218,180,132]}];
+for(const f of FLAVORS)f.pw=`rgb(${f.b.map(v=>Math.round(v*.86)).join(',')})`;
 const N=22;
 let S;
 function reset(){S={t:0,step:0,stepT:0,
@@ -234,6 +235,7 @@ function liveCenter(sh){const P=S.pit,near=a=>a.reduce((m,o)=>!m||Math.abs(o.x-s
   if(S.step===1)return [KNOB.x,KNOB.y];
   if(S.step===3&&S.bag&&!S.bag.cut)return [S.bag.x,S.bag.y];
   if(S.step===4&&S.brick&&!S.brick.inPot)return [S.brick.x,S.brick.y];
+  if(S.step===5&&S.brick)return [S.brick.x,S.brick.y];
   if(S.step===6&&S.packs&&!S.pack){const p=near(S.packs.filter(p=>p.ready));if(p)return [p.x,p.y];}
   if(S.step===7&&S.pack&&!S.pack.cut)return [S.pack.x,S.pack.y];
   if(S.step===11&&S.jars){const j=near(S.jars.filter(j=>j.pop>.9));if(j)return [j.x,j.y];}
@@ -248,6 +250,7 @@ function targetAt(b){const P=S.pit;
   if(S.step===1&&Math.hypot(b.x-KNOB.x,b.y-KNOB.y)<KNOB.r+8)return S.kfx;
   if(S.step===3&&S.bag&&!S.bag.cut&&S.bag.y>100&&inRot(b.x,b.y,S.bag.x,S.bag.y,S.bag.a,52,72))return S.bag;
   if(S.step===4&&S.brick&&!S.brick.inPot&&Math.abs(b.x-S.brick.x)<36&&Math.abs(b.y-S.brick.y)<16)return S.brick;
+  if(S.step===5&&S.brick&&Math.abs(b.x-S.brick.x)<POT.rx*.8&&Math.abs(b.y-surfY())<30)return S.brick;
   if(S.step===6&&S.packs&&!S.pack){for(const p of S.packs)if(p.ready&&inRot(b.x,b.y,p.x,p.y,0,54,70))return p;}
   if(S.step===7&&S.pack&&S.pack.home&&!S.pack.cut&&inRot(b.x,b.y,S.pack.x,S.pack.y,S.pack.a,56,72))return S.pack;
   if(S.step===11&&S.jars)for(const j of S.jars)if(j.pop>.9&&Math.abs(b.x-j.x)<24&&Math.abs(b.y-j.y)<32)return j;
@@ -285,6 +288,13 @@ function hitTest(b){
   if(S.step===4&&S.brick&&!S.brick.inPot&&Math.abs(b.x-S.brick.x)<36&&Math.abs(b.y-S.brick.y)<16){
     /* each hit only changes the brick's speed: up kicks, never sideways */
     S.brick.vy=Math.max(-10,Math.min(S.brick.vy,1)-2.6);S.brick.flash=5;puff(b.x,b.y);return true;}
+  if(S.step===5&&S.brick&&Math.abs(b.x-S.brick.x)<POT.rx*.8&&Math.abs(b.y-surfY())<30){
+    /* every hit blooms the noodle brick a little more: it loosens, swells and spreads until it's cooked */
+    const R=S.brick;R.soft=Math.min(1,(R.soft||0)+1/16);R.flash=5;puff(b.x,b.y);
+    for(let k=0;k<5;k++)S.bubbles.push({x:rnd(-40,40),y:0,r:rnd(2,4),vy:rnd(1,2)});
+    const v=S.pot.v,d0=(b.x-POT.x)/POT.rx;for(let i=0;i<N;i++){const d=(i-(N-1)/2)/((N-1)/2)-d0;v[i]-=.9*Math.exp(-d*d*12);}
+    if(R.soft>=1){setStep(6);S.packs=FLAVORS.map((f,i)=>({f,x:240+(i-1.5)*132,y:-60-i*30,ty:210,vx:0,vy:0,a:0,av:0,flash:0,ready:false}));}
+    return true;}
   if(S.step===6&&S.packs&&!S.pack){for(const p of S.packs)if(p.ready&&inRot(b.x,b.y,p.x,p.y,0,54,70)){S.pack=p;p.chosen=true;
     for(const q of S.packs)if(q!==p){q.vx=(q.x<p.x?-1:1)*3;q.vy=-2.5;q.leaving=true;}puff(b.x,b.y,p.f.c);setStep(7);return true;}}
   if(S.step===7&&S.pack&&S.pack.home&&!S.pack.cut&&inRot(b.x,b.y,S.pack.x,S.pack.y,S.pack.a,56,72)){const p=S.pack;p.flash=6;puff(b.x,b.y,p.f.c);
@@ -432,14 +442,13 @@ function step(){
         setStep(5);S.cook=0;}}
     else{R.y=lerp(R.y,surfY()-4,.1);}}
   /* step 5: cooking time-lapse */
-  if(S.step===5){S.cook++;if(R)R.soft=Math.min(1,S.cook/300);if(S.cook>=360){setStep(6);
-    S.packs=FLAVORS.map((f,i)=>({f,x:240+(i-1.5)*132,y:-60-i*30,ty:210,vx:0,vy:0,a:0,av:0,flash:0,ready:false}));}}
+  /* step 5: the player cooks the noodles by shooting them (see the hit handler) */
   /* step 6-7: flavor packets */
   if(S.packs)for(const p of S.packs){p.flash=Math.max(0,p.flash-1);
     if(p.leaving){p.x+=p.vx;p.y+=p.vy;p.vy-=.06;continue;}
     if(!p.chosen){p.y=lerp(p.y,p.ty+Math.sin(S.t*.05+p.x)*4,.08);p.ready=p.y>150;}
     else{if(!p.cut){p.x=lerp(p.x,240,.1);p.y=lerp(p.y,200,.1);p.home=Math.abs(p.x-240)<3;p.a+=p.av;p.av*=.93;if(p.a>=Math.PI){p.a=Math.PI;p.av=0;p.locked=true;}}
-      else{if(p.pour>0){p.pour--;for(let k=0;k<3;k++)S.powder.push({x:p.x+rnd(-7,7),y:p.y+52,vy:rnd(1,2.5),c:p.f.c});
+      else{if(p.pour>0){p.pour--;for(let k=0;k<3;k++)S.powder.push({x:p.x+rnd(-7,7),y:p.y+52,vy:rnd(1,2.5),c:p.f.pw});
              if(p.pour===0){p.vx=2;p.vy=-2;}}
            else{p.x+=p.vx;p.y+=p.vy;p.vy-=.05;p.a+=.03;}}}}
   for(const q of S.powder){q.vy+=.08;q.y+=q.vy;q.x+=Math.sin((q.y+q.x)*.1)*.3;if(q.y>surfY()){q.dead=true;pot.mix=Math.min(1,pot.mix+1/380);pot.broth=S.pack.f.b;}}
@@ -614,10 +623,10 @@ function drawPackOld(p){g.save();g.translate(p.x,p.y);g.rotate(p.a);
   g.strokeStyle='rgba(255,255,255,.7)';for(let x=-22;x<22;x+=5){g.beginPath();g.moveTo(x,-36);g.lineTo(x+2.5,-31);g.lineTo(x+5,-36);g.stroke();}
   g.restore();
   if((S.step===6&&p.ready&&!p.leaving)||(S.step===7&&p.chosen&&p.home&&!p.cut))glow(p.x,p.y,48);}
-function drawTimer(){if(S.step!==5)return;const t=S.cook/360,x=420,y=300;
+function drawTimer(){if(S.step!==5)return;const t=(S.brick&&S.brick.soft)||0,x=420,y=300;
   g.fillStyle='#f6efe2';g.strokeStyle='#7d5a3c';g.lineWidth=3;g.beginPath();g.arc(x,y,26,0,7);g.fill();g.stroke();
-  g.fillStyle='#e07a5f';g.beginPath();g.moveTo(x,y);g.arc(x,y,22,-Math.PI/2,-Math.PI/2+Math.PI*2*(1-t));g.fill();
-  g.fillStyle='#3b2a20';g.font=`700 12px ${F}`;g.textAlign='center';g.textBaseline='middle';g.fillText(`${Math.ceil(7*(1-t))}m`,x,y+40);}
+  g.fillStyle='#e07a5f';g.beginPath();g.moveTo(x,y);g.arc(x,y,22,-Math.PI/2,-Math.PI/2+Math.PI*2*t);g.fill();
+  g.fillStyle='#3b2a20';g.font=`700 12px ${F}`;g.textAlign='center';g.textBaseline='middle';g.fillText(`${Math.round(t*100)}%`,x,y+40);}
 function drawPadOld(){const p=S.pad;if(!p)return;const pop=Math.min(1,p.t/20),s=.6+.4*pop+Math.sin(Math.min(p.t,20)/20*Math.PI)*.15;
   g.save();g.translate(p.x,p.y);g.scale(s,s);
   g.fillStyle='rgba(60,30,10,.25)';g.beginPath();g.ellipse(4,8,46,10,0,0,7);g.fill();
@@ -650,7 +659,7 @@ function drawLightOld(){
   for(let i=0;i<30;i++){const px=110+((i*97+S.t*.12)%260),py=170+((i*61+Math.sin(S.t*.003+i)*30+S.t*.05)%300);g.fillStyle='rgba(255,230,170,.5)';g.beginPath();g.arc(px,py,1,0,7);g.fill();}
   g.restore();
   g.save();g.globalCompositeOperation='multiply';g.fillStyle='rgba(255,214,160,.14)';g.fillRect(0,0,W,H);g.restore();}
-const STEPS=['Shoot the kettle to pour. Steady fire, steady pour','Shoot the knob to light the burner','Bringing it to a boil…','Shoot the bag to flip it, then cut it open','Shoot the noodles to slow them down. Or don’t','Cooking…','Pick a flavor: shoot one','Flip it and cut it open','Ramen’s ready! Park on the landing pad','Parked!','Plating up…','Shoot the jars to add toppings','','Your bowl!','Parked!'];
+const STEPS=['Shoot the kettle to pour. Steady fire, steady pour','Shoot the knob to light the burner','Bringing it to a boil…','Shoot the bag to flip it, then cut it open','Shoot the noodles to slow them down. Or don’t','Shoot the noodles to cook them','Pick a flavor: shoot one','Flip it and cut it open','Ramen’s ready! Park on the landing pad','Parked!','Plating up…','Shoot the jars to add toppings','','Your bowl!','Parked!'];
 function drawUI(){
   const t=S.step===11&&S.pad?'All done? Park on the pad':STEPS[S.step];if(t){g.font=`600 14px ${F}`;g.textAlign='center';g.textBaseline='middle';const w=Math.min(W-24,g.measureText(t).width+28);
   g.fillStyle='rgba(35,25,20,.78)';g.beginPath();g.roundRect(W/2-w/2,10,w,32,16);g.fill();g.fillStyle='#fff6e6';g.fillText(t,W/2,26.5,w-20);}
