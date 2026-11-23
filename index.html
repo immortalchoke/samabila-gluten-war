@@ -1331,11 +1331,11 @@ function dioFrame(){if(!DIOC){DIOC=document.createElement('canvas');DIOC.width=W
   DIO.wisps.forEach(([y,s0,v,ph],i)=>{const im=DIO.w[i];if(!loaded(im))return;const w=150*s0,h=im.naturalHeight/im.naturalWidth*w,x=((t*v+ph)%(W+w+60))-w-30;
     c.globalAlpha=.85;c.drawImage(im,x,y+Math.sin(t*.4+i)*3,w,h);c.globalAlpha=1;});
   /* the wheat sheaves give chase, swaying on their own rhythm */
-  if(loaded(DIO.en)){/* each piece cut from the enemy layer (its box in the photo's pixels) and placed clear of the title */
+  if(loaded(DIO.en)){const ee=1-enterE('enemies',SET_TE);c.save();c.translate(ENTER.enemies[2]*ee,ENTER.enemies[3]*ee);/* each piece cut from the enemy layer (its box in the photo's pixels) and placed clear of the title */
     for(const [sx,sy,sw,sh,dx,dy,ph] of [[657,661,126,187,392,240,0],[353,728,148,194,382,382,2],[514,820,88,79,330,372,4]]){
-      const w=sw*sc,h=sh*sc;c.drawImage(DIO.en,sx,sy,sw,sh,dx+Math.sin(t*1.6+ph)*6,dy+Math.cos(t*1.2+ph)*5,w,h);}}
+      const w=sw*sc,h=sh*sc;c.drawImage(DIO.en,sx,sy,sw,sh,dx+Math.sin(t*1.6+ph)*6,dy+Math.cos(t*1.2+ph)*5,w,h);}c.restore();}
   /* two banks of felt clouds roll past along the bottom, the near one faster */
-  dioBand(c,DIO.cl,H-132,104,t*9);dioBand(c,DIO.cl,H-88,136,t*20+170);}
+  {const cy=(1-enterE('clouds',SET_TE))*ENTER.clouds[3];dioBand(c,DIO.cl,H-132+cy,104,t*9);dioBand(c,DIO.cl,H-88+cy*1.15,136,t*20+170);}}
 /* two wisps drift in front of the logo and dragon, for depth; they thin out as the set is struck */
 /* the jet, a set piece of its own so its contrails can stream over the logo */
 function drawDioJet(){const t=performance.now()/1000,sc=H/1264,iw=848*sc,ox=(W-iw)/2;if(!loaded(DIO.jet))return;
@@ -1350,20 +1350,20 @@ function dioFront(a){const t=performance.now()/1000;[[38,.7,11,40],[120,.55,8,30
    place, and the controls pop up from below. */
 const easeOutBack=u=>{const c=1.6;return 1+(c+1)*Math.pow(u-1,3)+c*Math.pow(u-1,2);},easeOutCubic=u=>1-Math.pow(1-u,3);
 const easeBounce=u=>{const n=7.5625,d=2.75;if(u<1/d)return n*u*u;if(u<2/d)return n*(u-=1.5/d)*u+.75;if(u<2.5/d)return n*(u-=2.25/d)*u+.9375;return n*(u-=2.625/d)*u+.984375;};
-function enterPose(q,te){let d=0,dur=22,dx=0,dy=0,ez=easeOutBack;
-  switch(q.k){case 'flat':dur=24;dx=q.half?W/2+20:-W/2-20;ez=easeOutCubic;break;
-    case 'logo':d=16;dur=28;dy=-150;break;case 'dragon':d=20;dur=28;dy=-230;break;
-    case 'jet':d=24;dur=34;dx=420;dy=-380;ez=easeOutCubic;break;
-    case 'letter':d=40+q.li*2.6;dur=26;dy=-(q.y+80);ez=easeBounce;break;
-    case 'prompt':d=86;dur=18;dy=-(q.y+60);ez=easeBounce;break;
-    default:d=70+(q.delay-22)*.8;dur=20;dy=240;}
-  const u=Math.max(0,Math.min(1,(te-d)/dur)),e=u<=0?0:ez(u);return{x:q.x+dx*(1-e),y:q.y+dy*(1-e),r:0,done:u>=1};}
+const easeOutQuart=u=>1-Math.pow(1-u,4);
+/* entry timeline in frames: [delay, duration, dx, dy] */
+const ENTER={clouds:[0,80,0,230],logo:[14,80,0,-170],dragon:[22,80,0,-250],jet:[30,100,430,-400],enemies:[46,100,320,-220],
+  letter:[64,70,0,300],prompt:[74,70,0,260],ctl:[82,70,0,260]};
+function enterE(k,te){const [d,dur]=ENTER[k];const u=Math.max(0,Math.min(1,(te-d)/dur));return easeOutQuart(u);}
+function enterPose(q,te){const k=q.k==='flat'?null:(ENTER[q.k]?q.k:'ctl');if(!k)return{x:q.x,y:q.y,r:0};
+  const [,,dx,dy]=ENTER[k],e=enterE(k,te);return{x:q.x+dx*(1-e),y:q.y+dy*(1-e),r:0};}
+let SET_TE=999;
 function drawSet(){
   if(!SET)return;const T=SET.striking?SET.t:0;let alive=0;
   /* the build waits until the art is in, so it plays in full instead of finishing behind a loading screen */
   if(!SET.ready&&!SET.striking){const now=performance.now(),art=[DIO.sky,DIO.jet,DIO.cl,DIO.en,TITLE_IM.dragon,...Object.values(TITLE_IM.font)].every(loaded)&&(loaded(TITLE_IM.logo)||loaded(TITLE_IM.logoFlat));
-    if(art||now-SET.made>5000){SET.ready=true;SET.born=now;}else return;}
-  const te=(performance.now()-SET.born)/16.67;
+    if(art||now-SET.made>5000){SET.ready=true;SET.born=now;}}
+  const te=SET.ready?(performance.now()-SET.born)/16.67:0;SET_TE=SET.striking?999:te;
   for(const q of SET.P){const p=SET.striking?piecePose(q,T):enterPose(q,te);
     if(p.y>H+140||p.y<-200||p.x<-W||p.x>W*2)continue;alive++;
     if(q.k==='flat'){if(!q.half)dioFrame();
