@@ -301,7 +301,7 @@ function hitTest(b){
   if(S.step===0&&P.x>=PIV.x-2){const [lx,ly]=rot(-P.th,b.x-P.x,b.y-PIV.y);if(lx>-114&&lx<48&&ly>-150&&ly<6){
     /* each hit kicks the tilt; sized so a steady held rhythm settles just past the pouring angle */
     P.om+=K*AUTO*(need(P.W)+.14);P.flash=6;puff(b.x,b.y);return true;}}
-  if(S.step===1&&Math.hypot(b.x-KNOB.x,b.y-KNOB.y)<KNOB.r+8){S.flame=Math.min(1,S.flame+.09);puff(b.x,b.y,'#ffd27a');if(S.flame>=1){S.lit=true;setStep(2);}return true;}
+  if(S.step===1&&Math.hypot(b.x-KNOB.x,b.y-KNOB.y)<KNOB.r+8){S.flame=Math.min(1,S.flame+.2);puff(b.x,b.y,'#ffd27a');if(S.flame>=1){S.lit=true;setStep(2);}return true;}
   if(S.step===3&&S.bag&&!S.bag.cut&&S.bag.y>100&&inRot(b.x,b.y,S.bag.x,S.bag.y,S.bag.a,52,72)){const B=S.bag;B.flash=6;puff(b.x,b.y);
     if(B.locked){B.cut=true;S.brick={x:B.x,y:B.y+62,vy:.5,flash:0,inPot:false,soft:0};B.vy=-3;B.vx=2.2;}else B.av+=.035;return true;}
   if(S.step===4&&S.brick&&!S.brick.inPot&&Math.abs(b.x-S.brick.x)<36&&Math.abs(b.y-S.brick.y)<16){
@@ -370,7 +370,7 @@ function step(){
   sh.x=clamp(sh.x,viewL()+20,viewR()-20);sh.y=clamp(sh.y,viewTop()+30,viewBot());
   /* the landing pad: fly onto it and the rocket settles down and parks */
   /* when you're done with toppings, park on the pad to take the photo */
-  if(S.pad){S.pad.t++;if(S.step===11&&S.pad.t>20&&Math.hypot(sh.x-S.pad.x,sh.y-(S.pad.y-20))<30)setStep(14);
+  if(S.pad){S.pad.t++;if(S.step===11&&!S.pad.armed&&S.pad.t>20&&Math.hypot(sh.x-S.pad.x,sh.y-(S.pad.y-20))>70)S.pad.armed=true;if(S.step===11&&S.pad.armed&&Math.hypot(sh.x-S.pad.x,sh.y-(S.pad.y-20))<30)setStep(14);
     if(S.step===14){S.land=Math.min(1,S.land+.02);sh.x=lerp(sh.x,S.pad.x,.12);sh.y=lerp(sh.y,S.pad.y-16,.08);if(touch){touch.sx=sh.x;touch.sy=sh.y;touch.px=touch.px;}}}
   /* plating: the kitchen pulls away, the pot moves onto a mat, and the rocket lifts off again */
   if(S.step===14&&S.land>=1&&S.stepT>30)snap();
@@ -379,7 +379,9 @@ function step(){
     if(S.hero>=1){setStep(11);S.jars=TOPS.map((t,i)=>({t,x:40+i*64,y:96,pop:0,delay:i*6,wig:0,count:0}));}}
   if(S.jars)for(const j of S.jars){if(S.step>11||S.stepT>j.delay)j.pop=Math.min(1,j.pop+.08);j.wig=Math.max(0,j.wig-.05);}
   /* the landing pad is there from the start of toppings: a plain bowl is a fine finish */
-  if(S.step===11&&!S.pad)S.pad={x:418,y:668,t:0};
+  /* the landing pad shows up a few seconds into toppings, once the jars are out, and only counts a landing after the ship
+     has flown clear of it, so nobody finishes by accident while things are still arriving */
+  if(S.step===11&&!S.pad&&S.stepT>150&&(!S.jars||S.jars.every(j=>j.pop>.9)))S.pad={x:418,y:668,t:0,armed:false};
   for(const q of S.drop){q.t++;if(q.t>=22){q.done=true;S.added.push({k:q.k,i:q.i});}}S.drop=S.drop.filter(q=>!q.done);
   for(const f of S.flying){f.t++;if(f.t>=f.dur){f.done=true;S.tops.push({k:f.k,u:f.u,v:f.v,r:f.r,s:f.s});}}S.flying=S.flying.filter(f=>!f.done);
   if(S.step===12){S.flash=Math.max(0,S.flash-.035);if(S.stepT>40){setStep(13);document.getElementById('polrow').hidden=false;document.getElementById('hint').hidden=true;}}
@@ -405,7 +407,7 @@ function step(){
     const lvl=levelY(P.th,P.W)-Math.max(0,P.sl)*.6,[sx,sy]=rot(P.th,SPOUT[0],SPOUT[1]),head=(sy-lvl);
     /* the spout tip is swinging with the kettle: that motion flings the stream, so jerky kicks spray */
     const tvx=-sy*P.om*.45,tvy=sx*P.om*.45,over=Math.max(0,P.th-need(P.W)-.22);
-    if(head>0){const glug=over>0?.6+.4*Math.sin(S.t*.9):1,rate=clamp(head/24,0,2)*.0048*glug,n=Math.ceil(rate/.0006),spd=.6+head*.05+over*3+Math.max(0,P.sl)*.1,a=P.th-SPOUT_DIR;
+    if(head>0){const glug=over>0?.6+.4*Math.sin(S.t*.9):1,rate=clamp(head/24,0,2)*.0085*glug,n=Math.ceil(rate/.0006),spd=.6+head*.05+over*3+Math.max(0,P.sl)*.1,a=P.th-SPOUT_DIR;
       for(let k=0;k<n;k++){const vol=Math.min(P.W,rate/n);P.W-=vol;const sp=over*7;
         S.drops.push({x:P.x+sx+rnd(-1.5,1.5),y:PIV.y+sy+rnd(-1,1),vx:Math.cos(a)*spd+tvx+rnd(-.2-sp,.2+sp),vy:Math.sin(a)*spd+tvy,r:rnd(1.8,2.8),vol,floor:rnd(TOP.y0,TOP.y1)});}}
     /* tip it far enough and water also seeps out around the lid, at whichever end of the lid seam is lowest; jerks splash more out */
@@ -656,7 +658,9 @@ function drawPadOld(){const p=S.pad;if(!p)return;const pop=Math.min(1,p.t/20),s=
   g.fillStyle='#fff6e6';g.font=`700 12px ${F}`;g.textAlign='center';g.textBaseline='middle';g.save();g.scale(1,.42);g.fillText('H',0,1);g.restore();
   for(let i=0;i<8;i++){const a=i/8*Math.PI*2,on=S.step===14||Math.floor(p.t/8)%8===i;g.fillStyle=on?'#ffe27a':'#8a7a5a';g.beginPath();g.arc(Math.cos(a)*38,Math.sin(a)*10.5,2.4,0,7);g.fill();}
   g.restore();
-  if(S.step===11){const b=Math.sin(p.t*.12)*4;g.fillStyle='#fff6e6';g.beginPath();g.moveTo(p.x,p.y-30+b);g.lineTo(p.x-9,p.y-44+b);g.lineTo(p.x+9,p.y-44+b);g.fill();}}
+  if(S.step===11){const b=Math.sin(p.t*.12)*4,a=Math.min(1,p.t/20);g.globalAlpha=a;g.font=`700 13px ${F}`;g.textAlign='center';g.textBaseline='middle';
+    const w=g.measureText('FINISH').width+20;g.fillStyle='rgba(35,25,20,.8)';g.beginPath();g.roundRect(p.x-w/2,p.y-74+b,w,22,11);g.fill();g.fillStyle='#ffe27a';g.fillText('FINISH',p.x,p.y-62.5+b);
+    g.fillStyle='#fff6e6';g.beginPath();g.moveTo(p.x,p.y-30+b);g.lineTo(p.x-9,p.y-44+b);g.lineTo(p.x+9,p.y-44+b);g.fill();g.globalAlpha=1;}}
 const ROCKET={hero:'art/jet.webp',flames:['art/flame0.webp','art/flame1.webp','art/flame2.webp']};
 const RK={hero:Object.assign(new Image(),{src:ROCKET.hero}),flames:ROCKET.flames.map(src=>Object.assign(new Image(),{src}))};
 function drawShip(){const s=S.ship;
@@ -815,7 +819,9 @@ function drawPad(){const p=S.pad;if(!p)return;if(!ok(SPR.pad))return drawPadOld(
   g.globalCompositeOperation='lighter';for(let i=0;i<8;i++){const a=i/8*Math.PI*2+.39,on=S.step===14||Math.floor(p.t/8)%8===i;if(!on)continue;
     g.fillStyle='rgba(255,230,120,.8)';g.beginPath();g.arc(Math.cos(a)*36,Math.sin(a)*14-1,3.2,0,7);g.fill();}
   g.globalCompositeOperation='source-over';g.restore();
-  if(S.step===11){const b=Math.sin(p.t*.12)*4;g.fillStyle='#fff6e6';g.beginPath();g.moveTo(p.x,p.y-30+b);g.lineTo(p.x-9,p.y-44+b);g.lineTo(p.x+9,p.y-44+b);g.fill();}}
+  if(S.step===11){const b=Math.sin(p.t*.12)*4,a=Math.min(1,p.t/20);g.globalAlpha=a;g.font=`700 13px ${F}`;g.textAlign='center';g.textBaseline='middle';
+    const w=g.measureText('FINISH').width+20;g.fillStyle='rgba(35,25,20,.8)';g.beginPath();g.roundRect(p.x-w/2,p.y-74+b,w,22,11);g.fill();g.fillStyle='#ffe27a';g.fillText('FINISH',p.x,p.y-62.5+b);
+    g.fillStyle='#fff6e6';g.beginPath();g.moveTo(p.x,p.y-30+b);g.lineTo(p.x-9,p.y-44+b);g.lineTo(p.x+9,p.y-44+b);g.fill();g.globalAlpha=1;}}
 let last=performance.now(),acc=0,fadeIn=1;
 const sfxOn=()=>{SFX.init();SFX.loadSamples();};addEventListener('keydown',sfxOn);addEventListener('pointerdown',sfxOn);
 function frame(now){acc+=Math.min(100,now-last);last=now;while(acc>=1000/60){step();acc-=1000/60;}draw();if(fadeIn>0){fadeIn=Math.max(0,fadeIn-.012);g.fillStyle=`rgba(255,246,228,${fadeIn})`;g.fillRect(0,0,W,H);}requestAnimationFrame(frame);}
