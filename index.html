@@ -1257,7 +1257,8 @@ function buildSet(){
         g.lineWidth=size*.06;g.strokeStyle='rgba(255,236,190,.35)';g.strokeText(c,0,-2);g.fillStyle='#e69000';g.fillText(c,0,0);}});x+=ws[i]+gap;});}
   g.restore();
   /* the controls, as keycaps and captions, in two columns */
-  let r=0;const L=(xx,y,draw,exit)=>add({k:'ctl',x:xx,y,exit,delay:22+r*5,draw});
+  /* the controls sit at the bottom of the screen; the start prompt goes between them and the title */
+  let r=0;const CY=124,L=(xx,y,draw,exit)=>add({k:'ctl',x:xx,y:y+CY,exit,delay:22+r*5,draw});
   if(!TOUCH){
     const K=32;L(84,480,keycap(K,30,'',0),'left');L(48,514,keycap(K,30,'',-Math.PI/2),'left');L(84,514,keycap(K,30,'',Math.PI),'left');L(120,514,keycap(K,30,'',Math.PI/2),'left');
     L(146,488,caption('MOVE',18),'left');L(146,510,caption('OR WASD',13),'left');r++;
@@ -1271,7 +1272,7 @@ function buildSet(){
     L(88,550,caption('TAP BOMB TO CLEAR THE SCREEN',14),'right');
   }
   /* the start prompt */
-  add({k:'prompt',x:W/2,y:584,exit:'fall',delay:0,dir:1,draw:()=>{if(!SET.striking&&Math.floor(performance.now()/450)%2)return;feltText(TOUCH?'TAP TO START':'PRESS ENTER TO START',0,0,19,'k');}});
+  add({k:'prompt',x:W/2,y:516,exit:'fall',delay:0,dir:1,draw:()=>{if(!SET.striking&&Math.floor(performance.now()/450)%2)return;feltText(TOUCH?'TAP TO START':'PRESS ENTER TO START',0,0,19,'k');}});
   return{P,t:0,striking:false};
 }
 /* Where a piece is at time t into the strike: a small lift first (like a stagehand getting a grip), then it moves off */
