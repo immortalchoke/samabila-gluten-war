@@ -1809,12 +1809,12 @@ const BOWL={L:{room:img('bowl/room'),counter:img('bowl/counter'),pot:img('bowl/p
   lines:['Gluten-free, vegan, and good to the last noodle.','Now, cook your own.']};
 function shotLines(){return FE.shot===0?[FEAST.lines[FE.wi],'Peace returned to the high plains.']:FE.shot===1?HALL.lines:BOWL.lines;}
 const FE={wi:0,shot:0,t:0,line:0,typed:0,hold:0,fade:1,out:0,sw:0,now:0,steam:[],motes:[]};
-function feastBegin(){Object.assign(FE,{wi:S.p.wi,shot:0,t:0,line:0,typed:0,hold:0,fade:1,out:0,sw:0,steam:[],motes:[]});mode='feast';ENDSONG.start();}
+function feastBegin(){kitchenPreload();Object.assign(FE,{wi:S.p.wi,shot:0,t:0,line:0,typed:0,hold:0,fade:1,out:0,sw:0,steam:[],motes:[]});mode='feast';ENDSONG.start();}
 function feastText(){return shotLines()[FE.line];}
 function feastPress(){if(FE.out||FE.sw||FE.t<.8)return;const tx=feastText();if(FE.typed<tx.length)FE.typed=tx.length;else feastNext();}
 function feastNext(){if(FE.line<shotLines().length-1){FE.line++;FE.typed=0;FE.hold=0;}else if(FE.shot<2)FE.sw=.0001;else FE.out=.0001;}
 function feastStep(dt){const s=dt/1000;FE.t+=s;FE.now+=dt;FE.fade=Math.max(0,FE.fade-s*1.4);
-  if(FE.out){FE.out+=s*.8;if(FE.out>=1.2){mode='leaving';location.href='kitchen.html';}return;}
+  if(FE.out){FE.out+=s*.8;if(FE.out>=1.2){kitchenShow();}return;}
   /* cream dip between the feast and the ramen hall */
   if(FE.sw){FE.sw+=s*1.6;if(FE.sw>=1.1)Object.assign(FE,{shot:FE.shot+1,t:0,line:0,typed:0,hold:0,fade:1,sw:0,steam:[],motes:[]});return;}
   if(FE.t>1.2){const tx=feastText(),b=Math.floor(FE.typed);FE.typed=Math.min(tx.length,FE.typed+s*30);if(Math.floor(FE.typed)>b&&tx[Math.floor(FE.typed)-1]!==' ')SFX.click();
@@ -1888,18 +1888,29 @@ function feastSteam(){
   if(Math.random()<.35){const src=[[700,330],[250,575],[150,590],[760,595]][Math.floor(Math.random()*4)];FE.steam.push({x:src[0]+rnd(-15,15),y:src[1],vx:rnd(-.2,.2),vy:-rnd(.5,.9),r:rnd(6,10),life:0});}
   for(const q of FE.steam){q.life++;q.x+=q.vx+Math.sin((q.life+q.x)*.05)*.4;q.y+=q.vy;q.r+=.15;const a=Math.sin(Math.min(1,q.life/120)*Math.PI)*.18;g.fillStyle=`rgba(255,250,240,${a})`;g.beginPath();g.arc(q.x,q.y,q.r,0,7);g.fill();}
   FE.steam=FE.steam.filter(q=>q.life<120);}
+/* The kitchen ending lives in its own page. It is loaded early, hidden, in a frame laid over the game while the ending
+   shots play, then revealed in place: no page load, the ending song keeps playing, and a refresh still starts the game */
+let KFRAME=null;
+function kitchenPreload(){if(KFRAME)return;KFRAME=document.createElement('iframe');KFRAME.src='kitchen.html?embed=1';KFRAME.title='Ramen kitchen';
+  KFRAME.setAttribute('allow','autoplay');Object.assign(KFRAME.style,{position:'fixed',inset:'0',width:'100%',height:'100%',border:'0',zIndex:'50',background:'#191614',opacity:'0',pointerEvents:'none',transition:'opacity .5s'});
+  document.body.appendChild(KFRAME);}
+window.__kshow=()=>kitchenShow();
+function kitchenShow(){mode='leaving';kitchenPreload();const go=()=>{let w=null;try{w=KFRAME.contentWindow;}catch(e){}
+    if(w&&w.kitchenGo&&w.kitchenReady&&w.kitchenReady()){w.kitchenGo();KFRAME.style.opacity='1';KFRAME.style.pointerEvents='auto';try{KFRAME.focus();}catch(e){}}
+    else setTimeout(go,100);};go();}
 function frame(ts){
   const dt=Math.min(ts-last,50);last=ts;
   SFX.suspend(mode==='play'&&paused);
   if((mode==='play'||mode==='kitchen'||mode==='tofeast')&&!paused){acc+=dt;while(acc>=1000/60){step();acc-=1000/60;}}
   else if(mode==='title'){acc+=dt;while(acc>=1000/60){S.tick++;acc-=1000/60;}}
+  if(mode==='leaving'){requestAnimationFrame(frame);return;}
   if(mode==='intro'){introStep(dt);drawIntro();requestAnimationFrame(frame);return;}
   if(mode==='feast'){feastStep(dt);drawFeast();requestAnimationFrame(frame);return;}
   draw();
   if(introFadeIn>0){g.fillStyle=`rgba(18,12,8,${introFadeIn})`;g.fillRect(0,0,W,H);introFadeIn=Math.max(0,introFadeIn-dt/500);}
   if(mode==='tofeast'){kitchenT+=dt;g.save();g.setTransform(1,0,0,1,0,0);g.fillStyle=`rgba(255,246,228,${Math.min(1,kitchenT/1400)})`;g.fillRect(0,0,cv.width,cv.height);g.restore();if(kitchenT>1500)feastBegin();}
   if(mode==='kitchen'){kitchenT+=dt;g.save();g.setTransform(1,0,0,1,0,0);g.fillStyle=`rgba(255,246,228,${Math.min(1,kitchenT/1400)})`;g.fillRect(0,0,cv.width,cv.height);g.restore();
-    if(kitchenT>1700){mode='leaving';location.href='kitchen.html';}}
+    if(kitchenT>1700){kitchenShow();}}
   requestAnimationFrame(frame);
 }
 addEventListener('pointerdown',()=>SFX.init());

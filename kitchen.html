@@ -29,7 +29,7 @@ button:focus-visible,.btn:focus-visible{outline:2px solid #e69000;outline-offset
   .wrap{gap:0!important;padding:0!important;width:100%;max-width:none!important}
   .cab,.stack{width:100%!important;max-width:none!important;border-radius:0!important;outline:none!important}
   .pad,#hint{display:none!important}
-
+}
 .haspad .cab{width:min(100%,calc((100dvh - 110px - 160px)*.6667),480px)}
 .haspad #hint{display:none}
 /* On-screen controller under the screen on touch devices (or with ?pad=1), so fingers never cover the play area */
@@ -59,7 +59,7 @@ p{margin:0;color:var(--muted);font-size:13px;max-width:480px;text-align:center}
 <style>.haspad .wrap .pad{width:min(100%,calc((100dvh - 110px - 160px)*.6667),480px)}</style>
   <div class="cab"><canvas id="c" width="960" height="1440" tabindex="0" aria-label="Ramen cooking ending: shoot the kettle, burner, noodle box and seasoning to cook ramen"></canvas></div>
   <div class="pad" id="pad" aria-label="Controller"><div class="joy" id="joy"><div class="knob"></div></div><div class="pbtns"><button class="pbtn fire" id="pfire">FIRE</button></div></div>
-  <div class="row" id="polrow" hidden><button id="save">Save photo</button><button id="share">Share</button><a class="btn shop" id="shop" href="https://www.samabila.com/" target="_blank" rel="noopener">Shop Samabila</a><a class="btn" href="./">Play again</a></div>
+  <div class="row" id="polrow" hidden><button id="save">Save photo</button><button id="share">Share</button><a class="btn shop" id="shop" href="https://www.samabila.com/" target="_blank" rel="noopener">Shop Samabila</a><a class="btn" id="again" href="./">Play again</a></div>
   <p id="hint">Arrows or WASD to fly, hold Z to fire. On a phone, drag to fly. Steady fire is neat, mashing is messy.</p>
 </div>
 <script>
@@ -327,7 +327,9 @@ const ENDSONG=(()=>{const KEY='gw-end-t',VOL=.5;let el=null,on=false,pend=false;
   function stop(){on=false;pend=false;if(el){el.pause();el.currentTime=0;}try{sessionStorage.removeItem(KEY);}catch(e){}}
   function prefetch(){if(!el){el=new Audio('music/ending.mp3');el.loop=true;el.volume=VOL;el.preload='auto';}}
   return{start,stop,prefetch,get on(){return on},get el(){return el}};})();window.ENDSONG=ENDSONG;
-ENDSONG.start(true);
+/* inside the game page the game keeps playing the ending song itself, so the kitchen leaves it alone */
+const EMBED=/[?&]embed=1/.test(location.search);
+if(!EMBED)ENDSONG.start(true);
 
 /* the kitchen always plays with a single chili shot, whatever you finished the stage with */
 let WI=0,WL=1;
@@ -969,8 +971,16 @@ function drawPad(){const p=S.pad;if(!p)return;if(!ok(SPR.pad))return drawPadOld(
     g.fillStyle='#fff6e6';g.beginPath();g.moveTo(p.x,p.y-30+b);g.lineTo(p.x-9,p.y-44+b);g.lineTo(p.x+9,p.y-44+b);g.fill();g.globalAlpha=1;}}
 let last=performance.now(),acc=0,fadeIn=1;
 const sfxOn=()=>{SFX.init();SFX.loadSamples();};addEventListener('keydown',sfxOn);addEventListener('pointerdown',sfxOn);
-function frame(now){acc+=Math.min(100,now-last);last=now;while(acc>=1000/60){step();acc-=1000/60;}draw();if(fadeIn>0){fadeIn=Math.max(0,fadeIn-.012);g.fillStyle=`rgba(255,246,228,${fadeIn})`;g.fillRect(0,0,W,H);}requestAnimationFrame(frame);}
+/* the kitchen waits until its art is in before it starts, so nothing shows half-drawn. Inside the game it is loaded early,
+   hidden, and starts when the game hands over (window.kitchenGo) */
+let kGo=!EMBED;window.kitchenGo=()=>{if(kGo)return;kGo=true;reset();last=performance.now();acc=0;fadeIn=1;cv.focus();};
+function kReady(){return [ART.sr,...Object.values(SPR)].every(im=>im.complete);}
+window.kitchenReady=kReady;
+function frame(now){if(!kGo||!kReady()){last=now;g.fillStyle='#fff6e4';g.fillRect(0,0,W,H);requestAnimationFrame(frame);return;}
+  acc+=Math.min(100,now-last);last=now;while(acc>=1000/60){step();acc-=1000/60;}draw();if(fadeIn>0){fadeIn=Math.max(0,fadeIn-.012);g.fillStyle=`rgba(255,246,228,${fadeIn})`;g.fillRect(0,0,W,H);}requestAnimationFrame(frame);}
 requestAnimationFrame(frame);cv.focus();
+/* inside the game, Play again restarts the game page itself */
+document.getElementById('again').addEventListener('click',e=>{if(EMBED&&parent!==window){e.preventDefault();try{parent.location.reload();}catch(_){location.href='./';}}});
 const GAME_URL='https://immortalchoke.github.io/samabila-gluten-war/';
 function polBlob(){return new Promise(r=>S.polaroid.toBlob(r,'image/png'));}
 function say(btn,txt){const o=btn.dataset.o||(btn.dataset.o=btn.textContent);btn.textContent=txt;setTimeout(()=>btn.textContent=o,1800);}
