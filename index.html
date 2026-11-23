@@ -1272,6 +1272,7 @@ function buildSet(){
   /* the noodle-slurping dragon under the wordmark, now a small badge above the jet */
   add({k:'dragon',x:W/2,y:104,exit:'fly',delay:2,draw:()=>{const im=TITLE_IM.dragon;if(!loaded(im))return;const h=118,w=im.naturalWidth/im.naturalHeight*h;
     g.drawImage(im,-w/2,-h/2+(SET.striking?0:Math.sin(performance.now()/700)*2),w,h);}});
+  add({k:'jet',x:0,y:0,exit:'dive',delay:6,draw:drawDioJet});
   /* title letters, each its own piece */
   g.save();
   /* every title letter is its own piece from the felt Gooper alphabet (art/font/A..Z); a missing letter draws in Gooper */
@@ -1299,7 +1300,8 @@ function buildSet(){
   }
   /* the start prompt */
   add({k:'prompt',x:W/2,y:570,exit:'fall',delay:0,dir:1,draw:()=>{if(!SET.striking&&Math.floor(performance.now()/450)%2)return;feltText(TOUCH?'TAP TO START':'PRESS ENTER TO START',0,0,17,'k');}});
-  return{P,t:0,striking:false};
+  P.filter(q=>q.k==='letter').forEach((q,i)=>q.li=i);
+  return{P,t:0,striking:false,born:performance.now(),made:performance.now(),ready:false};
 }
 /* Where a piece is at time t into the strike: a small lift first (like a stagehand getting a grip), then it moves off */
 function piecePose(q,t){
@@ -1307,6 +1309,7 @@ function piecePose(q,t){
   const lift=Math.min(t,6)/6,go=Math.max(0,t-6);
   switch(q.exit){
     case 'left':case 'right':{const s=q.exit==='left'?-1:1;return{x:q.x+s*(go*go*.55+go*2),y:q.y-lift*4+Math.sin(go*.45)*2*Math.min(1,go/4),r:s*Math.min(go,10)*.006};}
+    case 'dive':return{x:q.x-go*go*.5-go*2,y:q.y+go*go*.32,r:0};
     case 'fly':return{x:q.x+Math.sin(go*.18)*6,y:q.y+lift*3-go*go*.42,r:Math.sin(go*.2)*.05};
     default:{const d=q.dir;return{x:q.x+d*go*1.4,y:q.y-lift*8+go*go*.42,r:d*go*go*.0022};}
   }
@@ -1325,25 +1328,43 @@ function dioFrame(){if(!DIOC){DIOC=document.createElement('canvas');DIOC.width=W
   c.fillStyle='#5f7fb0';c.fillRect(0,0,W,H);
   if(loaded(DIO.sky))c.drawImage(DIO.sky,ox-6+Math.sin(t*.07)*5,-6,iw+12,H+12);
   /* wisps drift left to right across the sky and wrap */
-  DIO.wisps.forEach(([y,s0,v,ph],i)=>{if(i<2)return;const im=DIO.w[i];if(!loaded(im))return;const w=150*s0,h=im.naturalHeight/im.naturalWidth*w,x=((t*v+ph)%(W+w+60))-w-30;
+  DIO.wisps.forEach(([y,s0,v,ph],i)=>{const im=DIO.w[i];if(!loaded(im))return;const w=150*s0,h=im.naturalHeight/im.naturalWidth*w,x=((t*v+ph)%(W+w+60))-w-30;
     c.globalAlpha=.85;c.drawImage(im,x,y+Math.sin(t*.4+i)*3,w,h);c.globalAlpha=1;});
   /* the wheat sheaves give chase, swaying on their own rhythm */
   if(loaded(DIO.en)){/* each piece cut from the enemy layer (its box in the photo's pixels) and placed clear of the title */
     for(const [sx,sy,sw,sh,dx,dy,ph] of [[657,661,126,187,392,240,0],[353,728,148,194,382,382,2],[514,820,88,79,330,372,4]]){
       const w=sw*sc,h=sh*sc;c.drawImage(DIO.en,sx,sy,sw,sh,dx+Math.sin(t*1.6+ph)*6,dy+Math.cos(t*1.2+ph)*5,w,h);}}
-  /* the jet bobs and rocks a little, its exhaust flickering */
-  if(loaded(DIO.jet)){const jx=Math.sin(t*1.1)*4,jy=Math.sin(t*.9)*6,jr=Math.sin(t*.8)*.025;c.save();c.translate(235+jx,320+jy);c.rotate(jr);c.translate(-235,-320);
-    c.drawImage(DIO.jet,ox,0,iw,H);c.globalCompositeOperation='lighter';
-    for(const [nx,ny] of [[286,222],[312,240]]){const a=.22+Math.random()*.14,gr=c.createRadialGradient(nx,ny,2,nx,ny,26);gr.addColorStop(0,`rgba(255,170,60,${a})`);gr.addColorStop(1,'rgba(255,120,30,0)');c.fillStyle=gr;c.fillRect(nx-26,ny-26,52,52);}
-    c.restore();}
   /* two banks of felt clouds roll past along the bottom, the near one faster */
-  dioBand(c,DIO.cl,H-168,124,t*9);dioBand(c,DIO.cl,H-116,170,t*20+170);}
+  dioBand(c,DIO.cl,H-132,104,t*9);dioBand(c,DIO.cl,H-88,136,t*20+170);}
 /* two wisps drift in front of the logo and dragon, for depth; they thin out as the set is struck */
+/* the jet, a set piece of its own so its contrails can stream over the logo */
+function drawDioJet(){const t=performance.now()/1000,sc=H/1264,iw=848*sc,ox=(W-iw)/2;if(!loaded(DIO.jet))return;
+  const jx=Math.sin(t*1.1)*4,jy=Math.sin(t*.9)*6,jr=Math.sin(t*.8)*.025;g.save();g.translate(235+jx,320+jy);g.rotate(jr);g.translate(-235,-320);
+  g.drawImage(DIO.jet,ox,0,iw,H);g.globalCompositeOperation='lighter';
+  for(const [nx,ny] of [[286,222],[312,240]]){const a=.22+Math.random()*.14,gr=g.createRadialGradient(nx,ny,2,nx,ny,26);gr.addColorStop(0,`rgba(255,170,60,${a})`);gr.addColorStop(1,'rgba(255,120,30,0)');g.fillStyle=gr;g.fillRect(nx-26,ny-26,52,52);}
+  g.restore();}
 function dioFront(a){const t=performance.now()/1000;[[38,.7,11,40],[120,.55,8,300]].forEach(([y,s0,v,ph],i)=>{const im=DIO.w[i];if(!loaded(im))return;
   const w=150*s0,h=im.naturalHeight/im.naturalWidth*w,x=((t*v+ph)%(W+w+60))-w-30;g.globalAlpha=.9*a;g.drawImage(im,x,y+Math.sin(t*.5+i)*3,w,h);g.globalAlpha=1;});}
+/* The set builds itself when the title opens, like a diorama being dressed: the backdrop flats slide in, the logo and
+   dragon are lowered on their wires, the jet swoops in along its contrails, each title letter drops and bounces into
+   place, and the controls pop up from below. */
+const easeOutBack=u=>{const c=1.6;return 1+(c+1)*Math.pow(u-1,3)+c*Math.pow(u-1,2);},easeOutCubic=u=>1-Math.pow(1-u,3);
+const easeBounce=u=>{const n=7.5625,d=2.75;if(u<1/d)return n*u*u;if(u<2/d)return n*(u-=1.5/d)*u+.75;if(u<2.5/d)return n*(u-=2.25/d)*u+.9375;return n*(u-=2.625/d)*u+.984375;};
+function enterPose(q,te){let d=0,dur=22,dx=0,dy=0,ez=easeOutBack;
+  switch(q.k){case 'flat':dur=24;dx=q.half?W/2+20:-W/2-20;ez=easeOutCubic;break;
+    case 'logo':d=16;dur=28;dy=-150;break;case 'dragon':d=20;dur=28;dy=-230;break;
+    case 'jet':d=24;dur=34;dx=420;dy=-380;ez=easeOutCubic;break;
+    case 'letter':d=40+q.li*2.6;dur=26;dy=-(q.y+80);ez=easeBounce;break;
+    case 'prompt':d=86;dur=18;dy=-(q.y+60);ez=easeBounce;break;
+    default:d=70+(q.delay-22)*.8;dur=20;dy=240;}
+  const u=Math.max(0,Math.min(1,(te-d)/dur)),e=u<=0?0:ez(u);return{x:q.x+dx*(1-e),y:q.y+dy*(1-e),r:0,done:u>=1};}
 function drawSet(){
   if(!SET)return;const T=SET.striking?SET.t:0;let alive=0;
-  for(const q of SET.P){const p=piecePose(q,T);
+  /* the build waits until the art is in, so it plays in full instead of finishing behind a loading screen */
+  if(!SET.ready&&!SET.striking){const now=performance.now(),art=[DIO.sky,DIO.jet,DIO.cl,DIO.en,TITLE_IM.dragon,...Object.values(TITLE_IM.font)].every(loaded)&&(loaded(TITLE_IM.logo)||loaded(TITLE_IM.logoFlat));
+    if(art||now-SET.made>5000){SET.ready=true;SET.born=now;}else return;}
+  const te=(performance.now()-SET.born)/16.67;
+  for(const q of SET.P){const p=SET.striking?piecePose(q,T):enterPose(q,te);
     if(p.y>H+140||p.y<-200||p.x<-W||p.x>W*2)continue;alive++;
     if(q.k==='flat'){if(!q.half)dioFrame();
       g.save();g.translate(p.x-q.x,p.y-q.y);g.drawImage(DIOC,q.half*W,0,W,H*2,q.half*W/2,0,W/2,H);
@@ -1352,7 +1373,7 @@ function drawSet(){
     if(q.wires){g.strokeStyle='rgba(35,31,32,.6)';g.lineWidth=1.2;g.beginPath();g.moveTo(p.x-120,p.y+20);g.lineTo(p.x-120,-10);g.moveTo(p.x+120,p.y+20);g.lineTo(p.x+120,-10);g.stroke();}
     g.save();g.translate(p.x,p.y);g.rotate(p.r);
     if(q.k==='letter'&&!SET.striking){g.translate(0,Math.sin(performance.now()/500+q.x*.03)*2);}
-    q.draw();g.restore();if(q.k==='dragon')dioFront(SET.striking?Math.max(0,1-T/30):1);}
+    q.draw();g.restore();}
   if(SET.striking&&alive===0)SET=null;
 }
 function draw(){
@@ -1685,7 +1706,7 @@ function textBox(text,typed,now,top){const bx=14,by=top?14:H-168,bw=W-28,bh=154;
   let left=Math.floor(typed);iWrap(text,bw-48).forEach((ln,i)=>{g.fillText(ln.slice(0,Math.max(0,left)),bx+24,by+24+i*27);left-=ln.length+1;});
   if(typed>=text.length&&Math.floor(now/450)%2){g.fillStyle='#e69000';g.beginPath();g.moveTo(bx+bw-30,by+bh-28);g.lineTo(bx+bw-20,by+bh-28);g.lineTo(bx+bw-25,by+bh-20);g.fill();}}
 let introFadeIn=0;
-window.__intro={IN,get FE(){return FE},get mode(){return mode},feastBegin:()=>feastBegin()};
+window.__setReady=()=>SET&&SET.ready;window.__intro={IN,get FE(){return FE},get mode(){return mode},feastBegin:()=>feastBegin()};
 
 /* ---------- Flow ---------- */
 const over=document.getElementById('over'),ot=document.getElementById('ot'),om=document.getElementById('om'),ok=document.getElementById('ok');
@@ -1915,7 +1936,7 @@ document.getElementById('toboss').onclick=()=>{
 
 S=fresh();S.p.inv=0;syncBench();
 /* Open on the title set instead of the overlay */
-over.hidden=true;SET=buildSet();document.fonts&&document.fonts.load('900 74px Gooper').then(()=>{if(SET&&!SET.striking)SET=buildSet();});
+over.hidden=true;SET=buildSet();document.fonts&&document.fonts.load('900 74px Gooper').then(()=>{if(SET&&!SET.striking){const o=SET;SET=buildSet();SET.born=o.born;SET.made=o.made;SET.ready=o.ready;}});
 window.__g={get S(){return S},T,step,start,draw,get mode(){return mode},setPaused(v){paused=v}};
 requestAnimationFrame(t=>{last=t;frame(t);});
 })();
