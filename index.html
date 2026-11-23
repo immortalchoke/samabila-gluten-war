@@ -500,7 +500,7 @@ function kill(e){
   /* The ending: she's full. She swoops a big circle shedding her body, which bursts segment by segment, chewing slowly the whole time,
      then settles in the middle to savor it and flies off. Baby dragons, if you have them, follow her home. */
   if(e.type==='boss'&&!e.leaving){
-    SFX.play('bossdie',e.x);SFX.music(false,4);e.leaving=true;e.hp=1;e.phase=0;e.recoil=-10;e.rush=null;e.chomp=0;e.slurp=0;e.flash=0;e.shk=e.sx=e.sy=e.sr=0;e.segs.forEach(sg=>sg.shk=0);
+    SFX.play('bossdie',e.x);SFX.music(false,4);SFX.stage(false,3);ENDSONG.start();e.leaving=true;e.hp=1;e.phase=0;e.recoil=-10;e.rush=null;e.chomp=0;e.slurp=0;e.flash=0;e.shk=e.sx=e.sy=e.sr=0;e.segs.forEach(sg=>sg.shk=0);
     e.fin={st:'circle',t:0,a:Math.atan2(e.y-300,e.x-W/2)};
     S.score+=ENEMY.boss.score;S.bul.length=0;S.shake=10;S.p.inv=Math.max(S.p.inv,900);
     for(const q of S.en)if(q.type==='pearl'&&!q.dead){q.dead=true;addBoom(q.x,q.y,80);}
@@ -754,7 +754,24 @@ const SFX=(()=>{
     const o=ac.createBufferSource();o.buffer=b;const f=ac.createBiquadFilter();f.type='bandpass';f.frequency.value=2600+Math.random()*900;const gn=ac.createGain();gn.gain.value=.5;o.connect(f).connect(gn).connect(out);o.start();}
   return{init,play,frame,setMuted,music,stage,click,suspend,loadMusic,loadSamples,get musicOn(){return !!musSrc},get muted(){return muted},names:Object.keys(LIB)};
 })();
-window.__sfx=SFX;
+window.__sfx=SFX;window.SFX=SFX;
+/* Ending song: starts the moment the dragon falls and keeps playing through the ending shots and the kitchen until the
+   game restarts. It streams from a plain audio element so the kitchen page can pick it up where the game left off
+   (the position rides along in sessionStorage). Swap music/ending.mp3 to replace it. */
+const ENDSONG=(()=>{const KEY='gw-end-t',VOL=.5;let el=null,on=false,pend=false;
+  const save=()=>{if(el&&on)try{sessionStorage.setItem(KEY,el.currentTime.toFixed(2));}catch(e){}};
+  function tryPlay(){if(!el||!on)return;el.muted=!!(window.SFX&&SFX.muted);const p=el.play();if(p&&p.catch)p.catch(()=>{pend=true;});}
+  /* if the browser blocks playback until the player touches something, start on the first key or tap */
+  const kick=()=>{if(pend){pend=false;tryPlay();}};addEventListener('pointerdown',kick,true);addEventListener('keydown',kick,true);
+  setInterval(()=>{if(el&&on){el.muted=!!(window.SFX&&SFX.muted);save();}},500);addEventListener('pagehide',save);
+  function start(resume){if(on)return;on=true;if(!el){el=new Audio('music/ending.mp3');el.loop=true;el.volume=VOL;el.preload='auto';}
+    let t=0;if(resume)try{t=parseFloat(sessionStorage.getItem(KEY))||0;}catch(e){}
+    if(t>0){const seek=()=>{try{el.currentTime=t;}catch(e){}};if(el.readyState>=1)seek();else el.addEventListener('loadedmetadata',seek,{once:true});}
+    tryPlay();}
+  function stop(){on=false;pend=false;if(el){el.pause();el.currentTime=0;}try{sessionStorage.removeItem(KEY);}catch(e){}}
+  function prefetch(){if(!el){el=new Audio('music/ending.mp3');el.loop=true;el.volume=VOL;el.preload='auto';}}
+  return{start,stop,prefetch,get on(){return on},get el(){return el}};})();window.ENDSONG=ENDSONG;
+
 function hurt(){
   const p=S.p;
   if(T.god||p.inv>0)return;
@@ -1520,7 +1537,7 @@ const INTRO_SHOTS=[
   {im:'cockpit',a:{x:470,y:690,z:1.08},b:{x:480,y:720,z:1.24},dur:8,text:'The town put out a call. Only one thing could calm him: a gluten-free, vegan ramen.'},
   {im:'sky',a:{x:500,y:740,z:1.05},b:{x:560,y:760,z:1.16},dur:6.5,text:'Saddle up, pilot. Bring him a bowl of Samabila.'}];
 const IN={shot:0,t:0,typed:0,fade:1,out:0,dust:[],steam:[],now:0};
-function introBegin(){SFX.init();SFX.loadSamples();SFX.stage(true);mode='intro';Object.assign(IN,{shot:0,t:0,typed:0,fade:1,out:0,dust:[],steam:[]});}
+function introBegin(){ENDSONG.stop();SFX.init();SFX.loadSamples();SFX.stage(true);mode='intro';Object.assign(IN,{shot:0,t:0,typed:0,fade:1,out:0,dust:[],steam:[]});}
 function introPress(){const S0=INTRO_SHOTS[IN.shot];if(IN.out)return;if(IN.typed<S0.text.length)IN.typed=S0.text.length;else introNext();}
 function introNext(){if(IN.shot<INTRO_SHOTS.length-1){IN.shot++;IN.t=0;IN.typed=0;IN.fade=1;IN.steam=[];IN.trail=[];}else IN.out=.0001;}
 function introSkip(){if(!IN.out)IN.out=.0001;}
@@ -1593,12 +1610,13 @@ window.__intro={IN,get FE(){return FE},get mode(){return mode},feastBegin:()=>fe
 
 /* ---------- Flow ---------- */
 const over=document.getElementById('over'),ot=document.getElementById('ot'),om=document.getElementById('om'),ok=document.getElementById('ok');
-function start(){SFX.init();SFX.loadMusic();SFX.loadSamples();SFX.music(false,.3);SFX.stage(true);S=fresh();mode='play';paused=false;over.hidden=true;syncBench();
+function start(){ENDSONG.stop();SFX.init();SFX.loadMusic();SFX.loadSamples();SFX.music(false,.3);SFX.stage(true);S=fresh();mode='play';paused=false;over.hidden=true;syncBench();
   /* Strike the set: the rocket is already in place, so no blink-in */
   if(SET&&!SET.striking){SET.striking=true;SET.t=0;S.p.inv=0;}}
 function end(win){
   if(mode!=='play')return;
   SFX.music(false,win?4:1.5);
+  if(win){SFX.stage(false,3);ENDSONG.start();}
   const bonus=S.medals*500+S.p.bombs*2000;
   if(win)S.score+=bonus;
   /* Winning leads into the ending: the screen fades to warm cream and the ramen kitchen opens */
@@ -1632,7 +1650,7 @@ const BOWL={L:{room:img('bowl/room'),counter:img('bowl/counter'),pot:img('bowl/p
   lines:['Gluten-free, vegan, and good to the last noodle.','Now, cook your own.']};
 function shotLines(){return FE.shot===0?[FEAST.lines[FE.wi],'Peace returned to the high plains.']:FE.shot===1?HALL.lines:BOWL.lines;}
 const FE={wi:0,shot:0,t:0,line:0,typed:0,hold:0,fade:1,out:0,sw:0,now:0,steam:[],motes:[]};
-function feastBegin(){Object.assign(FE,{wi:S.p.wi,shot:0,t:0,line:0,typed:0,hold:0,fade:1,out:0,sw:0,steam:[],motes:[]});mode='feast';SFX.stage(true);}
+function feastBegin(){Object.assign(FE,{wi:S.p.wi,shot:0,t:0,line:0,typed:0,hold:0,fade:1,out:0,sw:0,steam:[],motes:[]});mode='feast';ENDSONG.start();}
 function feastText(){return shotLines()[FE.line];}
 function feastPress(){if(FE.out||FE.sw||FE.t<.8)return;const tx=feastText();if(FE.typed<tx.length)FE.typed=tx.length;else feastNext();}
 function feastNext(){if(FE.line<shotLines().length-1){FE.line++;FE.typed=0;FE.hold=0;}else if(FE.shot<2)FE.sw=.0001;else FE.out=.0001;}

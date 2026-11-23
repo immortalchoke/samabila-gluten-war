@@ -217,6 +217,25 @@ const SFX=(()=>{
   function setMuted(m){muted=m;if(out)out.gain.setTargetAtTime(m?0:vol,ac.currentTime,.02);}
   return{init,play,frame,setMuted,music,suspend,loadMusic,loadSamples,get musicOn(){return !!musSrc},get muted(){return muted},names:Object.keys(LIB)};
 })();
+window.SFX=SFX;
+/* Ending song: starts the moment the dragon falls and keeps playing through the ending shots and the kitchen until the
+   game restarts. It streams from a plain audio element so the kitchen page can pick it up where the game left off
+   (the position rides along in sessionStorage). Swap music/ending.mp3 to replace it. */
+const ENDSONG=(()=>{const KEY='gw-end-t',VOL=.5;let el=null,on=false,pend=false;
+  const save=()=>{if(el&&on)try{sessionStorage.setItem(KEY,el.currentTime.toFixed(2));}catch(e){}};
+  function tryPlay(){if(!el||!on)return;el.muted=!!(window.SFX&&SFX.muted);const p=el.play();if(p&&p.catch)p.catch(()=>{pend=true;});}
+  /* if the browser blocks playback until the player touches something, start on the first key or tap */
+  const kick=()=>{if(pend){pend=false;tryPlay();}};addEventListener('pointerdown',kick,true);addEventListener('keydown',kick,true);
+  setInterval(()=>{if(el&&on){el.muted=!!(window.SFX&&SFX.muted);save();}},500);addEventListener('pagehide',save);
+  function start(resume){if(on)return;on=true;if(!el){el=new Audio('music/ending.mp3');el.loop=true;el.volume=VOL;el.preload='auto';}
+    let t=0;if(resume)try{t=parseFloat(sessionStorage.getItem(KEY))||0;}catch(e){}
+    if(t>0){const seek=()=>{try{el.currentTime=t;}catch(e){}};if(el.readyState>=1)seek();else el.addEventListener('loadedmetadata',seek,{once:true});}
+    tryPlay();}
+  function stop(){on=false;pend=false;if(el){el.pause();el.currentTime=0;}try{sessionStorage.removeItem(KEY);}catch(e){}}
+  function prefetch(){if(!el){el=new Audio('music/ending.mp3');el.loop=true;el.volume=VOL;el.preload='auto';}}
+  return{start,stop,prefetch,get on(){return on},get el(){return el}};})();window.ENDSONG=ENDSONG;
+ENDSONG.start(true);
+
 let WI=0,WL=3;try{const a=sessionStorage.getItem('gw-wi'),b=sessionStorage.getItem('gw-lvl');if(a!==null)WI=clamp(+a|0,0,3);if(b!==null)WL=clamp(+b|0,1,5);}catch(e){}
 const WEAP=['spread','rang','laser','noodle'][WI];
 const SPREAD=[[0],[-5,5],[-12,0,12],[-20,-7,7,20],[-28,-16,-5,5,16,28]];
