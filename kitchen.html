@@ -24,10 +24,10 @@ button:focus-visible,.btn:focus-visible{outline:2px solid #e69000;outline-offset
 [hidden]{display:none!important}
 /* Phones: the game fills the screen edge to edge, nothing zooms, selects or pops up on fast taps, and the tuning bench is hidden */
 @media (pointer:coarse){
-  html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+  html,body{margin:0!important;width:100%;overflow-x:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
   body{background:#0e0b09}
   .wrap{gap:0!important;padding:0!important;width:100%;max-width:none!important}
-  .cab,.stack{width:100vw!important;max-width:none!important;border-radius:0!important;outline:none!important}
+  .cab,.stack{width:100%!important;max-width:none!important;border-radius:0!important;outline:none!important}
   .pad,#hint{display:none!important}
 
 .haspad .cab{width:min(100%,calc((100dvh - 110px - 160px)*.6667),480px)}

@@ -36,10 +36,10 @@ canvas{display:block;width:100%;height:100%;touch-action:none;user-select:none;-
 .bombbtn:active,.bombbtn.on{background-image:url(art/pad/bomb-on.webp);transform:translateY(2px)}
 /* Phones: the game fills the screen edge to edge, nothing zooms, selects or pops up on fast taps, and the tuning bench is hidden */
 @media (pointer:coarse){
-  html,body{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
+  html,body{margin:0!important;width:100%;overflow-x:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
   body{padding:0!important;background:#0e0b09;min-height:100dvh;display:flex;align-items:center;overflow:hidden}
   .wrap{gap:0!important;padding:0!important;width:100%;max-width:none!important}
-  .cab,.stack{width:100vw!important;max-width:none!important;border-radius:0!important;outline:none!important}
+  .cab,.stack{width:100%!important;max-width:none!important;border-radius:0!important;outline:none!important}
   .bench,#hint{display:none!important}
 }
 
@@ -1636,11 +1636,11 @@ function dragHint(){if(!TOUCH||mode!=='play'||!S||S.p.alive===false){hintA=0;ret
   feltText('DRAG TO MOVE',p.x+12,y,13,'k');g.restore();}
 function hud(){
   const p=S.p,f=FLAVORS[p.wi];
-  g.textAlign='left';g.font='800 15px Figtree,system-ui,sans-serif';g.fillStyle='#f3e9dc';
-  g.fillText(String(S.score).padStart(7,'0'),10,20);
+  g.textAlign='left';g.textBaseline='middle';g.font='800 15px Figtree,system-ui,sans-serif';g.fillStyle='#f3e9dc';
+  g.fillText(String(S.score).padStart(7,'0'),10,15);
   /* HUD icons reuse the felt pickups, so the bars teach players what each pickup is */
   const icon=(im,x,y,w,h)=>{if(loaded(im))g.drawImage(im,x,y,w,h);};
-  icon(ART.soju[0],112,5,9,20);g.fillStyle='#f6cf52';g.fillText('×'+S.medals,124,20);
+  icon(ART.soju[0],112,5,9,20);g.fillStyle='#f6cf52';g.fillText('×'+S.medals,124,15);g.textBaseline='alphabetic';
   for(let i=0;i<Math.max(0,p.lives);i++)icon(ART.hero,W-22-i*20,4,16,20);
   for(let i=0;i<p.bombs;i++)icon(ART.brick,W-26-i*22,H-29,20,20);
   g.textAlign='left';icon(ART.bags[p.wi],8,H-31,20,25);g.fillStyle='#f6efe2';g.fillText(f.short,32,H-12);
