@@ -41,10 +41,10 @@ const TOP={y0:481,y1:634,bl:161,br:364,bf:583,
   /* the glass top is a trapezoid in perspective: narrower at the back edge, wider at the front (measured off the kitchen photo) */
   inside(x,y){const t=clamp((y-481)/(634-481),0,1);return x>lerp(45,-9,t)&&x<lerp(432,480,t);}};
 /* view zoom: the whole kitchen is drawn a bit smaller around the bottom-center of the screen, easing back to 1 for the hero shot */
-const VIEWK=1;
+const VIEWK=.88;
 function viewK(){return lerp(VIEWK,1,typeof S==='undefined'?0:heroE());}
 /* the camera is panned so the scene sits higher, leaving breathing room at the bottom; the pan eases out for the hero shot */
-const PAN=146,TILT=-656,TILT_T=200;
+const PAN=94,TILT=-500,TILT_T=200;
 /* the scene opens looking out the window at San Ramyeon's main street, then tilts down to the table */
 function tiltE(){if(typeof S==='undefined')return 1;const t=Math.min(1,S.t/TILT_T);return t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
 function panY(){if(typeof S==='undefined')return PAN;return PAN*(1-heroE())+TILT*(1-tiltE());}
