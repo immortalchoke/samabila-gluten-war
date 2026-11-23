@@ -1627,7 +1627,10 @@ function draw(){
   g.restore();
   if(mode!=='title')hud();
   dragHint();
+  /* the bomb button only shows during play, not on the title, cutscenes or the ending */
+  {const vis=mode==='play'?'visible':'hidden';if(BOMBBTN.style.visibility!==vis)BOMBBTN.style.visibility=vis;}
 }
+const BOMBBTN=document.getElementById('bombbtn');BOMBBTN.style.visibility='hidden';
 /* On phones, a "drag to move" cue hangs under the jet whenever no finger is on the screen; it fades out the moment
    you start steering and comes back if you let go */
 let hintA=0;
