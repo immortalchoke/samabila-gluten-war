@@ -754,7 +754,7 @@ const SFX=(()=>{
   let chargeOsc=null,chargeGn=null,beamOsc=null,beamGn=null;
   /* Recorded sounds (Billy's) replace the synth voice for these names. Sprout snap has five takes, picked at random and
      nudged in pitch so a run of breaks never sounds the same twice */
-  const REC={},REC_FILES={medal:['s_medal'],item:['s_item'],life:['s_life'],smash:['s_smash'],catch:['s_catch'],rang:['s_rang'],bag:['s_bag'],snap:['s_snap0','s_snap1','s_snap2','s_snap3','s_snap4']},REC_VOL={rang:.7,catch:.8,snap:.9,medal:.8};
+  const REC={},REC_FILES={medal:['s_medal'],item:['s_item'],life:['s_life'],smash:['s_smash'],catch:['s_catch'],rang:['s_rang'],snap:['s_snap0','s_snap1','s_snap2','s_snap3','s_snap4']},REC_VOL={rang:.45,catch:.8,snap:.9,medal:.8,life:.6,smash:.6};
   function playRec(name,pan){const bs=(REC[name]||[]).filter(Boolean);if(!bs.length)return false;const src=ac.createBufferSource();src.buffer=bs[Math.floor(Math.random()*bs.length)];
     src.playbackRate.value=name==='snap'?.85+Math.random()*.35:.97+Math.random()*.06;const gn=bus(pan,false);gn.gain.value=REC_VOL[name]||1;src.connect(gn);src.start();return true;}
   function play(name,x){if(!ac||muted||(!LIB[name]&&!REC[name]))return;const now=performance.now();if(GAP[name]&&now-(last[name]||0)<GAP[name])return;last[name]=now;
