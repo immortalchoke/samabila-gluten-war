@@ -1313,9 +1313,9 @@ function buildSet(){
     L(282,548,keycap(K,30,'P'),'right');L(306,548,caption('PAUSE',17),'right');
   }else{
     L(64,486,()=>{const im=TITLE_IM.finger;if(loaded(im)){const h=46,w=im.naturalWidth/im.naturalHeight*h;g.drawImage(im,-w/2,-h/2,w,h);}else{g.fillStyle='#f1e8d2';g.strokeStyle='#231f20';g.lineWidth=4;g.beginPath();g.arc(0,0,13,0,7);g.fill();g.stroke();}},'left');
-    L(88,486,caption('STICK OR DRAG TO MOVE',17),'left');r++;
-    L(88,518,caption('HOLD FIRE TO SHOOT',17),'right');r++;
-    L(88,550,caption('BOMB CLEARS THE SCREEN',15),'right');
+    L(88,486,caption('DRAG TO MOVE',17),'left');r++;
+    L(88,518,caption('AUTO-FIRE IS ON',17),'right');r++;
+    L(88,550,caption('TAP BOMB TO CLEAR THE SCREEN',14),'right');
   }
   /* the start prompt */
   add({k:'prompt',x:W/2,y:570,exit:'fall',delay:0,dir:1,draw:()=>{if(!SET.striking&&Math.floor(performance.now()/450)%2)return;feltText(TOUCH?'TAP TO START':'PRESS ENTER TO START',0,0,17,'k');}});
@@ -1607,7 +1607,16 @@ function draw(){
   }
   g.restore();
   if(mode!=='title')hud();
+  dragHint();
 }
+/* On phones, a "drag to move" cue hangs under the jet whenever no finger is on the screen; it fades out the moment
+   you start steering and comes back if you let go */
+let hintA=0;
+function dragHint(){if(!TOUCH||mode!=='play'||!S||S.p.alive===false){hintA=0;return;}
+  hintA+=((drag||paused?0:1)-hintA)*(drag?.35:.06);if(hintA<.02)return;
+  const p=S.p,t=performance.now()/1000,y=Math.min(H-40,p.y+58)+Math.sin(t*3)*3;g.save();g.globalAlpha=hintA;
+  const im=TITLE_IM.finger;if(loaded(im)){const h=30,w=im.naturalWidth/im.naturalHeight*h,sx=Math.sin(t*2.4)*10;g.drawImage(im,p.x-w/2+sx-58,y-h/2,w,h);}
+  feltText('DRAG TO MOVE',p.x+12,y,13,'k');g.restore();}
 function hud(){
   const p=S.p,f=FLAVORS[p.wi];
   g.textAlign='left';g.font='800 15px Figtree,system-ui,sans-serif';g.fillStyle='#f3e9dc';
@@ -1895,7 +1904,8 @@ document.getElementById('bombbtn').addEventListener('pointerdown',e=>{e.preventD
    A thumb stick on the left, FIRE and BOMB on the right. PAD.x/PAD.y is the stick (-1..1), PAD.fire is FIRE held.
    Each page wires PAD.onFire / onBomb / onPause to its own actions. Dragging on the screen still works too. */
 const PAD={x:0,y:0,fire:false,onDrag:null,onFire:null,onFireUp:null,onBomb:null,onPause:null};window.PAD=PAD;
-(function(){const on=matchMedia('(pointer:coarse)').matches||/[?&]pad=1/.test(location.search);if(!on)return;
+(function(){/* the on-screen controller is off: phones drag on the screen itself. ?pad=1 still brings it back for testing */
+  const on=/[?&]pad=1/.test(location.search);if(!on)return;
   document.documentElement.classList.add('haspad');
   const joy=document.getElementById('joy');if(!joy)return;const knob=joy.querySelector('.knob');let jp=null;
   const setJ=e=>{const r=joy.getBoundingClientRect(),R=r.width*.42;let dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);const d=Math.hypot(dx,dy);
@@ -1949,7 +1959,9 @@ function syncBench(){
   for(let i=1;i<=5;i++)document.getElementById('l'+i).setAttribute('aria-pressed',S.p.lvl===i);
 }
 const tog=(id,k)=>{const b=document.getElementById(id);b.onclick=()=>{T[k]=!T[k];b.setAttribute('aria-pressed',T[k]);};};
-tog('god','god');tog('cyc','cycle');tog('auto','autoFire');
+/* phones fire automatically, since a thumb on the screen is busy steering */
+if(TOUCH)T.autoFire=true;
+tog('god','god');tog('cyc','cycle');tog('auto','autoFire');document.getElementById('auto').setAttribute('aria-pressed',T.autoFire);
 document.getElementById('restart').onclick=start;
 /* jump straight to the win: keeps the weapon you're holding, so the feast shows that one */
 document.getElementById('toend').onclick=()=>{
