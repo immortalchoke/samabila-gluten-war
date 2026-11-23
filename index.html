@@ -1268,7 +1268,7 @@ function buildSet(){
   /* backdrop flats */
   add({k:'flat',half:0,x:0,y:0,exit:'left',delay:14});add({k:'flat',half:1,x:W/2,y:0,exit:'right',delay:14});
   /* the felt wordmark, hung on two wires, arching over the dragon */
-  add({k:'logo',x:W/2,y:34,exit:'fly',delay:0,wires:true,draw:()=>{const im=loaded(TITLE_IM.logo)?TITLE_IM.logo:TITLE_IM.logoFlat;if(!loaded(im))return;const w=140,h=im.naturalHeight/im.naturalWidth*w;g.drawImage(im,-w/2,-h/2,w,h);}});
+  add({k:'logo',x:W/2,y:34,exit:'fly',delay:0,draw:()=>{const im=loaded(TITLE_IM.logo)?TITLE_IM.logo:TITLE_IM.logoFlat;if(!loaded(im))return;const w=140,h=im.naturalHeight/im.naturalWidth*w;g.drawImage(im,-w/2,-h/2,w,h);}});
   /* the noodle-slurping dragon under the wordmark, now a small badge above the jet */
   add({k:'dragon',x:W/2,y:104,exit:'fly',delay:2,draw:()=>{const im=TITLE_IM.dragon;if(!loaded(im))return;const h=118,w=im.naturalWidth/im.naturalHeight*h;
     g.drawImage(im,-w/2,-h/2+(SET.striking?0:Math.sin(performance.now()/700)*2),w,h);}});
@@ -1352,7 +1352,7 @@ const easeOutBack=u=>{const c=1.6;return 1+(c+1)*Math.pow(u-1,3)+c*Math.pow(u-1,
 const easeBounce=u=>{const n=7.5625,d=2.75;if(u<1/d)return n*u*u;if(u<2/d)return n*(u-=1.5/d)*u+.75;if(u<2.5/d)return n*(u-=2.25/d)*u+.9375;return n*(u-=2.625/d)*u+.984375;};
 const easeOutQuart=u=>1-Math.pow(1-u,4);
 /* entry timeline in frames: [delay, duration, dx, dy] */
-const ENTER={clouds:[0,80,0,230],logo:[14,80,0,-170],dragon:[22,80,0,-250],jet:[30,100,430,-400],enemies:[46,100,320,-220],
+const ENTER={clouds:[0,80,0,230],logo:[14,80,0,-170],dragon:[22,80,0,-250],jet:[30,100,560,-580],enemies:[46,100,320,-220],
   letter:[64,70,0,300],prompt:[74,70,0,260],ctl:[82,70,0,260]};
 function enterE(k,te){const [d,dur]=ENTER[k];const u=Math.max(0,Math.min(1,(te-d)/dur));return easeOutQuart(u);}
 function enterPose(q,te){const k=q.k==='flat'?null:(ENTER[q.k]?q.k:'ctl');if(!k)return{x:q.x,y:q.y,r:0};
@@ -1365,7 +1365,7 @@ function drawSet(){
     if(art||now-SET.made>5000){SET.ready=true;SET.born=now;}}
   const te=SET.ready?(performance.now()-SET.born)/16.67:0;SET_TE=SET.striking?999:te;
   for(const q of SET.P){const p=SET.striking?piecePose(q,T):enterPose(q,te);
-    if(p.y>H+140||p.y<-200||p.x<-W||p.x>W*2)continue;alive++;
+    if(SET.striking&&(p.y>H+140||p.y<-200||p.x<-W||p.x>W*2))continue;alive++;
     if(q.k==='flat'){if(!q.half)dioFrame();
       g.save();g.translate(p.x-q.x,p.y-q.y);g.drawImage(DIOC,q.half*W,0,W,H*2,q.half*W/2,0,W/2,H);
       /* the cut edge between the two flats shows as a dark seam once they part */
