@@ -218,10 +218,11 @@ const LEVEL=[
 
 /* ---------- State ---------- */
 let S,mode='title',paused=false;
+const TOUCH0=matchMedia('(pointer:coarse)').matches;
 const keys={};
 function fresh(){return{
   tick:0,t:0,li:0,press:0,cool:0,hold:0,rhythm:0,bolts:[],charge:0,heldT:0,beamT:0,beamMax:1,score:0,medals:0,shake:0,warn:0,
-  p:{x:W/2,y:H-90,wi:0,lvl:1,lives:3,bombs:3,inv:90,flash:0,vx:0},
+  p:{x:W/2,y:TOUCH0?H-150:H-90,wi:0,lvl:1,lives:3,bombs:3,inv:90,flash:0,vx:0},
   en:[],shots:[],rings:[],bul:[],items:[],fx:[],boom:[],pops:[],swarm:[],props:[],nextProp:30,corpse:null,bomb:0,beam:false,boss:null,
   chains:[],deb:[],puffs:[],comets:[],cling:[],opts:[],crumbs:[],trail:[],loopH:[],rockBags:Math.random()<.5?1:2,rockKills:0,
 };}
@@ -1637,9 +1638,12 @@ const BOMBBTN=document.getElementById('bombbtn');BOMBBTN.style.visibility='hidde
 let hintA=0;
 function dragHint(){if(!TOUCH||mode!=='play'||!S||S.p.alive===false){hintA=0;return;}
   hintA+=((drag||paused?0:1)-hintA)*(drag?.35:.06);if(hintA<.02)return;
-  const p=S.p,t=performance.now()/1000,y=Math.min(H-40,p.y+58)+Math.sin(t*3)*3;g.save();g.globalAlpha=hintA;
-  const im=TITLE_IM.finger;if(loaded(im)){const h=30,w=im.naturalWidth/im.naturalHeight*h,sx=Math.sin(t*2.4)*10;g.drawImage(im,p.x-w/2+sx-58,y-h/2,w,h);}
-  feltText('DRAG TO MOVE',p.x+12,y,13,'k');g.restore();}
+  /* a pulsing target ring under the jet with the words stacked inside, like a spot to put your thumb */
+  const p=S.p,t=performance.now()/1000,cx=p.x,cy=p.y+82<=H-48?p.y+82:p.y-92,pulse=(t*1.4)%1;g.save();g.globalAlpha=hintA;
+  g.strokeStyle='rgba(255,226,122,'+(.9*(1-pulse))+')';g.lineWidth=3;g.beginPath();g.arc(cx,cy,34+pulse*16,0,7);g.stroke();
+  g.strokeStyle='rgba(255,246,230,'+(.55+.35*Math.sin(t*6))+')';g.lineWidth=3;g.beginPath();g.arc(cx,cy,34,0,7);g.stroke();
+  g.fillStyle='rgba(35,25,20,.35)';g.beginPath();g.arc(cx,cy,32,0,7);g.fill();
+  feltText('DRAG',cx,cy-8,12,'k');feltText('TO MOVE',cx,cy+9,11,'k');g.restore();}
 /* laser on a phone: once the charge is full, a cue to lift the thumb */
 function beamHint(){if(!TOUCH||mode!=='play'||!S||!drag||S.charge<1||FLAVORS[S.p.wi].id!=='laser')return;
   const p=S.p;g.save();g.globalAlpha=.6+.4*Math.sin(performance.now()/120);feltText('RELEASE TO FIRE',p.x,Math.max(40,p.y-118),13,'r');g.restore();}

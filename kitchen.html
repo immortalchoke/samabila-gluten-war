@@ -802,9 +802,14 @@ const ROCKET={hero:'art/jet.webp',flames:['art/flame0.webp','art/flame1.webp','a
 const RK={hero:Object.assign(new Image(),{src:ROCKET.hero}),flames:ROCKET.flames.map(src=>Object.assign(new Image(),{src}))};
 /* phones: a "drag to move" cue under the jet until a finger is on the screen */
 const KTOUCH=matchMedia('(pointer:coarse)').matches;let kHintA=0;
-function kHint(){if(!KTOUCH)return;kHintA+=((touch?0:1)-kHintA)*(touch?.35:.06);if(kHintA<.02)return;const s=S.ship,t=performance.now()/1000,k=1/viewK();
-  g.save();g.globalAlpha=kHintA;g.font=`900 ${13*k}px Gooper,Georgia,serif`;g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';g.lineWidth=4*k;g.strokeStyle='#231f20';
-  const y=s.y+46*k+Math.sin(t*3)*3*k;g.strokeText('DRAG TO MOVE',s.x,y);g.fillStyle='#fff';g.fillText('DRAG TO MOVE',s.x,y);g.restore();}
+function kHint(){if(!KTOUCH)return;kHintA+=((touch?0:1)-kHintA)*(touch?.35:.06);if(kHintA<.02)return;const s=S.ship,t=performance.now()/1000,k=1/viewK(),pulse=(t*1.4)%1;
+  const cx=s.x,cy=s.y+62*k;g.save();g.globalAlpha=kHintA;g.lineWidth=3*k;
+  g.strokeStyle='rgba(255,226,122,'+(.9*(1-pulse))+')';g.beginPath();g.arc(cx,cy,(34+pulse*16)*k,0,7);g.stroke();
+  g.strokeStyle='rgba(255,246,230,'+(.55+.35*Math.sin(t*6))+')';g.beginPath();g.arc(cx,cy,34*k,0,7);g.stroke();
+  g.fillStyle='rgba(35,25,20,.35)';g.beginPath();g.arc(cx,cy,32*k,0,7);g.fill();
+  g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';g.strokeStyle='#231f20';g.fillStyle='#fff';
+  for(const [txt,dy,sz] of [['DRAG',-8,12],['TO MOVE',9,11]]){g.font=`900 ${sz*k}px Gooper,Georgia,serif`;g.lineWidth=4*k;g.strokeText(txt,cx,cy+dy*k);g.fillText(txt,cx,cy+dy*k);}
+  g.restore();}
 function drawShip(){const s=S.ship;
   /* the game's own felt rocket, at exactly its in-game size on screen (undoing the kitchen's zoom) */
   if(ok(RK.hero)){g.save();g.translate(s.x,s.y);g.scale(1/viewK(),1/viewK());const thr=1-S.land,fi=[0,1,0,2][Math.floor(S.t/5)%4];
