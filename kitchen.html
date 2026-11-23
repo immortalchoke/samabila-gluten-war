@@ -453,7 +453,7 @@ function step(){
     if(S.step===14){S.land=Math.min(1,S.land+.02);sh.x=lerp(sh.x,S.pad.x,.12);sh.y=lerp(sh.y,S.pad.y-16,.08);if(touch){touch.sx=sh.x;touch.sy=sh.y;touch.px=touch.px;}}}
   /* plating: the kitchen pulls away, the pot moves onto a mat, and the rocket lifts off again */
   if(S.step===14&&S.land>=1&&S.stepT>30)snap();
-  if(S.step===10){S.hero=Math.min(1,S.hero+1/110);S.land=Math.max(0,S.land-.03);sh.x=lerp(sh.x,400,.05);sh.y=lerp(sh.y,650,.05);
+  if(S.step===10){S.hero=Math.min(1,S.hero+1/110);S.land=Math.max(0,S.land-.03);
     S.pot.V=lerp(S.pot.V,.86,.04);for(let i=0;i<N;i++){S.pot.h[i]*=.9;S.pot.v[i]*=.9;}
     if(S.hero>=1){setStep(11);S.jars=TOPS.map((t,i)=>({t,x:40+i*64,y:96,pop:0,delay:i*6,wig:0,count:0}));}}
   if(S.jars)for(const j of S.jars){if(S.step>11||S.stepT>j.delay)j.pop=Math.min(1,j.pop+.08);j.wig=Math.max(0,j.wig-.05);}
