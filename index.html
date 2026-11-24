@@ -1401,10 +1401,11 @@ function enterPose(q,te){const k=q.k==='flat'?null:(ENTER[q.k]?q.k:'ctl');if(!k)
   const [,,dx,dy]=ENTER[k],e=enterE(k,te);return{x:q.x+dx*(1-e),y:q.y+dy*(1-e),r:0};}
 let SET_TE=999;
 function drawSet(){
-  if(!SET)return;const T=SET.striking?SET.t:0;let alive=0;
+  if(!SET)return;
+const T=SET.striking?SET.t:0;let alive=0;
   /* the build waits until the art is in, so it plays in full instead of finishing behind a loading screen */
-  if(!SET.ready&&!SET.striking){const now=performance.now(),art=[DIO.sky,DIO.jet,DIO.cl,DIO.en,TITLE_IM.dragon,...Object.values(TITLE_IM.font)].every(loaded)&&(loaded(TITLE_IM.logo)||loaded(TITLE_IM.logoFlat));
-    if(art||now-SET.made>5000){SET.ready=true;SET.born=now;}}
+  if(!SET.ready&&!SET.striking){const now=performance.now(),art=!TGATE&&[DIO.sky,DIO.jet,DIO.cl,DIO.en,TITLE_IM.dragon,...Object.values(TITLE_IM.font)].every(loaded)&&(loaded(TITLE_IM.logo)||loaded(TITLE_IM.logoFlat));
+    if(art||(!TGATE&&now-SET.made>5000)){SET.ready=true;SET.born=now;}}
   const te=SET.ready?(performance.now()-SET.born)/16.67:0;SET_TE=SET.striking?999:te;
   for(const q of SET.P){const p=SET.striking?piecePose(q,T):enterPose(q,te);
     if(SET.striking&&(p.y>H+140||p.y<-200||p.x<-W||p.x>W*2))continue;alive++;
@@ -1416,6 +1417,7 @@ function drawSet(){
     g.save();g.translate(p.x,p.y);g.rotate(p.r);
     if(q.k==='letter'&&!SET.striking){g.translate(0,Math.sin(performance.now()/500+q.x*.03)*2);}
     q.draw();g.restore();}
+  if(TGATE&&!SET.striking&&mode==='title'){const a=.55+.45*Math.sin(performance.now()/260);g.save();g.globalAlpha=a;feltText(TOUCH?'TAP TO BEGIN':'CLICK TO BEGIN',W/2,H*.62,20,'k');g.restore();}
   if(SET.striking&&alive===0)SET=null;
 }
 function draw(){
@@ -1701,9 +1703,16 @@ const IN={shot:0,t:0,typed:0,fade:1,out:0,dust:[],steam:[],now:0};
 /* Title whistle: plays once while the title is up, never loops, and fades out when the game starts. Browsers only allow
    sound after the player has interacted, so if it can't start on load it starts on the first click or key that doesn't
    start the game (and if that first press does start the game, the whistle is simply skipped) */
+/* If the browser blocks sound on arrival (phones always do), the title waits behind a "tap to begin": that first tap
+   unlocks audio, starts the whistle and plays the title's entrance, and only the next tap starts the game */
+let TGATE=true,gateHit=false;window.__tg=()=>TGATE;
+addEventListener('pointerdown',e=>{if(TGATE&&mode==='title'){gateHit=true;e.stopImmediatePropagation();e.preventDefault();}},true);
+function openGate(e){if(!TGATE||mode!=='title')return;if(e.type==='keydown'){e.stopImmediatePropagation();e.preventDefault();}else if(!gateHit)return;
+  TGATE=false;gateHit=false;try{SFX.init();SFX.unlock&&SFX.unlock();}catch(_){}WHISTLE.go();}
+for(const ev of ['pointerup','touchend','click','keydown'])addEventListener(ev,openGate,true);
 const WHISTLE=(()=>{let el=null,done=false,want=false;
   function go(){if(done||mode!=='title')return;if(!el){el=new Audio('music/whistle.mp3');el.volume=.8;el.preload='auto';}
-    el.muted=!!SFX.muted;const p=el.play();if(p&&p.then)p.then(()=>{done=true;want=false;}).catch(()=>{want=true;});else done=true;}
+    el.muted=!!SFX.muted;const p=el.play();if(p&&p.then)p.then(()=>{done=true;want=false;TGATE=false;}).catch(()=>{want=true;});else{done=true;TGATE=false;}}
   function stop(){want=false;done=true;if(!el||el.paused)return;const v0=el.volume,t0=performance.now();
     const f=()=>{const k=Math.min(1,(performance.now()-t0)/900);el.volume=v0*(1-k);if(k<1)requestAnimationFrame(f);else el.pause();};f();}
   const kick=()=>setTimeout(()=>{if(want&&mode==='title')go();},0);for(const ev of ['pointerup','click','keydown'])addEventListener(ev,kick,true);
