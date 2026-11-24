@@ -288,9 +288,9 @@ const SFX=(()=>{
   let chargeOsc=null,chargeGn=null,beamOsc=null,beamGn=null;
   /* Recorded sounds (Billy's) replace the synth voice for these names. Sprout snap has five takes, picked at random and
      nudged in pitch so a run of breaks never sounds the same twice */
-  const REC={},REC_FILES={medal:['s_medal'],item:['s_item'],life:['s_life'],smash:['s_smash'],catch:['s_catch'],rang:['s_rang'],snap:['s_snap0','s_snap1','s_snap2','s_snap3','s_snap4']},REC_VOL={rang:.45,catch:.8,snap:.9,medal:.8,life:.6,smash:.6};
+  const REC={},REC_FILES={medal:['s_medal'],item:['s_item'],life:['s_life'],smash:['s_smash'],catch:['s_catch'],rang:['s_rang'],snap:['s_snap0','s_snap1','s_snap2','s_snap3','s_snap4'],camera:['s_camera']},REC_VOL={camera:.8,rang:.45,catch:.8,snap:.9,medal:.8,life:.6,smash:.6};
   function playRec(name,pan){const bs=(REC[name]||[]).filter(Boolean);if(!bs.length)return false;const src=ac.createBufferSource();src.buffer=bs[Math.floor(Math.random()*bs.length)];
-    src.playbackRate.value=name==='snap'?.85+Math.random()*.35:.97+Math.random()*.06;const gn=bus(pan,false);gn.gain.value=REC_VOL[name]||1;src.connect(gn);src.start();return true;}
+    src.playbackRate.value=name==='snap'?.85+Math.random()*.35:name==='camera'?1:.97+Math.random()*.06;const gn=bus(pan,false);gn.gain.value=REC_VOL[name]||1;src.connect(gn);src.start();return true;}
   function play(name,x){if(!ac||muted||(!LIB[name]&&!REC[name]))return;const now=performance.now();if(GAP[name]&&now-(last[name]||0)<GAP[name])return;last[name]=now;
     const pan=x===undefined?0:(x/W-.5)*1.4;if(playRec(name,pan))return;if(LIB[name])LIB[name](pan);}
   /* Continuous voices: the laser charge whine and the beam buzz follow game state every frame */
@@ -472,7 +472,7 @@ function snap(){S.snapping=true;draw();S.snapping=false;
     x.font='900 44px Gooper,Georgia,serif';x.fillText(cap,fw/2,cy-16,fw-140);x.font=`500 22px ${F}`;x.fillStyle='#8a7560';x.fillText(sub,fw/2,cy+30,fw-140);}
   else{pc.width=720;pc.height=880;x=pc.getContext('2d');x.fillStyle='#fbf8f1';x.fillRect(0,0,720,880);x.drawImage(cv,120,600,720,720,40,40,640,640);
     x.fillStyle='#3b2a20';x.font='900 42px Gooper,Georgia,serif';x.textAlign='center';x.fillText(cap,360,752);x.font=`500 24px ${F}`;x.fillStyle='#8a7560';x.fillText(sub,360,800);}
-  S.polaroid=pc;S.flash=1;setStep(12);}
+  S.polaroid=pc;S.flash=1;SFX.play('camera');setStep(12);}
 /* ---------- physics ---------- */
 function step(){
   S.t++;S.stepT++;const P=S.pit,pot=S.pot,sh=S.ship;
