@@ -733,7 +733,7 @@ const SFX=(()=>{
   let sfxOff=false,musOff=false;try{sfxOff=localStorage.getItem('gw-sfx-off')==='1';musOff=localStorage.getItem('gw-mus-off')==='1';}catch(e){}const last={},vol=.8;
   const pulses={},noise={};
   function init(){
-    if(ac){if(ac.state==='suspended')ac.resume();return;}
+    if(ac){if(ac.state==='suspended'&&!held)ac.resume();return;}
     const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;ac=new AC();
     const comp=ac.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=4;comp.attack.value=.003;comp.release.value=.2;
     const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=9000;lp.Q.value=.3;
@@ -847,9 +847,10 @@ const SFX=(()=>{
     musSrc=ac.createBufferSource();musSrc.buffer=musBuf;musSrc.loop=true;musSrc.loopStart=MUS.loopStart;musSrc.loopEnd=MUS.loopEnd;musSrc.connect(musGn);musSrc.start();}
   function music(on,fade=2.5){musWant=on;if(!ac)return;loadMusic();if(on){startMusic();return;}
     if(musSrc){const s=musSrc,gn=musGn,t=ac.currentTime;gn.gain.setValueAtTime(gn.gain.value,t);gn.gain.linearRampToValueAtTime(0,t+fade);s.stop(t+fade+.05);musSrc=null;musGn=null;}}
-function unlock(){init();if(!ac)return;if(ac.state!=='running')ac.resume();if(!unlocked){unlocked=true;const b=ac.createBuffer(1,1,22050),s=ac.createBufferSource();s.buffer=b;s.connect(ac.destination);s.start(0);}}
+function unlock(){init();if(!ac)return;if(ac.state!=='running'&&!held)ac.resume();if(!unlocked){unlocked=true;const b=ac.createBuffer(1,1,22050),s=ac.createBufferSource();s.buffer=b;s.connect(ac.destination);s.start(0);}}
   let unlocked=false;
-  function suspend(p){if(!ac)return;if(p&&ac.state==='running')ac.suspend();else if(!p&&ac.state==='suspended')ac.resume();}
+  /* while paused or the menu is up, taps elsewhere (which normally wake the audio for phones) must not restart it */
+  let held=false;function suspend(p){held=!!p;if(!ac)return;if(p&&ac.state==='running')ac.suspend();else if(!p&&ac.state==='suspended')ac.resume();}
   function levels(){if(!ac)return;out.gain.setTargetAtTime((muted||sfxOff)?0:vol,ac.currentTime,.02);mus.gain.setTargetAtTime((muted||musOff)?0:vol,ac.currentTime,.02);}
   function setMuted(m){muted=m;levels();}
   function setSfxOff(v){sfxOff=v;try{localStorage.setItem('gw-sfx-off',v?'1':'0');}catch(e){}levels();}
@@ -1717,6 +1718,8 @@ function menuClose(){if(MENU.hidden||menuShut)return;MENU.classList.remove('open
 function syncToggles(){for(const [id,off] of [['t-music',SFX.musOff],['t-sfx',SFX.sfxOff]]){const b=document.getElementById(id);b.setAttribute('aria-pressed',!off);const k=id==='t-music'?'music':'sound';b.querySelector('.ic').src='art/ui/'+k+(off?'-off':'')+'.webp';b.querySelector('.sw').src='art/ui/tog-'+(off?'off':'on')+'.webp';}}
 COG.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();menuOpen();});
 MENU.addEventListener('pointerdown',e=>e.stopPropagation());
+/* a tap on the dimmed backdrop (anywhere outside the panel, links aside) closes the menu */
+MENU.addEventListener('click',e=>{if(e.target===MENU||e.target.classList.contains('menu-credits'))menuClose();});
 document.getElementById('resume').onclick=menuClose;document.getElementById('mclose').onclick=menuClose;
 document.getElementById('t-music').onclick=()=>{SFX.setMusicOff(!SFX.musOff);syncToggles();};
 document.getElementById('t-sfx').onclick=()=>{SFX.setSfxOff(!SFX.sfxOff);syncToggles();};
