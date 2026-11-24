@@ -24,8 +24,14 @@ button:focus-visible,.btn:focus-visible{outline:2px solid #e69000;outline-offset
 [hidden]{display:none!important}
 .cab{position:relative}
 #endbar{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:28px 10px max(12px,env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(20,14,10,0),rgba(20,14,10,.82) 30%)}
-#endbar .row{flex-wrap:nowrap;gap:8px}
-#endbar .row button,#endbar .row .btn{font-size:clamp(12px,3.6vw,15px);padding:8px clamp(10px,3vw,16px);white-space:nowrap}
+#endbar .row{flex-wrap:nowrap;gap:5px;width:100%;max-width:440px;padding:0 4px;box-sizing:border-box}
+#endbar .row button,#endbar .row .btn{display:flex;align-items:center;justify-content:center;height:42px;flex:1 1 auto;min-width:0;box-sizing:border-box;padding:0 clamp(12px,3.4vw,18px) 3px;border:0;border-radius:0;background:none;white-space:nowrap;border-image:url(art/ui/btn-brown.webp) 50% 31% fill / 50% 24px round;-webkit-tap-highlight-color:transparent}
+#endbar .row button:active,#endbar .row .btn:active{border-image-source:url(art/ui/btn-brown-down.webp)}
+#endbar .row .btn.shop{border-image-source:url(art/ui/btn-red.webp)}
+#endbar .row .btn.shop:active{border-image-source:url(art/ui/btn-red-down.webp)}
+#endbar .row :active>img{transform:translateY(2px)}
+#endbar .row img{flex:0 1 auto;min-width:0;max-width:100%}
+#endbar .row .btn.shop{flex-grow:1.4}
 #endbar .credits a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 #endbar .credits{color:#e9dccb;margin:0;font-size:clamp(10px,2.9vw,12px);line-height:1.5}
 .credits{font-size:12px;line-height:1.6;color:var(--muted);text-align:center;margin-top:2px}
@@ -999,7 +1005,30 @@ requestAnimationFrame(frame);cv.focus();
 document.getElementById('again').addEventListener('click',e=>{if(EMBED&&parent!==window){e.preventDefault();try{parent.location.reload();}catch(_){location.href='./';}}});
 const GAME_URL='https://immortalchoke.github.io/samabila-gluten-war/';
 function polBlob(){return new Promise(r=>S.polaroid.toBlob(r,'image/png'));}
-function say(btn,txt){const o=btn.dataset.o||(btn.dataset.o=btn.textContent);btn.textContent=txt;setTimeout(()=>btn.textContent=o,1800);}
+/* felt lettering, shared with the game (white felt letters with a black or red outline) */
+const loadedF=im=>im&&im.complete&&im.naturalWidth>0;
+const FELT={"k":{"A":["k-A",-0.017,1.038,1.045],"B":["k-B",-0.017,1.031,0.99],"C":["k-C",-0.038,1.066,0.983],"D":["k-D",-0.024,1.038,1.059],"E":["k-E",-0.024,1.052,0.962],"F":["k-F",-0.017,1.038,0.962],"G":["k-G",-0.028,1.059,1.031],"H":["k-H",-0.021,1.038,1.066],"I":["k-I",-0.021,1.038,0.627],"J":["k-J",-0.021,1.045,0.962],"K":["k-K",-0.021,1.045,1.031],"L":["k-L",-0.014,1.024,0.92],"M":["k-M",-0.021,1.043,1.277],"N":["k-N",-0.028,1.05,1.057],"O":["k-O",-0.05,1.092,1.064],"P":["k-P",-0.021,1.035,0.972],"Q":["k-Q",-0.05,1.199,1.121],"R":["k-R",-0.021,1.035,1.021],"S":["k-S",-0.021,1.042,0.895],"T":["k-T",-0.021,1.042,1.021],"U":["k-U",-0.014,1.035,1.028],"W":["k-W",-0.014,1.021,1.329],"X":["k-X",-0.021,1.035,1.0],"Y":["k-Y",-0.014,1.021,1.014],"Z":["k-Z",-0.021,1.049,0.93],"0":["k-0",-0.02,1.049,0.911],"1":["k-1",-0.02,1.03,0.702],"2":["k-2",-0.026,1.049,0.872],"3":["k-3",-0.02,1.036,0.872],"4":["k-4",-0.013,1.023,0.885],"5":["k-5",-0.026,1.049,0.859],"6":["k-6",-0.023,1.039,0.857],"7":["k-7",-0.016,1.019,0.844],"8":["k-8",-0.016,1.026,0.877],"9":["k-9",-0.016,1.039,0.883],"!":["k-excl",-0.023,1.045,0.506],"?":["k-q",-0.029,1.065,0.805],".":["k-dot",0.463,0.505,0.491],",":["k-comma",0.427,0.698,0.52],"'":["k-apos",-0.078,0.683,0.512],"-":["k-dash",0.27,0.448,0.719],"&":["k-amp",-0.107,1.196,1.238],":":["k-colon",0.036,0.918,0.505],"V":["k-V",-0.017,1.038,1.047]},"r":{"A":["r-A",-0.021,1.041,1.048],"B":["r-B",-0.014,1.021,0.993],"C":["r-C",-0.041,1.068,0.993],"D":["r-D",-0.021,1.027,1.062],"E":["r-E",-0.027,1.055,0.979],"F":["r-F",-0.021,1.041,0.973],"G":["r-G",-0.031,1.065,1.045],"H":["r-H",-0.017,1.038,1.072],"I":["r-I",-0.024,1.045,0.646],"J":["r-J",-0.017,1.045,0.969],"K":["r-K",-0.024,1.045,1.045],"L":["r-L",-0.017,1.038,0.928],"M":["r-M",-0.014,1.035,1.273],"N":["r-N",-0.028,1.056,1.063],"O":["r-O",-0.049,1.098,1.063],"P":["r-P",-0.021,1.042,0.965],"Q":["r-Q",-0.042,1.21,1.14],"R":["r-R",-0.021,1.042,1.021],"S":["r-S",-0.035,1.062,0.91],"T":["r-T",-0.021,1.035,1.035],"U":["r-U",-0.014,1.042,1.035],"W":["r-W",-0.014,1.028,1.34],"X":["r-X",-0.021,1.042,1.007],"Y":["r-Y",-0.014,1.021,1.028],"Z":["r-Z",-0.028,1.056,0.938],"0":["r-0",-0.02,1.039,0.948],"1":["r-1",-0.013,1.02,0.693],"2":["r-2",-0.02,1.039,0.895],"3":["r-3",-0.02,1.039,0.889],"4":["r-4",-0.013,1.013,0.915],"5":["r-5",-0.033,1.052,0.889],"6":["r-6",-0.02,1.039,0.889],"7":["r-7",-0.013,1.033,0.876],"8":["r-8",-0.02,1.039,0.915],"9":["r-9",-0.026,1.052,0.902],"!":["r-excl",-0.007,1.02,0.549],"?":["r-q",-0.039,1.065,0.817],".":["r-dot",0.464,0.522,0.536],",":["r-comma",0.42,0.703,0.551],"'":["r-apos",-0.109,0.652,0.529],"-":["r-dash",0.246,0.478,0.768],"&":["r-amp",-0.065,1.138,1.196],":":["r-colon",0.022,0.949,0.543],"V":["r-V",-0.021,1.041,1.011]}};
+const FELT_IM={};function feltIm(col,ch){const g=FELT[col][ch];if(!g)return null;const k=g[0];if(!FELT_IM[k])FELT_IM[k]=Object.assign(new Image(),{src:'art/font2/'+k+'.webp'});return FELT_IM[k];}
+const FELT_OL={k:'#231f20',r:'#e23200'};
+function feltAdv(col,ch,h,c=g){if(ch===' ')return h*.34;const gl=FELT[col][ch];if(gl)return gl[3]*h*.9;c.font=`900 ${h/.7}px Gooper,Georgia,serif`;return c.measureText(ch).width+h*.12;}
+function feltWidth(txt,h,col='k',c=g){txt=String(txt).toUpperCase();let w=0;for(const ch of txt)w+=feltAdv(col,ch,h,c);return w;}
+/* y is the middle of the cap height */
+function feltText(txt,x,y,h,col='k',align='center',c=g){txt=String(txt).toUpperCase();const tw=feltWidth(txt,h,col,c);let cx=align==='center'?x-tw/2:align==='right'?x-tw:x;const top=y-h/2;
+  for(const ch of txt){const adv=feltAdv(col,ch,h,c);if(ch!==' '){const gl=FELT[col][ch],im=feltIm(col,ch);
+      if(gl&&loadedF(im)){const w=gl[3]*h;c.drawImage(im,cx+(adv-w)/2,top+gl[1]*h,w,gl[2]*h);}
+      else{c.save();c.font=`900 ${h/.7}px Gooper,Georgia,serif`;c.textAlign='center';c.textBaseline='alphabetic';c.lineJoin='round';c.lineWidth=h*.24;c.strokeStyle=FELT_OL[col];
+        c.strokeText(ch,cx+adv/2,top+h);c.fillStyle='#fff';c.fillText(ch,cx+adv/2,top+h);c.restore();}}
+    cx+=adv;}}
+/* the same lettering for page elements (headline, buttons): drawn to a small canvas and dropped in as an image */
+function feltHTML(el,txt,col,h){el.setAttribute('aria-label',txt);const T=String(txt).toUpperCase(),ims=[...new Set([...T].map(ch=>feltIm(col,ch)).filter(Boolean))];
+  const paint=()=>{const sc=2,pad=h*.3,cv2=document.createElement('canvas');let c=cv2.getContext('2d');const w=feltWidth(T,h,col,c);
+    cv2.width=Math.ceil((w+pad*2)*sc);cv2.height=Math.ceil((h+pad*2)*sc);c=cv2.getContext('2d');c.scale(sc,sc);feltText(T,pad,pad+h/2,h,col,'left',c);
+    const im=new Image();im.src=cv2.toDataURL();im.alt='';im.style.width=(w+pad*2)+'px';im.style.maxWidth='100%';im.style.height='auto';im.style.display='block';im.style.margin='0 auto';el.replaceChildren(im);};
+  paint();Promise.all(ims.map(i=>i.complete?0:new Promise(r=>{i.addEventListener('load',r,{once:true});i.addEventListener('error',r,{once:true});}))).then(paint);
+  if(document.fonts)document.fonts.load('900 40px Gooper').then(paint);}
+function say(btn,txt){const o=btn.dataset.o||(btn.dataset.o=btn.getAttribute('aria-label'));feltHTML(btn,txt,'k',12);setTimeout(()=>feltHTML(btn,o,'k',12),1800);}
+for(const [id,t] of [['share','Share'],['shop','Shop Samabila'],['again','Play again']])feltHTML(document.getElementById(id),t,'k',12);
+for(const n of ['btn-red-down','btn-brown-down'])new Image().src='art/ui/'+n+'.webp';
 async function savePhoto(){const b=await polBlob(),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='my-samabila-ramen.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
 document.getElementById('share').onclick=async e=>{const btn=e.currentTarget;if(!S.polaroid)return;
   try{const f=new File([await polBlob()],'my-samabila-ramen.png',{type:'image/png'});
