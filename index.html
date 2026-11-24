@@ -1397,10 +1397,11 @@ const easeOutQuart=u=>1-Math.pow(1-u,4);
 const ENTER={clouds:[0,80,0,230],logo:[0,70,0,-170],dragon:[22,80,0,-250],jet:[30,100,560,-580],enemies:[46,100,320,-220],
   letter:[64,70,0,300],prompt:[74,70,0,260],ctl:[82,70,0,260]};
 function enterE(k,te){const [d,dur]=ENTER[k];const u=Math.max(0,Math.min(1,(te-d)/dur));return easeOutQuart(u);}
-const LOGO_SPLASH={y:H*.4,s:2.1};
+const LOGO_SPLASH={y:196,s:1.8},DRAGON_DY=70;
 function enterPose(q,te){
-  if(q.k==='logo'&&SET&&SET.gated){const [d,dur]=ENTER.logo,u=Math.max(0,Math.min(1,(te-d)/dur)),e=u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2;
-    return{x:q.x,y:LOGO_SPLASH.y+(q.y-LOGO_SPLASH.y)*e,r:0,s:LOGO_SPLASH.s+(1-LOGO_SPLASH.s)*e};}const k=q.k==='flat'?null:(ENTER[q.k]?q.k:'ctl');if(!k)return{x:q.x,y:q.y,r:0};
+  /* coming from the Begin screen, the logo and dragon start big in the middle and glide up together into place */
+  if((q.k==='logo'||q.k==='dragon')&&SET&&SET.gated){const [d,dur]=ENTER.logo,u=Math.max(0,Math.min(1,(te-d)/dur)),e=u<.5?4*u*u*u:1-Math.pow(-2*u+2,3)/2;
+    const y0=LOGO_SPLASH.y+(q.k==='dragon'?DRAGON_DY*LOGO_SPLASH.s:0);return{x:q.x,y:y0+(q.y-y0)*e,r:0,s:LOGO_SPLASH.s+(1-LOGO_SPLASH.s)*e};}const k=q.k==='flat'?null:(ENTER[q.k]?q.k:'ctl');if(!k)return{x:q.x,y:q.y,r:0};
   const [,,dx,dy]=ENTER[k],e=enterE(k,te);return{x:q.x+dx*(1-e),y:q.y+dy*(1-e),r:0};}
 let SET_TE=999;
 function drawSet(){
@@ -1422,8 +1423,10 @@ const T=SET.striking?SET.t:0;let alive=0;
     q.draw();g.restore();}
   if(TGATE&&!SET.striking&&mode==='title'){SET.gated=true;
     /* the Begin screen: the Samabila logo big in the middle, a felt Begin button under it */
+    const t=performance.now()/1000,dr=TITLE_IM.dragon;
+    if(loaded(dr)){const h=118*LOGO_SPLASH.s,w=dr.naturalWidth/dr.naturalHeight*h;g.drawImage(dr,W/2-w/2,LOGO_SPLASH.y+DRAGON_DY*LOGO_SPLASH.s-h/2+Math.sin(t*1.43)*2,w,h);}
     const im=loaded(TITLE_IM.logo)?TITLE_IM.logo:TITLE_IM.logoFlat;if(loaded(im)){const w=140*LOGO_SPLASH.s,h=im.naturalHeight/im.naturalWidth*w;g.drawImage(im,W/2-w/2,LOGO_SPLASH.y-h/2,w,h);}
-    const t=performance.now()/1000,by=H*.6,bs=1+Math.sin(t*3)*.03;g.save();g.translate(W/2,by);g.scale(bs,bs);
+    const by=H*.7,bs=1+Math.sin(t*3)*.03;g.save();g.translate(W/2,by);g.scale(bs,bs);
     g.fillStyle='rgba(0,0,0,.35)';g.beginPath();g.roundRect(-72,-22,144,50,25);g.fill();
     g.fillStyle='#e23200';g.beginPath();g.roundRect(-72,-26,144,50,25);g.fill();g.lineWidth=4;g.strokeStyle='#231f20';g.stroke();
     g.strokeStyle='rgba(255,236,200,.55)';g.lineWidth=1.5;g.setLineDash([4,4]);g.beginPath();g.roundRect(-64,-19,128,36,18);g.stroke();g.setLineDash([]);
