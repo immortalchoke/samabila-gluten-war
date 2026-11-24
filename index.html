@@ -1698,7 +1698,19 @@ const INTRO_SHOTS=[
   {im:'cockpit',a:{x:470,y:690,z:1.08},b:{x:480,y:720,z:1.24},dur:8,text:'The town put out a call. Only one thing could calm him: a gluten-free, vegan ramen.'},
   {im:'sky',a:{x:500,y:740,z:1.05},b:{x:560,y:760,z:1.16},dur:6.5,text:'Saddle up, pilot. Bring him a bowl of Samabila.'}];
 const IN={shot:0,t:0,typed:0,fade:1,out:0,dust:[],steam:[],now:0};
-function introBegin(){ENDSONG.stop();SFX.init();SFX.loadSamples();SFX.stage(true);mode='intro';Object.assign(IN,{shot:0,t:0,typed:0,fade:1,out:0,dust:[],steam:[]});}
+/* Title whistle: plays once while the title is up, never loops, and fades out when the game starts. Browsers only allow
+   sound after the player has interacted, so if it can't start on load it starts on the first click or key that doesn't
+   start the game (and if that first press does start the game, the whistle is simply skipped) */
+const WHISTLE=(()=>{let el=null,done=false,want=false;
+  function go(){if(done||mode!=='title')return;if(!el){el=new Audio('music/whistle.mp3');el.volume=.8;el.preload='auto';}
+    el.muted=!!SFX.muted;const p=el.play();if(p&&p.then)p.then(()=>{done=true;want=false;}).catch(()=>{want=true;});else done=true;}
+  function stop(){want=false;done=true;if(!el||el.paused)return;const v0=el.volume,t0=performance.now();
+    const f=()=>{const k=Math.min(1,(performance.now()-t0)/900);el.volume=v0*(1-k);if(k<1)requestAnimationFrame(f);else el.pause();};f();}
+  const kick=()=>setTimeout(()=>{if(want&&mode==='title')go();},0);for(const ev of ['pointerup','click','keydown'])addEventListener(ev,kick,true);
+  setInterval(()=>{if(el&&!el.paused)el.muted=!!SFX.muted;},300);
+  return{go,stop,get el(){return el}};})();window.WHISTLE=WHISTLE;
+addEventListener('load',()=>WHISTLE.go());
+function introBegin(){WHISTLE.stop();ENDSONG.stop();SFX.init();SFX.loadSamples();SFX.stage(true);mode='intro';Object.assign(IN,{shot:0,t:0,typed:0,fade:1,out:0,dust:[],steam:[]});}
 function introPress(){const S0=INTRO_SHOTS[IN.shot];if(IN.out)return;if(IN.typed<S0.text.length)IN.typed=S0.text.length;else introNext();}
 function introNext(){if(IN.shot<INTRO_SHOTS.length-1){IN.shot++;IN.t=0;IN.typed=0;IN.fade=1;IN.steam=[];IN.trail=[];}else IN.out=.0001;}
 function introSkip(){if(!IN.out)IN.out=.0001;}
@@ -1772,7 +1784,7 @@ window.__setReady=()=>SET&&SET.ready;window.__intro={IN,get FE(){return FE},get 
 /* ---------- Flow ---------- */
 const over=document.getElementById('over'),ot=document.getElementById('ot'),om=document.getElementById('om'),ok=document.getElementById('ok');
 feltHTML(ot,'The Gluten Conflict','r',46);feltHTML(document.getElementById('go'),'Start','k',18);
-function start(){ENDSONG.stop();SFX.init();SFX.loadMusic();SFX.loadSamples();SFX.music(false,.3);SFX.stage(true);S=fresh();mode='play';paused=false;over.hidden=true;syncBench();
+function start(){WHISTLE.stop();ENDSONG.stop();SFX.init();SFX.loadMusic();SFX.loadSamples();SFX.music(false,.3);SFX.stage(true);S=fresh();mode='play';paused=false;over.hidden=true;syncBench();
   /* Strike the set: the rocket is already in place, so no blink-in */
   if(SET&&!SET.striking){SET.striking=true;SET.t=0;S.p.inv=0;}}
 function end(win){
