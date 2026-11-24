@@ -421,9 +421,8 @@ function hitTest(b){
     if(R.soft>=1){setStep(6);S.packs=FLAVORS.map((f,i)=>({f,x:240+CAMX+(i-1.5)*114,y:-60-i*30,ty:210,vx:0,vy:0,a:0,av:0,flash:0,ready:false}));}
     return true;}
   if(S.step===6&&S.packs&&!S.pack){for(const p of S.packs)if(p.ready&&inRot(b.x,b.y,p.x,p.y,0,54,70)){
-    /* three hits to pick, so a stray shot doesn't choose for you */
-    p.picks=(p.picks||0)+1;p.flash=6;if(p.picks<3){puff(b.x,b.y,p.f.c);return true;}S.pack=p;p.chosen=true;
-    for(const q of S.packs)if(q!==p){q.vx=(q.x<p.x?-1:1)*3;q.vy=-2.5;q.leaving=true;}puff(b.x,b.y,p.f.c);setStep(7);return true;}}
+    /* shots only jostle the packets now; you choose one by flying into it */
+    p.flash=4;puff(b.x,b.y,p.f.c);return true;}}
   if(S.step===7&&S.pack&&S.pack.home&&!S.pack.cut&&inRot(b.x,b.y,S.pack.x,S.pack.y,S.pack.a,56,72)){const p=S.pack;p.flash=6;puff(b.x,b.y,p.f.c);
     if(p.locked){p.cut=true;p.pour=150;}else p.av+=.04;return true;}
   if(S.step===11){if(S.jars)for(const j of S.jars)if(j.pop>.9&&Math.abs(b.x-j.x)<24&&Math.abs(b.y-j.y)<32){return shootJar(j,b);}
@@ -479,6 +478,9 @@ function step(){
   sh.x+=PAD.x*sp*1.3/viewK();sh.y+=PAD.y*sp*1.3/viewK();
   if(touch&&sh.tgt){const ex=sh.tgt.x-sh.x,ey=sh.tgt.y-sh.y,d=Math.hypot(ex,ey);if(d>.5){const m=Math.min(d,Math.max(3,d*.32),26/viewK());sh.x+=ex/d*m;sh.y+=ey/d*m;}}
   sh.x=clamp(sh.x,viewL()+20,viewR()-20);sh.y=clamp(sh.y,viewTop()+30,viewBot());
+  /* choosing a flavor: touch a packet with the jet */
+  if(S.step===6&&S.packs&&!S.pack)for(const p of S.packs)if(p.ready&&!p.leaving&&inRot(sh.x,sh.y,p.x,p.y,0,62,80)){S.pack=p;p.chosen=true;p.flash=8;
+    for(const q of S.packs)if(q!==p){q.vx=(q.x<p.x?-1:1)*3;q.vy=-2.5;q.leaving=true;}puff(sh.x,sh.y-20,p.f.c);SFX.play&&SFX.play('item',sh.x);setStep(7);break;}
   /* the landing pad: fly onto it and the rocket settles down and parks */
   /* when you're done with toppings, park on the pad to take the photo */
   if(S.pad){S.pad.t++;if(S.step===11&&!S.pad.armed&&S.pad.t>20&&Math.hypot(sh.x-S.pad.x,sh.y-(S.pad.y-20))>70)S.pad.armed=true;if(S.step===11&&S.pad.armed&&Math.hypot(sh.x-S.pad.x,sh.y-(S.pad.y-20))<30)setStep(14);
@@ -843,7 +845,7 @@ function drawLightOld(){
   for(let i=0;i<30;i++){const px=110+((i*97+S.t*.12)%260),py=170+((i*61+Math.sin(S.t*.003+i)*30+S.t*.05)%300);g.fillStyle='rgba(255,230,170,.5)';g.beginPath();g.arc(px,py,1,0,7);g.fill();}
   g.restore();
   g.save();g.globalCompositeOperation='multiply';g.fillStyle='rgba(255,214,160,.14)';g.fillRect(0,0,W,H);g.restore();}
-const STEPS=['Shoot the kettle to pour. Steady fire, steady pour','Shoot the knob to light the burner','Bringing it to a boil…','Shoot the bag to flip it, then cut it open','Shoot the noodles to slow them down. Or don’t','Shoot the noodles to cook them','Pick a flavor: hit one 3 times','Flip it and cut it open','Ramen’s ready! Park on the landing pad','Parked!','Plating up…','Shoot the jars to add toppings','','Your bowl!','Parked!'];
+const STEPS=['Shoot the kettle to pour. Steady fire, steady pour','Shoot the knob to light the burner','Bringing it to a boil…','Shoot the bag to flip it, then cut it open','Shoot the noodles to slow them down. Or don’t','Shoot the noodles to cook them','Pick a flavor: fly into one','Flip it and cut it open','Ramen’s ready! Park on the landing pad','Parked!','Plating up…','Shoot the jars to add toppings','','Your bowl!','Parked!'];
 function drawUI(){
   const t=S.step===11&&S.pad?'All done? Park on the pad':STEPS[S.step];if(t){g.font=`600 14px ${F}`;g.textAlign='center';g.textBaseline='middle';const w=Math.min(W-24,g.measureText(t).width+28);
   g.fillStyle='rgba(35,25,20,.78)';g.beginPath();g.roundRect(W/2-w/2,10,w,32,16);g.fill();g.fillStyle='#fff6e6';g.fillText(t,W/2,26.5,w-20);}
