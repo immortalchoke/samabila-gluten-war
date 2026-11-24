@@ -46,6 +46,20 @@ canvas{display:block;width:100%;height:100%;touch-action:none;user-select:none;-
 }
 
 @media (pointer:coarse){.bombbtn{display:block}}
+/* settings cog (top left, beside the score) and the pause menu it opens */
+.cog{position:absolute;z-index:7;left:6px;top:4px;width:30px;height:30px;padding:0;border:0;background:none;cursor:pointer;visibility:hidden;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
+.cog svg,.cog img{width:100%;height:100%;display:block}
+.menu{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(18,12,8,.78);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.menu[hidden]{display:none}
+.menu-card{display:flex;flex-direction:column;gap:10px;width:min(78%,300px);padding:20px 18px;border-radius:18px;background:#2a211b;border:2px dashed rgba(214,170,110,.55);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.menu h2{margin:0 0 4px;text-align:center;font:900 26px Gooper,Georgia,serif;color:#fff;-webkit-text-stroke:5px #231f20;paint-order:stroke fill;letter-spacing:.02em}
+.menu .tog,.menu .tog[aria-pressed]{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border-radius:12px;border:0;background:#3a2f27!important;color:var(--ink);font:700 15px Figtree,system-ui,sans-serif;cursor:pointer}
+.tog b{min-width:46px;padding:4px 0;border-radius:999px;background:#5f8f3a;color:#fff;font-size:13px;text-align:center}
+.tog[aria-pressed="false"] b{background:#6b5a4e}
+.mbtn{display:block;text-align:center;padding:11px 14px;border-radius:999px;border:0;background:#3a2f27;color:var(--ink);font:700 15px Figtree,system-ui,sans-serif;text-decoration:none;cursor:pointer}
+.mbtn.shop{background:#e23200;color:#fff}
+.menu-credits{position:absolute;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom,0px));margin:0;text-align:center;font:500 12px/1.6 Figtree,system-ui,sans-serif;color:#d9cab6}
+.menu-credits a,.credits a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 .haspad .bombbtn{display:none!important}
 .stack{display:flex;flex-direction:column;gap:10px;flex:0 1 auto;min-width:0;width:min(100%,calc((100dvh - 32px)*.6667),480px)}
 .stack .cab{width:100%}
@@ -101,6 +115,15 @@ label input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--broth)}
       <button class="go" id="go">Start</button>
     </div>
     <button class="bombbtn" id="bombbtn" aria-label="Drop bomb">BOMB</button>
+    <button class="cog" id="cog" aria-label="Settings"><svg viewBox="0 0 32 32" aria-hidden="true"><path fill="#e9d9bd" stroke="#231f20" stroke-width="2" stroke-linejoin="round" d="M13.6 2h4.8l.8 3.6 2.6 1.1 3.1-2 3.4 3.4-2 3.1 1.1 2.6 3.6.8v4.8l-3.6.8-1.1 2.6 2 3.1-3.4 3.4-3.1-2-2.6 1.1-.8 3.6h-4.8l-.8-3.6-2.6-1.1-3.1 2-3.4-3.4 2-3.1-1.1-2.6L2 18.4v-4.8l3.6-.8 1.1-2.6-2-3.1 3.4-3.4 3.1 2 2.6-1.1z"/><circle cx="16" cy="16" r="4.6" fill="#7a4a2e" stroke="#231f20" stroke-width="2"/></svg></button>
+    <div class="menu" id="menu" hidden role="dialog" aria-label="Settings">
+      <div class="menu-card"><h2>Paused</h2>
+        <button class="tog" id="t-music" aria-pressed="true"><span>Music</span><b>On</b></button>
+        <button class="tog" id="t-sfx" aria-pressed="true"><span>Sound effects</span><b>On</b></button>
+        <a class="mbtn shop" href="https://www.samabila.com/" target="_blank" rel="noopener">Shop Samabila</a>
+        <button class="mbtn" id="resume">Resume</button></div>
+      <p class="menu-credits">Made for Samabila<br>by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a><br>Sound effects and music by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a> and Jack Hong</p>
+    </div>
   </div>
   <div class="pad" id="pad" aria-label="Controller"><div class="joy" id="joy"><div class="knob"></div></div><div class="pbtns"><button class="pbtn small" id="ppause" aria-label="Pause">II</button><button class="pbtn fire" id="pfire">FIRE</button><button class="pbtn bomb" id="pbomb">BOMB</button></div></div>
   </div>
@@ -689,14 +712,17 @@ function updateSwarm(){
    in its hissy and metallic modes. A light modern finish sits on top: soft low-pass, small room reverb, stereo pan by
    screen position, random pitch variation, and a master compressor. No audio files. */
 const SFX=(()=>{
-  let ac=null,out,verb,muted=false;const last={},vol=.8;
+  let ac=null,out,mus,verb,muted=false;
+  /* separate switches for music and sound effects, remembered between visits */
+  let sfxOff=false,musOff=false;try{sfxOff=localStorage.getItem('gw-sfx-off')==='1';musOff=localStorage.getItem('gw-mus-off')==='1';}catch(e){}const last={},vol=.8;
   const pulses={},noise={};
   function init(){
     if(ac){if(ac.state==='suspended')ac.resume();return;}
     const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;ac=new AC();
     const comp=ac.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=4;comp.attack.value=.003;comp.release.value=.2;
     const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=9000;lp.Q.value=.3;
-    out=ac.createGain();out.gain.value=muted?0:vol;out.connect(lp);lp.connect(comp);
+    out=ac.createGain();out.gain.value=(muted||sfxOff)?0:vol;out.connect(lp);lp.connect(comp);
+    mus=ac.createGain();mus.gain.value=(muted||musOff)?0:vol;mus.connect(lp);
     /* Brick-wall limiter last in the chain, so loud moments like the bomb can't clip */
     const lim=ac.createDynamicsCompressor();lim.threshold.value=-1.5;lim.knee.value=0;lim.ratio.value=20;lim.attack.value=.001;lim.release.value=.1;comp.connect(lim);lim.connect(ac.destination);
     /* Small room: a short decaying noise impulse */
@@ -781,14 +807,14 @@ const SFX=(()=>{
   const REC={},REC_FILES={medal:['s_medal'],item:['s_item'],life:['s_life'],smash:['s_smash'],catch:['s_catch'],rang:['s_rang'],snap:['s_snap0','s_snap1','s_snap2','s_snap3','s_snap4']},REC_VOL={rang:.45,catch:.8,snap:.9,medal:.8,life:.6,smash:.6};
   function playRec(name,pan){const bs=(REC[name]||[]).filter(Boolean);if(!bs.length)return false;const src=ac.createBufferSource();src.buffer=bs[Math.floor(Math.random()*bs.length)];
     src.playbackRate.value=name==='snap'?.85+Math.random()*.35:.97+Math.random()*.06;const gn=bus(pan,false);gn.gain.value=REC_VOL[name]||1;src.connect(gn);src.start();return true;}
-  function play(name,x){if(!ac||muted||(!LIB[name]&&!REC[name]))return;const now=performance.now();if(GAP[name]&&now-(last[name]||0)<GAP[name])return;last[name]=now;
+  function play(name,x){if(!ac||muted||sfxOff||(!LIB[name]&&!REC[name]))return;const now=performance.now();if(GAP[name]&&now-(last[name]||0)<GAP[name])return;last[name]=now;
     const pan=x===undefined?0:(x/W-.5)*1.4;if(playRec(name,pan))return;if(LIB[name])LIB[name](pan);}
   /* Continuous voices: the laser charge whine and the beam buzz follow game state every frame */
   let prevC=0;
-  function frame(st){if(!ac)return;const t=ac.currentTime,c=(!muted&&st.charge)||0;if(c>=1&&prevC<1)play('full',st.p.x);prevC=c;
+  function frame(st){if(!ac)return;const t=ac.currentTime,c=(!muted&&!sfxOff&&st.charge)||0;if(c>=1&&prevC<1)play('full',st.p.x);prevC=c;
     if(c>0&&!chargeOsc){chargeOsc=ac.createOscillator();chargeOsc.setPeriodicWave(pulses[.25]);chargeGn=ac.createGain();chargeGn.gain.value=0;chargeOsc.connect(chargeGn);chargeGn.connect(out);chargeOsc.start();}
     if(chargeOsc){chargeOsc.frequency.setTargetAtTime(220+c*900,t,.03);chargeGn.gain.setTargetAtTime(c>0?.025+c*.03:0,t,.03);if(c<=0){const o=chargeOsc;setTimeout(()=>o.stop(),200);chargeOsc=null;}}
-    const b=!muted&&st.beam;
+    const b=!muted&&!sfxOff&&st.beam;
     if(b&&!beamOsc){
       if(FX.laser_beam){beamOsc=ac.createBufferSource();beamOsc.buffer=FX.laser_beam;beamOsc.loop=true;beamOsc.loopStart=.3828;beamOsc.loopEnd=FX.laser_beam.duration;beamOsc._lf=null;}
       else{beamOsc=ac.createOscillator();beamOsc.setPeriodicWave(pulses[.5]);beamOsc.frequency.value=110;const lf=ac.createOscillator(),lg=ac.createGain();lf.frequency.value=22;lg.gain.value=9;lf.connect(lg);lg.connect(beamOsc.frequency);lf.start();beamOsc._lf=lf;}
@@ -801,25 +827,28 @@ const SFX=(()=>{
   const MUS={url:'music/boss.mp3',loopStart:7.973,loopEnd:102.4,vol:.38};
   let musBuf=null,musSrc=null,musGn=null,musWant=false,musLoading=null;
   function loadMusic(){if(musLoading||!ac)return;musLoading=fetch(MUS.url).then(r=>r.arrayBuffer()).then(b=>new Promise((res,rej)=>ac.decodeAudioData(b,res,rej))).then(b=>{musBuf=b;if(musWant)startMusic();}).catch(()=>{});}
-  function startMusic(){if(!ac||!musBuf||musSrc)return;musGn=ac.createGain();musGn.gain.value=MUS.vol;musGn.connect(out);
+  function startMusic(){if(!ac||!musBuf||musSrc)return;musGn=ac.createGain();musGn.gain.value=MUS.vol;musGn.connect(mus);
     musSrc=ac.createBufferSource();musSrc.buffer=musBuf;musSrc.loop=true;musSrc.loopStart=MUS.loopStart;musSrc.loopEnd=MUS.loopEnd;musSrc.connect(musGn);musSrc.start();}
   function music(on,fade=2.5){musWant=on;if(!ac)return;loadMusic();if(on){startMusic();return;}
     if(musSrc){const s=musSrc,gn=musGn,t=ac.currentTime;gn.gain.setValueAtTime(gn.gain.value,t);gn.gain.linearRampToValueAtTime(0,t+fade);s.stop(t+fade+.05);musSrc=null;musGn=null;}}
 function unlock(){init();if(!ac)return;if(ac.state!=='running')ac.resume();if(!unlocked){unlocked=true;const b=ac.createBuffer(1,1,22050),s=ac.createBufferSource();s.buffer=b;s.connect(ac.destination);s.start(0);}}
   let unlocked=false;
   function suspend(p){if(!ac)return;if(p&&ac.state==='running')ac.suspend();else if(!p&&ac.state==='suspended')ac.resume();}
-  function setMuted(m){muted=m;if(out)out.gain.setTargetAtTime(m?0:vol,ac.currentTime,.02);}
+  function levels(){if(!ac)return;out.gain.setTargetAtTime((muted||sfxOff)?0:vol,ac.currentTime,.02);mus.gain.setTargetAtTime((muted||musOff)?0:vol,ac.currentTime,.02);}
+  function setMuted(m){muted=m;levels();}
+  function setSfxOff(v){sfxOff=v;try{localStorage.setItem('gw-sfx-off',v?'1':'0');}catch(e){}levels();}
+  function setMusicOff(v){musOff=v;try{localStorage.setItem('gw-mus-off',v?'1':'0');}catch(e){}levels();}
   /* Stage theme: starts on the title's Enter, carries through the cutscene into the stage and loops the whole song.
      The file is fetched as soon as the page loads so it's ready when the player presses Enter. Swap music/stage.mp3 to replace it. */
   const STG={url:'music/stage.mp3',vol:.42};let stgRaw=fetch(STG.url).then(r=>r.arrayBuffer()).catch(()=>null),stgBuf=null,stgSrc=null,stgGn=null,stgWant=false,stgDec=null;
   function stage(on,fade=2.5){stgWant=on;if(!ac)return;
-    if(on){if(stgSrc)return;if(stgBuf){stgGn=ac.createGain();stgGn.gain.value=STG.vol;stgGn.connect(out);stgSrc=ac.createBufferSource();stgSrc.buffer=stgBuf;stgSrc.loop=true;stgSrc.connect(stgGn);stgSrc.start();return;}
+    if(on){if(stgSrc)return;if(stgBuf){stgGn=ac.createGain();stgGn.gain.value=STG.vol;stgGn.connect(mus);stgSrc=ac.createBufferSource();stgSrc.buffer=stgBuf;stgSrc.loop=true;stgSrc.connect(stgGn);stgSrc.start();return;}
       if(!stgDec)stgDec=stgRaw.then(b=>b&&new Promise((res,rej)=>ac.decodeAudioData(b,res,rej))).then(b=>{stgBuf=b;if(stgWant)stage(true);}).catch(()=>{});return;}
     if(stgSrc){const s=stgSrc,gn=stgGn,t=ac.currentTime;gn.gain.setValueAtTime(gn.gain.value,t);gn.gain.linearRampToValueAtTime(0,t+fade);s.stop(t+fade+.05);stgSrc=null;stgGn=null;}}
   /* typewriter key click for the cutscene text */
-  function click(){if(!ac||muted)return;const n=ac.sampleRate*.02|0,b=ac.createBuffer(1,n,ac.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,6);
+  function click(){if(!ac||muted||sfxOff)return;const n=ac.sampleRate*.02|0,b=ac.createBuffer(1,n,ac.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,6);
     const o=ac.createBufferSource();o.buffer=b;const f=ac.createBiquadFilter();f.type='bandpass';f.frequency.value=2600+Math.random()*900;const gn=ac.createGain();gn.gain.value=.5;o.connect(f).connect(gn).connect(out);o.start();}
-  return{init,unlock,play,frame,setMuted,music,stage,click,suspend,loadMusic,loadSamples,get musicOn(){return !!musSrc},get muted(){return muted},names:Object.keys(LIB)};
+  return{init,unlock,play,frame,setMuted,setSfxOff,setMusicOff,get sfxOff(){return sfxOff},get musOff(){return musOff},get musMuted(){return muted||musOff},music,stage,click,suspend,loadMusic,loadSamples,get musicOn(){return !!musSrc},get muted(){return muted},names:Object.keys(LIB)};
 })();
 window.__sfx=SFX;window.SFX=SFX;
 /* Ending song: starts the moment the dragon falls and keeps playing through the ending shots and the kitchen until the
@@ -827,10 +856,10 @@ window.__sfx=SFX;window.SFX=SFX;
    (the position rides along in sessionStorage). Swap music/ending.mp3 to replace it. */
 const ENDSONG=(()=>{const KEY='gw-end-t',VOL=.5;let el=null,on=false,pend=false;
   const save=()=>{if(el&&on)try{sessionStorage.setItem(KEY,el.currentTime.toFixed(2));}catch(e){}};
-  function tryPlay(){if(!el||!on)return;el.muted=!!(window.SFX&&SFX.muted);const p=el.play();if(p&&p.catch)p.catch(()=>{pend=true;});}
+  function tryPlay(){if(!el||!on)return;el.muted=!!(window.SFX&&SFX.musMuted);const p=el.play();if(p&&p.catch)p.catch(()=>{pend=true;});}
   /* if the browser blocks playback until the player touches something, start on the first key or tap */
   const kick=()=>{if(pend){pend=false;tryPlay();}};for(const ev of ['pointerdown','touchend','click','keydown'])addEventListener(ev,kick,true);
-  setInterval(()=>{if(el&&on){el.muted=!!(window.SFX&&SFX.muted);save();}},500);addEventListener('pagehide',save);
+  setInterval(()=>{if(el&&on){el.muted=!!(window.SFX&&SFX.musMuted);save();}},250);addEventListener('pagehide',save);
   function start(resume){if(on)return;on=true;if(!el){el=new Audio('music/ending.mp3');el.loop=true;el.volume=VOL;el.preload='auto';}
     let t=0;if(resume)try{t=parseFloat(sessionStorage.getItem(KEY))||0;}catch(e){}
     if(t>0){const seek=()=>{try{el.currentTime=t;}catch(e){}};if(el.readyState>=1)seek();else el.addEventListener('loadedmetadata',seek,{once:true});}
@@ -1649,9 +1678,20 @@ function draw(){
   if(mode!=='title')hud();
   dragHint();beamHint();
   /* the bomb button only shows during play, not on the title, cutscenes or the ending */
-  {const vis=mode==='play'?'visible':'hidden';if(BOMBBTN.style.visibility!==vis)BOMBBTN.style.visibility=vis;}
+  {const vis=mode==='play'?'visible':'hidden';if(BOMBBTN.style.visibility!==vis)BOMBBTN.style.visibility=vis;if(COG.style.visibility!==vis)COG.style.visibility=vis;}
 }
 const BOMBBTN=document.getElementById('bombbtn');BOMBBTN.style.visibility='hidden';
+/* ---------- settings menu: pauses the game, music and sound effects toggles (remembered), shop link, credits ---------- */
+const COG=document.getElementById('cog'),MENU=document.getElementById('menu');let menuWasPaused=false;
+function menuOpen(){if(mode!=='play'||!MENU.hidden)return;menuWasPaused=paused;paused=true;MENU.hidden=false;syncToggles();document.getElementById('resume').focus();}
+function menuClose(){if(MENU.hidden)return;MENU.hidden=true;paused=menuWasPaused;cv.focus();}
+function syncToggles(){for(const [id,off] of [['t-music',SFX.musOff],['t-sfx',SFX.sfxOff]]){const b=document.getElementById(id);b.setAttribute('aria-pressed',!off);b.querySelector('b').textContent=off?'Off':'On';}}
+COG.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();menuOpen();});
+MENU.addEventListener('pointerdown',e=>e.stopPropagation());
+document.getElementById('resume').onclick=menuClose;
+document.getElementById('t-music').onclick=()=>{SFX.setMusicOff(!SFX.musOff);syncToggles();};
+document.getElementById('t-sfx').onclick=()=>{SFX.setSfxOff(!SFX.sfxOff);syncToggles();};
+addEventListener('keydown',e=>{if(!MENU.hidden&&(e.code==='Escape'||e.code==='KeyP')){e.preventDefault();e.stopImmediatePropagation();menuClose();}},true);
 /* On phones, a "drag to move" cue hangs under the jet whenever no finger is on the screen; it fades out the moment
    you start steering and comes back if you let go */
 let hintA=0;
@@ -1669,10 +1709,10 @@ function beamHint(){if(!TOUCH||mode!=='play'||!S||!drag||S.charge<1||FLAVORS[S.p
 function hud(){
   const p=S.p,f=FLAVORS[p.wi];
   g.textAlign='left';g.textBaseline='middle';g.font='800 15px Figtree,system-ui,sans-serif';g.fillStyle='#f3e9dc';
-  g.fillText(String(S.score).padStart(7,'0'),10,15);
+  g.fillText(String(S.score).padStart(7,'0'),42,15);
   /* HUD icons reuse the felt pickups, so the bars teach players what each pickup is */
   const icon=(im,x,y,w,h)=>{if(loaded(im))g.drawImage(im,x,y,w,h);};
-  icon(ART.soju[0],112,5,9,20);g.fillStyle='#f6cf52';g.fillText('×'+S.medals,124,15);g.textBaseline='alphabetic';
+  icon(ART.soju[0],144,5,9,20);g.fillStyle='#f6cf52';g.fillText('×'+S.medals,156,15);g.textBaseline='alphabetic';
   for(let i=0;i<Math.max(0,p.lives);i++)icon(ART.hero,W-22-i*20,4,16,20);
   for(let i=0;i<p.bombs;i++)icon(ART.brick,W-26-i*22,H-29,20,20);
   g.textAlign='left';icon(ART.bags[p.wi],8,H-31,20,25);g.fillStyle='#f6efe2';g.fillText(f.short,32,H-12);
@@ -1729,11 +1769,11 @@ function openGate(e){if(!TOUCH0)return;if(!TGATE||mode!=='title')return;if(e.typ
 for(const ev of ['pointerup','touchend','click','keydown'])addEventListener(ev,openGate,true);
 const WHISTLE=(()=>{let el=null,done=false,want=false;
   function go(){if(done||mode!=='title')return;if(!el){el=new Audio('music/whistle.mp3');el.volume=.8;el.preload='auto';}
-    el.muted=!!SFX.muted;const p=el.play();if(p&&p.then)p.then(()=>{done=true;want=false;TGATE=false;}).catch(()=>{want=true;});else{done=true;TGATE=false;}}
+    el.muted=!!SFX.musMuted;const p=el.play();if(p&&p.then)p.then(()=>{done=true;want=false;TGATE=false;}).catch(()=>{want=true;});else{done=true;TGATE=false;}}
   function stop(){want=false;done=true;if(!el||el.paused)return;const v0=el.volume,t0=performance.now();
     const f=()=>{const k=Math.min(1,(performance.now()-t0)/900);el.volume=v0*(1-k);if(k<1)requestAnimationFrame(f);else el.pause();};f();}
   const kick=()=>setTimeout(()=>{if(want&&mode==='title')go();},0);for(const ev of ['pointerup','click','keydown'])addEventListener(ev,kick,true);
-  setInterval(()=>{if(el&&!el.paused)el.muted=!!SFX.muted;},300);
+  setInterval(()=>{if(el&&!el.paused)el.muted=!!SFX.musMuted;},300);
   return{go,stop,get el(){return el}};})();window.WHISTLE=WHISTLE;
 addEventListener('load',()=>{if(TOUCH0)WHISTLE.go();});
 function introBegin(){WHISTLE.stop();ENDSONG.stop();SFX.init();SFX.loadSamples();SFX.stage(true);mode='intro';Object.assign(IN,{shot:0,t:0,typed:0,fade:1,out:0,dust:[],steam:[]});}

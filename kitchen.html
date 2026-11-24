@@ -26,6 +26,7 @@ button:focus-visible,.btn:focus-visible{outline:2px solid #e69000;outline-offset
 #endbar{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:28px 10px max(12px,env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(20,14,10,0),rgba(20,14,10,.82) 30%)}
 #endbar .row{flex-wrap:nowrap;gap:8px}
 #endbar .row button,#endbar .row .btn{font-size:clamp(12px,3.6vw,15px);padding:8px clamp(10px,3vw,16px);white-space:nowrap}
+#endbar .credits a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 #endbar .credits{color:#e9dccb;margin:0;font-size:clamp(10px,2.9vw,12px);line-height:1.5}
 .credits{font-size:12px;line-height:1.6;color:var(--muted);text-align:center;margin-top:2px}
 /* Phones: the game fills the screen edge to edge, nothing zooms, selects or pops up on fast taps, and the tuning bench is hidden */
@@ -65,7 +66,7 @@ p{margin:0;color:var(--muted);font-size:13px;max-width:480px;text-align:center}
 <style>.haspad .wrap .pad{width:min(100%,calc((100dvh - 110px - 160px)*.6667),480px)}</style>
   <div class="cab"><canvas id="c" width="960" height="1440" tabindex="0" aria-label="Ramen cooking ending: shoot the kettle, burner, noodle box and seasoning to cook ramen"></canvas>
   <div id="endbar" hidden><div class="row" id="polrow"><button id="share">Share</button><a class="btn shop" id="shop" href="https://www.samabila.com/" target="_blank" rel="noopener">Shop Samabila</a><a class="btn" id="again" href="./">Play again</a></div>
-  <p class="credits" id="credits">Made for Samabila<br>Art by Billy Hong<br>Sound effects and music by Billy Hong and Jack Hong</p></div></div>
+  <p class="credits" id="credits">Made for Samabila<br>by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a><br>Sound effects and music by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a> and Jack Hong</p></div></div>
   <div class="pad" id="pad" aria-label="Controller"><div class="joy" id="joy"><div class="knob"></div></div><div class="pbtns"><button class="pbtn fire" id="pfire">FIRE</button></div></div>
   
   <p id="hint">Arrows or WASD to fly, hold Z to fire. On a phone, drag to fly. Steady fire is neat, mashing is messy.</p>
@@ -318,7 +319,9 @@ const SFX=(()=>{
 function unlock(){init();if(!ac)return;if(ac.state!=='running')ac.resume();if(!unlocked){unlocked=true;const b=ac.createBuffer(1,1,22050),s=ac.createBufferSource();s.buffer=b;s.connect(ac.destination);s.start(0);}}
   let unlocked=false;
   function setMuted(m){muted=m;if(out)out.gain.setTargetAtTime(m?0:vol,ac.currentTime,.02);}
-  return{init,unlock,play,frame,setMuted,music,suspend,loadMusic,loadSamples,get musicOn(){return !!musSrc},get muted(){return muted},names:Object.keys(LIB)};
+  /* honors the Music and Sound effects switches from the game's settings menu */
+  const off=k=>{try{return localStorage.getItem(k)==='1';}catch(e){return false;}};
+  return{init,unlock,play:(n,x)=>{if(!off('gw-sfx-off'))play(n,x);},frame:st=>{if(!off('gw-sfx-off'))frame(st);},setMuted,get musMuted(){return muted||off('gw-mus-off')},music,suspend,loadMusic,loadSamples,get musicOn(){return !!musSrc},get muted(){return muted},names:Object.keys(LIB)};
 })();
 window.SFX=SFX;
 /* Ending song: starts the moment the dragon falls and keeps playing through the ending shots and the kitchen until the
@@ -326,10 +329,10 @@ window.SFX=SFX;
    (the position rides along in sessionStorage). Swap music/ending.mp3 to replace it. */
 const ENDSONG=(()=>{const KEY='gw-end-t',VOL=.5;let el=null,on=false,pend=false;
   const save=()=>{if(el&&on)try{sessionStorage.setItem(KEY,el.currentTime.toFixed(2));}catch(e){}};
-  function tryPlay(){if(!el||!on)return;el.muted=!!(window.SFX&&SFX.muted);const p=el.play();if(p&&p.catch)p.catch(()=>{pend=true;});}
+  function tryPlay(){if(!el||!on)return;el.muted=!!(window.SFX&&SFX.musMuted);const p=el.play();if(p&&p.catch)p.catch(()=>{pend=true;});}
   /* if the browser blocks playback until the player touches something, start on the first key or tap */
   const kick=()=>{if(pend){pend=false;tryPlay();}};for(const ev of ['pointerdown','touchend','click','keydown'])addEventListener(ev,kick,true);
-  setInterval(()=>{if(el&&on){el.muted=!!(window.SFX&&SFX.muted);save();}},500);addEventListener('pagehide',save);
+  setInterval(()=>{if(el&&on){el.muted=!!(window.SFX&&SFX.musMuted);save();}},500);addEventListener('pagehide',save);
   function start(resume){if(on)return;on=true;if(!el){el=new Audio('music/ending.mp3');el.loop=true;el.volume=VOL;el.preload='auto';}
     let t=0;if(resume)try{t=parseFloat(sessionStorage.getItem(KEY))||0;}catch(e){}
     if(t>0){const seek=()=>{try{el.currentTime=t;}catch(e){}};if(el.readyState>=1)seek();else el.addEventListener('loadedmetadata',seek,{once:true});}
