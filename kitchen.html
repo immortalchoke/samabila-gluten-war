@@ -22,6 +22,11 @@ button,.btn{font:inherit;font-weight:700;font-size:15px;background:var(--chip);c
 .btn.shop{background:#e23200;border-color:#e23200;color:#fff}
 button:focus-visible,.btn:focus-visible{outline:2px solid #e69000;outline-offset:2px}
 [hidden]{display:none!important}
+.cab{position:relative}
+#endbar{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:28px 10px max(12px,env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(20,14,10,0),rgba(20,14,10,.82) 30%)}
+#endbar .row{flex-wrap:nowrap;gap:8px}
+#endbar .row button,#endbar .row .btn{font-size:clamp(12px,3.6vw,15px);padding:8px clamp(10px,3vw,16px);white-space:nowrap}
+#endbar .credits{color:#e9dccb;margin:0;font-size:clamp(10px,2.9vw,12px);line-height:1.5}
 .credits{font-size:12px;line-height:1.6;color:var(--muted);text-align:center;margin-top:2px}
 /* Phones: the game fills the screen edge to edge, nothing zooms, selects or pops up on fast taps, and the tuning bench is hidden */
 @media (pointer:coarse){
@@ -58,10 +63,11 @@ p{margin:0;color:var(--muted);font-size:13px;max-width:480px;text-align:center}
 </script>
 <div class="wrap">
 <style>.haspad .wrap .pad{width:min(100%,calc((100dvh - 110px - 160px)*.6667),480px)}</style>
-  <div class="cab"><canvas id="c" width="960" height="1440" tabindex="0" aria-label="Ramen cooking ending: shoot the kettle, burner, noodle box and seasoning to cook ramen"></canvas></div>
+  <div class="cab"><canvas id="c" width="960" height="1440" tabindex="0" aria-label="Ramen cooking ending: shoot the kettle, burner, noodle box and seasoning to cook ramen"></canvas>
+  <div id="endbar" hidden><div class="row" id="polrow"><button id="share">Share</button><a class="btn shop" id="shop" href="https://www.samabila.com/" target="_blank" rel="noopener">Shop Samabila</a><a class="btn" id="again" href="./">Play again</a></div>
+  <p class="credits" id="credits">Made for Samabila<br>Art by Billy Hong<br>Sound effects and music by Billy Hong and Jack Hong</p></div></div>
   <div class="pad" id="pad" aria-label="Controller"><div class="joy" id="joy"><div class="knob"></div></div><div class="pbtns"><button class="pbtn fire" id="pfire">FIRE</button></div></div>
-  <div class="row" id="polrow" hidden><button id="save">Save photo</button><button id="share">Share</button><a class="btn shop" id="shop" href="https://www.samabila.com/" target="_blank" rel="noopener">Shop Samabila</a><a class="btn" id="again" href="./">Play again</a></div>
-  <p class="credits" id="credits" hidden>Made for Samabila<br>Art by Billy Hong<br>Sound effects and music by Billy Hong and Jack Hong</p>
+  
   <p id="hint">Arrows or WASD to fly, hold Z to fire. On a phone, drag to fly. Steady fire is neat, mashing is messy.</p>
 </div>
 <script>
@@ -123,7 +129,7 @@ function reset(){S={t:0,step:0,stepT:0,
   flame:0,lit:false,
   bag:null,brick:null,packs:null,pack:null,powder:[],
   drops:[],puddles:[],bubbles:[],steam:[],spilled:0,splashMax:0,cook:0,drop:[],added:[],vHit:new Set(),kfx:{hk:0},pad:null,land:0,hero:0,jars:null,tops:[],flying:[],cam:null,topHits:0,flash:0,polaroid:null,polT:0,snapping:false};
-  const pr=document.getElementById('polrow');if(pr)pr.hidden=true;const cr=document.getElementById('credits');if(cr)cr.hidden=true;}
+  const eb=document.getElementById('endbar');if(eb)eb.hidden=true;}
 reset();
 /* ---------- input ---------- */
 const keys={};let fireDown=false,pressQueued=false,touch=null;
@@ -131,9 +137,11 @@ const isFire=k=>k==='z'||k==='Z'||k===' '||k==='x'||k==='X';
 addEventListener('keydown',e=>{if(e.key.startsWith('Arrow')||e.key===' ')e.preventDefault();keys[e.key.toLowerCase()]=true;if(isFire(e.key)){if(!e.repeat)pressQueued=true;fireDown=true;}});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false;if(isFire(e.key))fireDown=false;});
 function pt(e){const r=cv.getBoundingClientRect();return{x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};}
-cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);const p=pt(e);touch={px:p.x,py:p.y,sx:S.ship.x,sy:S.ship.y};pressQueued=true;fireDown=true;});
-cv.addEventListener('pointermove',e=>{if(!touch)return;const p=pt(e);S.ship.x=touch.sx+(p.x-touch.px)*1.2/viewK();S.ship.y=touch.sy+(p.y-touch.py)*1.2/viewK();});
-const up=()=>{touch=null;fireDown=PAD.fire;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
+/* phones: the jet is pulled to a spot just above your thumb (screen point turned into the scene's own coordinates) */
+function kMagnet(p){const vk=viewK();S.ship.tgt={x:(p.x-240)/vk+240+camX(),y:(p.y-78-720+panY())/vk+720};}
+cv.addEventListener('pointerdown',e=>{try{cv.setPointerCapture(e.pointerId);}catch(_){}const p=pt(e);touch={px:p.x,py:p.y,sx:S.ship.x,sy:S.ship.y};if(KTOUCH)kMagnet(p);pressQueued=true;fireDown=true;});
+cv.addEventListener('pointermove',e=>{if(!touch)return;const p=pt(e);if(KTOUCH){kMagnet(p);return;}S.ship.x=touch.sx+(p.x-touch.px)*1.2/viewK();S.ship.y=touch.sy+(p.y-touch.py)*1.2/viewK();});
+const up=()=>{touch=null;fireDown=PAD.fire;if(S.ship)S.ship.tgt=null;};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);
 
 /* ---------- on-screen controller ----------
    A thumb stick on the left, FIRE and BOMB on the right. PAD.x/PAD.y is the stick (-1..1), PAD.fire is FIRE held.
@@ -469,6 +477,7 @@ function step(){
   /* ship */
   const sp=4;if(keys.arrowleft||keys.a)sh.x-=sp;if(keys.arrowright||keys.d)sh.x+=sp;if(keys.arrowup||keys.w)sh.y-=sp;if(keys.arrowdown||keys.s)sh.y+=sp;
   sh.x+=PAD.x*sp*1.3/viewK();sh.y+=PAD.y*sp*1.3/viewK();
+  if(touch&&sh.tgt){const ex=sh.tgt.x-sh.x,ey=sh.tgt.y-sh.y,d=Math.hypot(ex,ey);if(d>.5){const m=Math.min(d,Math.max(3,d*.32),26/viewK());sh.x+=ex/d*m;sh.y+=ey/d*m;}}
   sh.x=clamp(sh.x,viewL()+20,viewR()-20);sh.y=clamp(sh.y,viewTop()+30,viewBot());
   /* the landing pad: fly onto it and the rocket settles down and parks */
   /* when you're done with toppings, park on the pad to take the photo */
@@ -486,7 +495,7 @@ function step(){
   if(S.step===11&&!S.pad&&S.stepT>60&&(!S.jars||S.jars.every(j=>j.pop>.9)))S.pad={x:418,y:668,t:0,armed:false};
   for(const q of S.drop){q.t++;if(q.t>=22){q.done=true;S.added.push({k:q.k,i:q.i});}}S.drop=S.drop.filter(q=>!q.done);
   for(const f of S.flying){f.t++;if(f.t>=f.dur){f.done=true;S.tops.push({k:f.k,u:f.u,v:f.v,r:f.r,s:f.s});}}S.flying=S.flying.filter(f=>!f.done);
-  if(S.step===12){S.flash=Math.max(0,S.flash-.035);if(S.stepT>40){setStep(13);document.getElementById('polrow').hidden=false;document.getElementById('credits').hidden=false;document.getElementById('hint').hidden=true;}}
+  if(S.step===12){S.flash=Math.max(0,S.flash-.035);if(S.stepT>40){setStep(13);document.getElementById('endbar').hidden=false;document.getElementById('hint').hidden=true;}}
   if(S.step===13)S.polT=Math.min(1,S.polT+.025);
   /* firing */
   S.since++;
@@ -753,7 +762,7 @@ function drawBackdrop(e){const wall=g.createLinearGradient(0,0,0,520);wall.addCo
   g.fillStyle='#8a5a34';g.beginPath();g.ellipse(0,0,156,26,0,0,7);g.fill();g.strokeStyle='#6f4526';g.lineWidth=2;
   for(let k=-5;k<=5;k++){const q=Math.sqrt(1-(k*26/156)**2)*24;g.beginPath();g.moveTo(k*26,-q);g.lineTo(k*26,q);g.stroke();}g.restore();}
 function drawPolaroid(){const e=1-Math.pow(1-S.polT,3);g.fillStyle=`rgba(20,12,8,${.55*e})`;g.fillRect(0,0,W,H);
-  const w=310,h=w*S.polaroid.height/S.polaroid.width;g.save();g.translate(240,lerp(H+h,350,e));g.rotate(lerp(.25,-.04,e));g.shadowColor='rgba(0,0,0,.45)';g.shadowBlur=18;g.shadowOffsetY=8;g.drawImage(S.polaroid,-w/2,-h/2,w,h);g.restore();}
+  const w=310,h=w*S.polaroid.height/S.polaroid.width;g.save();g.translate(240,lerp(H+h,292,e));g.rotate(lerp(.25,-.04,e));g.shadowColor='rgba(0,0,0,.45)';g.shadowBlur=18;g.shadowOffsetY=8;g.drawImage(S.polaroid,-w/2,-h/2,w,h);g.restore();}
 function drawPitcherOld(){
   const P=S.pit;if(P.gone)return;const lit=P.flash>0;
   g.save();g.translate(P.x,PIV.y);g.rotate(P.th);
@@ -812,7 +821,7 @@ function kHint(){if(!KTOUCH||S.step>=12)return;kHintA+=((touch?0:1)-kHintA)*(tou
   g.strokeStyle='rgba(255,246,230,'+(.55+.35*Math.sin(t*6))+')';g.beginPath();g.arc(cx,cy,34*k,0,7);g.stroke();
   g.fillStyle='rgba(35,25,20,.35)';g.beginPath();g.arc(cx,cy,32*k,0,7);g.fill();
   g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';g.strokeStyle='#231f20';g.fillStyle='#fff';
-  for(const [txt,dy,sz] of [['DRAG',-8,12],['TO MOVE',9,11]]){g.font=`900 ${sz*k}px Gooper,Georgia,serif`;g.lineWidth=4*k;g.strokeText(txt,cx,cy+dy*k);g.fillText(txt,cx,cy+dy*k);}
+  for(const [txt,dy,sz] of [['TOUCH',-8,12],['& HOLD',9,11]]){g.font=`900 ${sz*k}px Gooper,Georgia,serif`;g.lineWidth=4*k;g.strokeText(txt,cx,cy+dy*k);g.fillText(txt,cx,cy+dy*k);}
   g.restore();}
 function drawShip(){const s=S.ship;
   /* the game's own felt rocket, at exactly its in-game size on screen (undoing the kitchen's zoom) */
@@ -986,13 +995,14 @@ document.getElementById('again').addEventListener('click',e=>{if(EMBED&&parent!=
 const GAME_URL='https://immortalchoke.github.io/samabila-gluten-war/';
 function polBlob(){return new Promise(r=>S.polaroid.toBlob(r,'image/png'));}
 function say(btn,txt){const o=btn.dataset.o||(btn.dataset.o=btn.textContent);btn.textContent=txt;setTimeout(()=>btn.textContent=o,1800);}
-document.getElementById('save').onclick=async()=>{if(!S.polaroid)return;const b=await polBlob(),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='my-samabila-ramen.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);};
+async function savePhoto(){const b=await polBlob(),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='my-samabila-ramen.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
 document.getElementById('share').onclick=async e=>{const btn=e.currentTarget;if(!S.polaroid)return;
   try{const f=new File([await polBlob()],'my-samabila-ramen.png',{type:'image/png'});
     if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'My Samabila ramen',text:'I cooked this in The Gluten Conflict',url:GAME_URL});return;}
     if(navigator.share){await navigator.share({title:'The Gluten Conflict',text:'I cooked ramen in The Gluten Conflict',url:GAME_URL});return;}}
   catch(err){if(err&&err.name==='AbortError')return;}
-  try{await navigator.clipboard.writeText(GAME_URL);say(btn,'Link copied');}catch(err){say(btn,'Sharing isn\u2019t available here');}};
+  /* no share sheet (most desktops): save the photo and copy the game link instead */
+  await savePhoto();try{await navigator.clipboard.writeText(GAME_URL);say(btn,'Saved, link copied');}catch(err){say(btn,'Photo saved');}};
 /* clean layout frames, used as references for generating a single cohesive image of each scene */
 function renderGuide(mode){const sv=S;S=Object.assign({},sv,{guideMode:true,pot:{...sv.pot,V:0},lit:false,flame:0,bubbles:[],steam:[],tops:[],brick:null,step:1,hero:mode==='hero'?1:0});
   g.clearRect(0,0,W,H);

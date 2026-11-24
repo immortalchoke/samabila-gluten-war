@@ -874,6 +874,8 @@ function step(){
   if(S.warn>0)S.warn--;
   let dx=(keys.ArrowRight||keys.KeyD?1:0)-(keys.ArrowLeft||keys.KeyA?1:0),dy=(keys.ArrowDown||keys.KeyS?1:0)-(keys.ArrowUp||keys.KeyW?1:0);
   if(dx&&dy){dx*=.7071;dy*=.7071;}
+  if(TOUCH0&&drag&&p.tgt){const ex=p.tgt.x-p.x,ey=p.tgt.y-p.y,d=Math.hypot(ex,ey);
+    if(d>.5){const m=Math.min(d,Math.max(3,d*.32),26);p.x+=ex/d*m;p.y+=ey/d*m;if(Math.abs(ex)>2){p.dragV=Math.sign(ex);p.dragT=8;}clampP();}}
   /* the on-screen stick adds an analog push */
   if(PAD.x||PAD.y){dx+=PAD.x;dy+=PAD.y;const m=Math.hypot(dx,dy);if(m>1){dx/=m;dy/=m;}}
   p.x+=dx*T.shipSpeed;p.y+=dy*T.shipSpeed;clampP();
@@ -1643,7 +1645,7 @@ function dragHint(){if(!TOUCH||mode!=='play'||!S||S.p.alive===false){hintA=0;ret
   g.strokeStyle='rgba(255,226,122,'+(.9*(1-pulse))+')';g.lineWidth=3;g.beginPath();g.arc(cx,cy,34+pulse*16,0,7);g.stroke();
   g.strokeStyle='rgba(255,246,230,'+(.55+.35*Math.sin(t*6))+')';g.lineWidth=3;g.beginPath();g.arc(cx,cy,34,0,7);g.stroke();
   g.fillStyle='rgba(35,25,20,.35)';g.beginPath();g.arc(cx,cy,32,0,7);g.fill();
-  feltText('DRAG',cx,cy-8,12,'k');feltText('TO MOVE',cx,cy+9,11,'k');g.restore();}
+  feltText('TOUCH',cx,cy-8,12,'k');feltText('& HOLD',cx,cy+9,11,'k');g.restore();}
 /* laser on a phone: once the charge is full, a cue to lift the thumb */
 function beamHint(){if(!TOUCH||mode!=='play'||!S||!drag||S.charge<1||FLAVORS[S.p.wi].id!=='laser')return;
   const p=S.p;g.save();g.globalAlpha=.6+.4*Math.sin(performance.now()/120);feltText('RELEASE TO FIRE',p.x,Math.max(40,p.y-118),13,'r');g.restore();}
@@ -1933,12 +1935,15 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='pl
 
 /* Drag moves the ship by the same distance as the finger, so the finger never covers it */
 let drag=null;
-cv.addEventListener('pointerdown',e=>{if(mode==='title'){e.preventDefault();introBegin();return;}if(mode==='intro'){e.preventDefault();introPress();return;}if(mode==='feast'){e.preventDefault();feastPress();return;}try{cv.setPointerCapture(e.pointerId);}catch(_){}drag={x:e.clientX,y:e.clientY};firePress();e.preventDefault();});
+cv.addEventListener('pointerdown',e=>{if(mode==='title'){e.preventDefault();introBegin();return;}if(mode==='intro'){e.preventDefault();introPress();return;}if(mode==='feast'){e.preventDefault();feastPress();return;}try{cv.setPointerCapture(e.pointerId);}catch(_){}drag={x:e.clientX,y:e.clientY};if(TOUCH0)magnetTo(e);firePress();e.preventDefault();});
+/* phones: the jet is pulled to a spot just above your thumb, wherever you touch, and rushes there if you touch somewhere new */
+const MAGNET_UP=78;
+function magnetTo(e){if(!S)return;const r=cv.getBoundingClientRect(),k=W/r.width;S.p.tgt={x:(e.clientX-r.left)*k,y:(e.clientY-r.top)*k-MAGNET_UP};}
 cv.addEventListener('pointermove',e=>{
-  if(!drag||mode!=='play')return;const k=W/cv.getBoundingClientRect().width;
+  if(!drag||mode!=='play')return;if(TOUCH0){magnetTo(e);drag={x:e.clientX,y:e.clientY};return;}const k=W/cv.getBoundingClientRect().width;
   if(e.clientX!==drag.x){S.p.dragV=Math.sign(e.clientX-drag.x);S.p.dragT=8;}S.p.x+=(e.clientX-drag.x)*k;S.p.y+=(e.clientY-drag.y)*k;drag={x:e.clientX,y:e.clientY};clampP();
 });
-const stop=()=>{drag=null;if(S)S.p.vx=0;};
+const stop=()=>{drag=null;if(S){S.p.vx=0;S.p.tgt=null;}};
 cv.addEventListener('pointerup',stop);cv.addEventListener('pointercancel',stop);
 {const bb=document.getElementById('bombbtn');bb.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();bb.classList.add('on');dropBomb();});
   for(const ev of ['pointerup','pointercancel','pointerleave'])bb.addEventListener(ev,()=>bb.classList.remove('on'));}
