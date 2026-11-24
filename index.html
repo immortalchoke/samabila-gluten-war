@@ -1426,6 +1426,8 @@ const T=SET.striking?SET.t:0;let alive=0;
     const t=performance.now()/1000,dr=TITLE_IM.dragon;
     if(loaded(dr)){const h=118*LOGO_SPLASH.s,w=dr.naturalWidth/dr.naturalHeight*h;g.drawImage(dr,W/2-w/2,LOGO_SPLASH.y+DRAGON_DY*LOGO_SPLASH.s-h/2+Math.sin(t*1.43)*2,w,h);}
     const im=loaded(TITLE_IM.logo)?TITLE_IM.logo:TITLE_IM.logoFlat;if(loaded(im)){const w=140*LOGO_SPLASH.s,h=im.naturalHeight/im.naturalWidth*w;g.drawImage(im,W/2-w/2,LOGO_SPLASH.y-h/2,w,h);}
+    if(!TOUCH){const now=performance.now();if(!SET.splashT&&[DIO.sky,TITLE_IM.dragon,DIO.jet,DIO.cl].every(loaded)&&(loaded(TITLE_IM.logo)||loaded(TITLE_IM.logoFlat)))SET.splashT=now;
+      if(SET.splashT&&now-SET.splashT>1300)openGateAuto();return;}
     const by=H*.7,bs=1+Math.sin(t*3)*.03;g.save();g.translate(W/2,by);g.scale(bs,bs);
     g.fillStyle='rgba(0,0,0,.35)';g.beginPath();g.roundRect(-72,-22,144,50,25);g.fill();
     g.fillStyle='#e23200';g.beginPath();g.roundRect(-72,-26,144,50,25);g.fill();g.lineWidth=4;g.strokeStyle='#231f20';g.stroke();
@@ -1719,8 +1721,10 @@ const IN={shot:0,t:0,typed:0,fade:1,out:0,dust:[],steam:[],now:0};
 /* If the browser blocks sound on arrival (phones always do), the title waits behind a "tap to begin": that first tap
    unlocks audio, starts the whistle and plays the title's entrance, and only the next tap starts the game */
 let TGATE=true,gateHit=false;window.__tg=()=>TGATE;
-addEventListener('pointerdown',e=>{if(TGATE&&mode==='title'){gateHit=true;e.stopImmediatePropagation();e.preventDefault();}},true);
-function openGate(e){if(!TGATE||mode!=='title')return;if(e.type==='keydown'){e.stopImmediatePropagation();e.preventDefault();}else if(!gateHit)return;
+addEventListener('pointerdown',e=>{if(TOUCH0&&TGATE&&mode==='title'){gateHit=true;e.stopImmediatePropagation();e.preventDefault();}},true);
+/* desktop has no Begin button: the splash holds a moment once the art is in, then the title builds on its own */
+function openGateAuto(){if(!TGATE||mode!=='title')return;TGATE=false;WHISTLE.go();}
+function openGate(e){if(!TOUCH0)return;if(!TGATE||mode!=='title')return;if(e.type==='keydown'){e.stopImmediatePropagation();e.preventDefault();}else if(!gateHit)return;
   TGATE=false;gateHit=false;try{SFX.init();SFX.unlock&&SFX.unlock();}catch(_){}WHISTLE.go();}
 for(const ev of ['pointerup','touchend','click','keydown'])addEventListener(ev,openGate,true);
 const WHISTLE=(()=>{let el=null,done=false,want=false;
@@ -1731,7 +1735,7 @@ const WHISTLE=(()=>{let el=null,done=false,want=false;
   const kick=()=>setTimeout(()=>{if(want&&mode==='title')go();},0);for(const ev of ['pointerup','click','keydown'])addEventListener(ev,kick,true);
   setInterval(()=>{if(el&&!el.paused)el.muted=!!SFX.muted;},300);
   return{go,stop,get el(){return el}};})();window.WHISTLE=WHISTLE;
-addEventListener('load',()=>WHISTLE.go());
+addEventListener('load',()=>{if(TOUCH0)WHISTLE.go();});
 function introBegin(){WHISTLE.stop();ENDSONG.stop();SFX.init();SFX.loadSamples();SFX.stage(true);mode='intro';Object.assign(IN,{shot:0,t:0,typed:0,fade:1,out:0,dust:[],steam:[]});}
 function introPress(){const S0=INTRO_SHOTS[IN.shot];if(IN.out)return;if(IN.typed<S0.text.length)IN.typed=S0.text.length;else introNext();}
 function introNext(){if(IN.shot<INTRO_SHOTS.length-1){IN.shot++;IN.t=0;IN.typed=0;IN.fade=1;IN.steam=[];IN.trail=[];}else IN.out=.0001;}
