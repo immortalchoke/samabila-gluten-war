@@ -820,9 +820,9 @@ const SFX=(()=>{
   let chargeOsc=null,chargeGn=null,beamOsc=null,beamGn=null;
   /* Recorded sounds (Billy's) replace the synth voice for these names. Sprout snap has five takes, picked at random and
      nudged in pitch so a run of breaks never sounds the same twice */
-  const REC={},REC_FILES={medal:['s_medal'],item:['s_item'],life:['s_life'],smash:['s_smash'],catch:['s_catch'],rang:['s_rang'],snap:['s_snap0','s_snap1','s_snap2','s_snap3','s_snap4'],whip:['s_whip0','s_whip1'],charge:['s_charge']},REC_VOL={whip:.75,charge:.6,rang:.45,catch:.8,snap:.9,medal:.8,life:.6,smash:.6};
+  const REC={},REC_FILES={medal:['s_medal'],item:['s_item'],life:['s_life'],smash:['s_smash'],catch:['s_catch'],rang:['s_rang'],snap:['s_snap0','s_snap1','s_snap2','s_snap3','s_snap4'],whip:['s_whip0','s_whip1'],charge:['s_charge'],warning:['s_warning']},REC_VOL={warning:.6,whip:.75,charge:.6,rang:.45,catch:.8,snap:.9,medal:.8,life:.6,smash:.6};
   function playRec(name,pan){const bs=(REC[name]||[]).filter(Boolean);if(!bs.length)return false;const src=ac.createBufferSource();src.buffer=bs[Math.floor(Math.random()*bs.length)];
-    src.playbackRate.value=name==='snap'?.85+Math.random()*.35:.97+Math.random()*.06;const gn=bus(pan,false);gn.gain.value=REC_VOL[name]||1;src.connect(gn);src.start();return true;}
+    src.playbackRate.value=name==='snap'?.85+Math.random()*.35:name==='warning'?1:.97+Math.random()*.06;const gn=bus(pan,false);gn.gain.value=REC_VOL[name]||1;src.connect(gn);src.start();return true;}
   function play(name,x){if(!ac||muted||sfxOff||(!LIB[name]&&!REC[name]))return;const now=performance.now();if(GAP[name]&&now-(last[name]||0)<GAP[name])return;last[name]=now;
     const pan=x===undefined?0:(x/W-.5)*1.4;if(playRec(name,pan))return;if(LIB[name])LIB[name](pan);}
   /* Continuous voices: the laser charge whine and the beam buzz follow game state every frame */
@@ -840,7 +840,7 @@ const SFX=(()=>{
   }
   /* Boss music: the intro (the solo B riff) plays once, then it loops from where the band comes in (bar 5)
      to the final F# hit, which resolves straight back into the loop. Loop points sit on the drum transients. */
-  const MUS={url:'music/boss.mp3',loopStart:7.973,loopEnd:102.4,vol:.38};
+  const MUS={url:'music/boss.mp3',loopStart:7.973,loopEnd:102.4,vol:.5};
   let musBuf=null,musSrc=null,musGn=null,musWant=false,musLoading=null;
   function loadMusic(){if(musLoading||!ac)return;musLoading=fetch(MUS.url).then(r=>r.arrayBuffer()).then(b=>new Promise((res,rej)=>ac.decodeAudioData(b,res,rej))).then(b=>{musBuf=b;if(musWant)startMusic();}).catch(()=>{});}
   function startMusic(){if(!ac||!musBuf||musSrc)return;musGn=ac.createGain();musGn.gain.value=MUS.vol;musGn.connect(mus);
