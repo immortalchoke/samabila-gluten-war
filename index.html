@@ -47,7 +47,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;user-select:none;-
 
 @media (pointer:coarse){.bombbtn{display:block}}
 /* settings cog (top left, beside the score) and the pause menu it opens */
-.cog{position:absolute;z-index:7;left:5px;top:2px;width:33px;height:33px;padding:0;border:0;background:none;cursor:pointer;visibility:hidden;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
+.cog{position:absolute;z-index:7;left:1%;top:0;width:6.4%;height:auto;aspect-ratio:1;padding:0;border:0;background:none;cursor:pointer;visibility:hidden;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
 .cog svg,.cog img{width:100%;height:100%;display:block}
 .menu{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(18,12,8,.78);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 .menu[hidden]{display:none}
@@ -1678,20 +1678,21 @@ function draw(){
   if(mode!=='title')hud();
   dragHint();beamHint();
   /* the bomb button only shows during play, not on the title, cutscenes or the ending */
-  {const vis=mode==='play'?'visible':'hidden';if(BOMBBTN.style.visibility!==vis)BOMBBTN.style.visibility=vis;if(COG.style.visibility!==vis)COG.style.visibility=vis;}
+  {const vis=mode==='play'?'visible':'hidden';if(BOMBBTN.style.visibility!==vis)BOMBBTN.style.visibility=vis;}
 }
 const BOMBBTN=document.getElementById('bombbtn');BOMBBTN.style.visibility='hidden';
 /* ---------- settings menu: pauses the game, music and sound effects toggles (remembered), shop link, credits ---------- */
 const COG=document.getElementById('cog'),MENU=document.getElementById('menu');let menuWasPaused=false;
-function menuOpen(){if(mode!=='play'||!MENU.hidden)return;menuWasPaused=paused;paused=true;MENU.hidden=false;syncToggles();document.getElementById('resume').focus();}
-function menuClose(){if(MENU.hidden)return;MENU.hidden=true;paused=menuWasPaused;cv.focus();}
+const COG_MODES=['play','intro','feast','tofeast'];
+function menuOpen(){if(!COG_MODES.includes(mode)||!MENU.hidden)return;if(ENDSONG.on&&ENDSONG.el&&!ENDSONG.el.paused){ENDSONG.el.pause();MENU.endsong=true;}menuWasPaused=paused;paused=true;MENU.hidden=false;syncToggles();document.getElementById('resume').focus();}
+function menuClose(){if(MENU.hidden)return;MENU.hidden=true;paused=menuWasPaused;if(MENU.endsong){MENU.endsong=false;ENDSONG.el.play().catch(()=>{});}last=performance.now();cv.focus();}
 function syncToggles(){for(const [id,off] of [['t-music',SFX.musOff],['t-sfx',SFX.sfxOff]]){const b=document.getElementById(id);b.setAttribute('aria-pressed',!off);b.querySelector('b').textContent=off?'Off':'On';}}
 COG.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();menuOpen();});
 MENU.addEventListener('pointerdown',e=>e.stopPropagation());
 document.getElementById('resume').onclick=menuClose;
 document.getElementById('t-music').onclick=()=>{SFX.setMusicOff(!SFX.musOff);syncToggles();};
 document.getElementById('t-sfx').onclick=()=>{SFX.setSfxOff(!SFX.sfxOff);syncToggles();};
-addEventListener('keydown',e=>{if(!MENU.hidden&&(e.code==='Escape'||e.code==='KeyP')){e.preventDefault();e.stopImmediatePropagation();menuClose();}},true);
+addEventListener('keydown',e=>{if(MENU.hidden)return;if(e.code==='Tab'||e.code==='Space'&&e.target.tagName==='BUTTON'||e.code==='Enter'&&e.target.tagName==='BUTTON')return;e.preventDefault();e.stopImmediatePropagation();if(e.code==='Escape'||e.code==='KeyP')menuClose();},true);
 /* On phones, a "drag to move" cue hangs under the jet whenever no finger is on the screen; it fades out the moment
    you start steering and comes back if you let go */
 let hintA=0;
@@ -1713,7 +1714,7 @@ function hud(){
   /* HUD icons reuse the felt pickups, so the bars teach players what each pickup is */
   const icon=(im,x,y,w,h)=>{if(loaded(im))g.drawImage(im,x,y,w,h);};
   icon(ART.soju[0],144,5,9,20);g.fillStyle='#f6cf52';g.fillText('×'+S.medals,156,15);g.textBaseline='alphabetic';
-  for(let i=0;i<Math.max(0,p.lives);i++)icon(ART.hero,W-22-i*20,4,16,20);
+  for(let i=0;i<Math.max(0,p.lives);i++)icon(ART.hero,W-22-i*20,5,16,20);
   for(let i=0;i<p.bombs;i++)icon(ART.brick,W-26-i*22,H-29,20,20);
   g.textAlign='left';icon(ART.bags[p.wi],8,H-31,20,25);g.fillStyle='#f6efe2';g.fillText(f.short,32,H-12);
   const tw=g.measureText(f.short).width+22;
@@ -1981,7 +1982,12 @@ function kitchenShow(){mode='leaving';kitchenPreload();const go=()=>{let w=null;
     else setTimeout(go,100);};go();}
 function frame(ts){
   const dt=Math.min(ts-last,50);last=ts;
-  SFX.suspend(mode==='play'&&paused);
+  {const v=COG_MODES.includes(mode)?'visible':'hidden';if(COG.style.visibility!==v)COG.style.visibility=v;}
+  const menu=!MENU.hidden;
+  SFX.suspend((mode==='play'&&paused)||menu);
+  /* the settings menu freezes the cutscenes too */
+  if(menu&&mode==='intro'){drawIntro();requestAnimationFrame(frame);return;}
+  if(menu&&mode==='feast'){drawFeast();requestAnimationFrame(frame);return;}
   if((mode==='play'||mode==='kitchen'||mode==='tofeast')&&!paused){acc+=dt;while(acc>=1000/60){step();acc-=1000/60;}}
   else if(mode==='title'){acc+=dt;while(acc>=1000/60){S.tick++;acc-=1000/60;}}
   if(mode==='leaving'){requestAnimationFrame(frame);return;}
