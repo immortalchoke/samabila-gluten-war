@@ -47,12 +47,12 @@ canvas{display:block;width:100%;height:100%;touch-action:none;user-select:none;-
 
 @media (pointer:coarse){.bombbtn{display:block}}
 /* settings cog (top left, beside the score) and the pause menu it opens */
-.cog{position:absolute;z-index:7;left:1%;top:0;width:6.4%;height:auto;aspect-ratio:1;padding:0;border:0;background:none;cursor:pointer;visibility:hidden;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
+.cog{position:absolute;z-index:7;left:1.4%;top:.3%;width:5.4%;height:auto;aspect-ratio:1;padding:0;border:0;background:none;cursor:pointer;visibility:hidden;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
 .cog svg,.cog img{width:100%;height:100%;display:block}
 .menu{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(18,12,8,.78);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 .menu[hidden]{display:none}
 .menu-card{display:flex;flex-direction:column;gap:10px;width:min(78%,300px);padding:20px 18px;border-radius:18px;background:#2a211b;border:2px dashed rgba(214,170,110,.55);box-shadow:0 10px 30px rgba(0,0,0,.5)}
-.menu h2{margin:0 0 4px;text-align:center;font:900 26px Gooper,Georgia,serif;color:#fff;-webkit-text-stroke:5px #231f20;paint-order:stroke fill;letter-spacing:.02em}
+.menu h2{margin:0 0 4px;text-align:center;font:900 26px Gooper,Georgia,serif;color:#fff}
 .menu .tog,.menu .tog[aria-pressed]{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border-radius:12px;border:0;background:#3a2f27!important;color:var(--ink);font:700 15px Figtree,system-ui,sans-serif;cursor:pointer}
 .tog b{min-width:46px;padding:4px 0;border-radius:999px;background:#5f8f3a;color:#fff;font-size:13px;text-align:center}
 .tog[aria-pressed="false"] b{background:#6b5a4e}
@@ -117,7 +117,7 @@ label input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--broth)}
     <button class="bombbtn" id="bombbtn" aria-label="Drop bomb">BOMB</button>
     <button class="cog" id="cog" aria-label="Settings"><img src="art/cog.webp" alt=""></button>
     <div class="menu" id="menu" hidden role="dialog" aria-label="Settings">
-      <div class="menu-card"><h2>Paused</h2>
+      <div class="menu-card"><h2 id="menu-title">Paused</h2>
         <button class="tog" id="t-music" aria-pressed="true"><span>Music</span><b>On</b></button>
         <button class="tog" id="t-sfx" aria-pressed="true"><span>Sound effects</span><b>On</b></button>
         <a class="mbtn shop" href="https://www.samabila.com/" target="_blank" rel="noopener">Shop Samabila</a>
@@ -1684,6 +1684,7 @@ const BOMBBTN=document.getElementById('bombbtn');BOMBBTN.style.visibility='hidde
 /* ---------- settings menu: pauses the game, music and sound effects toggles (remembered), shop link, credits ---------- */
 const COG=document.getElementById('cog'),MENU=document.getElementById('menu');let menuWasPaused=false;
 const COG_MODES=['play','intro','feast','tofeast'];
+feltHTML(document.getElementById('menu-title'),'Paused','r',34);
 function menuOpen(){if(!COG_MODES.includes(mode)||!MENU.hidden)return;if(ENDSONG.on&&ENDSONG.el&&!ENDSONG.el.paused){ENDSONG.el.pause();MENU.endsong=true;}menuWasPaused=paused;paused=true;MENU.hidden=false;syncToggles();document.getElementById('resume').focus();}
 function menuClose(){if(MENU.hidden)return;MENU.hidden=true;paused=menuWasPaused;if(MENU.endsong){MENU.endsong=false;ENDSONG.el.play().catch(()=>{});}last=performance.now();cv.focus();}
 function syncToggles(){for(const [id,off] of [['t-music',SFX.musOff],['t-sfx',SFX.sfxOff]]){const b=document.getElementById(id);b.setAttribute('aria-pressed',!off);b.querySelector('b').textContent=off?'Off':'On';}}
