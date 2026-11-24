@@ -22,6 +22,7 @@ button,.btn{font:inherit;font-weight:700;font-size:15px;background:var(--chip);c
 .btn.shop{background:#e23200;border-color:#e23200;color:#fff}
 button:focus-visible,.btn:focus-visible{outline:2px solid #e69000;outline-offset:2px}
 [hidden]{display:none!important}
+.credits{font-size:12px;line-height:1.6;color:var(--muted);text-align:center;margin-top:2px}
 /* Phones: the game fills the screen edge to edge, nothing zooms, selects or pops up on fast taps, and the tuning bench is hidden */
 @media (pointer:coarse){
   html,body{margin:0!important;width:100%;overflow-x:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;overscroll-behavior:none}
@@ -60,6 +61,7 @@ p{margin:0;color:var(--muted);font-size:13px;max-width:480px;text-align:center}
   <div class="cab"><canvas id="c" width="960" height="1440" tabindex="0" aria-label="Ramen cooking ending: shoot the kettle, burner, noodle box and seasoning to cook ramen"></canvas></div>
   <div class="pad" id="pad" aria-label="Controller"><div class="joy" id="joy"><div class="knob"></div></div><div class="pbtns"><button class="pbtn fire" id="pfire">FIRE</button></div></div>
   <div class="row" id="polrow" hidden><button id="save">Save photo</button><button id="share">Share</button><a class="btn shop" id="shop" href="https://www.samabila.com/" target="_blank" rel="noopener">Shop Samabila</a><a class="btn" id="again" href="./">Play again</a></div>
+  <p class="credits" id="credits" hidden>Made for Samabila<br>Art by Billy Hong<br>Sound effects and music by Billy Hong and Jack Hong</p>
   <p id="hint">Arrows or WASD to fly, hold Z to fire. On a phone, drag to fly. Steady fire is neat, mashing is messy.</p>
 </div>
 <script>
@@ -121,7 +123,7 @@ function reset(){S={t:0,step:0,stepT:0,
   flame:0,lit:false,
   bag:null,brick:null,packs:null,pack:null,powder:[],
   drops:[],puddles:[],bubbles:[],steam:[],spilled:0,splashMax:0,cook:0,drop:[],added:[],vHit:new Set(),kfx:{hk:0},pad:null,land:0,hero:0,jars:null,tops:[],flying:[],cam:null,topHits:0,flash:0,polaroid:null,polT:0,snapping:false};
-  const pr=document.getElementById('polrow');if(pr)pr.hidden=true;}
+  const pr=document.getElementById('polrow');if(pr)pr.hidden=true;const cr=document.getElementById('credits');if(cr)cr.hidden=true;}
 reset();
 /* ---------- input ---------- */
 const keys={};let fireDown=false,pressQueued=false,touch=null;
@@ -484,7 +486,7 @@ function step(){
   if(S.step===11&&!S.pad&&S.stepT>60&&(!S.jars||S.jars.every(j=>j.pop>.9)))S.pad={x:418,y:668,t:0,armed:false};
   for(const q of S.drop){q.t++;if(q.t>=22){q.done=true;S.added.push({k:q.k,i:q.i});}}S.drop=S.drop.filter(q=>!q.done);
   for(const f of S.flying){f.t++;if(f.t>=f.dur){f.done=true;S.tops.push({k:f.k,u:f.u,v:f.v,r:f.r,s:f.s});}}S.flying=S.flying.filter(f=>!f.done);
-  if(S.step===12){S.flash=Math.max(0,S.flash-.035);if(S.stepT>40){setStep(13);document.getElementById('polrow').hidden=false;document.getElementById('hint').hidden=true;}}
+  if(S.step===12){S.flash=Math.max(0,S.flash-.035);if(S.stepT>40){setStep(13);document.getElementById('polrow').hidden=false;document.getElementById('credits').hidden=false;document.getElementById('hint').hidden=true;}}
   if(S.step===13)S.polT=Math.min(1,S.polT+.025);
   /* firing */
   S.since++;
@@ -804,7 +806,7 @@ const ROCKET={hero:'art/jet.webp',flames:['art/flame0.webp','art/flame1.webp','a
 const RK={hero:Object.assign(new Image(),{src:ROCKET.hero}),flames:ROCKET.flames.map(src=>Object.assign(new Image(),{src}))};
 /* phones: a "drag to move" cue under the jet until a finger is on the screen */
 const KTOUCH=matchMedia('(pointer:coarse)').matches;let kHintA=0;
-function kHint(){if(!KTOUCH)return;kHintA+=((touch?0:1)-kHintA)*(touch?.35:.06);if(kHintA<.02)return;const s=S.ship,t=performance.now()/1000,k=1/viewK(),pulse=(t*1.4)%1;
+function kHint(){if(!KTOUCH||S.step>=12)return;kHintA+=((touch?0:1)-kHintA)*(touch?.35:.06);if(kHintA<.02)return;const s=S.ship,t=performance.now()/1000,k=1/viewK(),pulse=(t*1.4)%1;
   const cx=s.x,cy=s.y+62*k;g.save();g.globalAlpha=kHintA;g.lineWidth=3*k;
   g.strokeStyle='rgba(255,226,122,'+(.9*(1-pulse))+')';g.beginPath();g.arc(cx,cy,(34+pulse*16)*k,0,7);g.stroke();
   g.strokeStyle='rgba(255,246,230,'+(.55+.35*Math.sin(t*6))+')';g.beginPath();g.arc(cx,cy,34*k,0,7);g.stroke();
