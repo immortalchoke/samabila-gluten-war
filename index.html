@@ -846,7 +846,8 @@ function hurt(){
   p.lives--;S.medals=0;S.bul.length=0;S.shake=12;
   addBoom(p.x,p.y,110);
   if(p.lives<0){end(false);return;}
-  p.lvl=Math.max(1,p.lvl-1);p.bombs=Math.max(p.bombs,2);p.inv=150;p.x=W/2;p.y=H-90;S.chains.length=0;S.opts.length=0;S.trail.length=0;
+  p.lvl=Math.max(1,p.lvl-1);p.bombs=Math.max(p.bombs,2);p.inv=150;/* phones respawn right where you died, so your thumb is still on the jet; keyboards go back to the start spot */
+  if(!TOUCH0){p.x=W/2;p.y=H-90;}S.chains.length=0;S.opts.length=0;S.trail.length=0;
   addBag(W/2,H*.45);
 }
 function pick(i){
