@@ -47,7 +47,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;user-select:none;-
 
 @media (pointer:coarse){.bombbtn{display:block}}
 /* settings cog (top left, beside the score) and the pause menu it opens */
-.cog{position:absolute;z-index:7;left:6px;top:4px;width:30px;height:30px;padding:0;border:0;background:none;cursor:pointer;visibility:hidden;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
+.cog{position:absolute;z-index:7;left:5px;top:2px;width:33px;height:33px;padding:0;border:0;background:none;cursor:pointer;visibility:hidden;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
 .cog svg,.cog img{width:100%;height:100%;display:block}
 .menu{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(18,12,8,.78);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 .menu[hidden]{display:none}
@@ -115,7 +115,7 @@ label input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--broth)}
       <button class="go" id="go">Start</button>
     </div>
     <button class="bombbtn" id="bombbtn" aria-label="Drop bomb">BOMB</button>
-    <button class="cog" id="cog" aria-label="Settings"><svg viewBox="0 0 32 32" aria-hidden="true"><path fill="#e9d9bd" stroke="#231f20" stroke-width="2" stroke-linejoin="round" d="M13.6 2h4.8l.8 3.6 2.6 1.1 3.1-2 3.4 3.4-2 3.1 1.1 2.6 3.6.8v4.8l-3.6.8-1.1 2.6 2 3.1-3.4 3.4-3.1-2-2.6 1.1-.8 3.6h-4.8l-.8-3.6-2.6-1.1-3.1 2-3.4-3.4 2-3.1-1.1-2.6L2 18.4v-4.8l3.6-.8 1.1-2.6-2-3.1 3.4-3.4 3.1 2 2.6-1.1z"/><circle cx="16" cy="16" r="4.6" fill="#7a4a2e" stroke="#231f20" stroke-width="2"/></svg></button>
+    <button class="cog" id="cog" aria-label="Settings"><img src="art/cog.webp" alt=""></button>
     <div class="menu" id="menu" hidden role="dialog" aria-label="Settings">
       <div class="menu-card"><h2>Paused</h2>
         <button class="tog" id="t-music" aria-pressed="true"><span>Music</span><b>On</b></button>
@@ -804,14 +804,14 @@ const SFX=(()=>{
   let chargeOsc=null,chargeGn=null,beamOsc=null,beamGn=null;
   /* Recorded sounds (Billy's) replace the synth voice for these names. Sprout snap has five takes, picked at random and
      nudged in pitch so a run of breaks never sounds the same twice */
-  const REC={},REC_FILES={medal:['s_medal'],item:['s_item'],life:['s_life'],smash:['s_smash'],catch:['s_catch'],rang:['s_rang'],snap:['s_snap0','s_snap1','s_snap2','s_snap3','s_snap4']},REC_VOL={rang:.45,catch:.8,snap:.9,medal:.8,life:.6,smash:.6};
+  const REC={},REC_FILES={medal:['s_medal'],item:['s_item'],life:['s_life'],smash:['s_smash'],catch:['s_catch'],rang:['s_rang'],snap:['s_snap0','s_snap1','s_snap2','s_snap3','s_snap4'],whip:['s_whip0','s_whip1'],charge:['s_charge']},REC_VOL={whip:.75,charge:.6,rang:.45,catch:.8,snap:.9,medal:.8,life:.6,smash:.6};
   function playRec(name,pan){const bs=(REC[name]||[]).filter(Boolean);if(!bs.length)return false;const src=ac.createBufferSource();src.buffer=bs[Math.floor(Math.random()*bs.length)];
     src.playbackRate.value=name==='snap'?.85+Math.random()*.35:.97+Math.random()*.06;const gn=bus(pan,false);gn.gain.value=REC_VOL[name]||1;src.connect(gn);src.start();return true;}
   function play(name,x){if(!ac||muted||sfxOff||(!LIB[name]&&!REC[name]))return;const now=performance.now();if(GAP[name]&&now-(last[name]||0)<GAP[name])return;last[name]=now;
     const pan=x===undefined?0:(x/W-.5)*1.4;if(playRec(name,pan))return;if(LIB[name])LIB[name](pan);}
   /* Continuous voices: the laser charge whine and the beam buzz follow game state every frame */
   let prevC=0;
-  function frame(st){if(!ac)return;const t=ac.currentTime,c=(!muted&&!sfxOff&&st.charge)||0;if(c>=1&&prevC<1)play('full',st.p.x);prevC=c;
+  function frame(st){if(!ac)return;const t=ac.currentTime,c=(!muted&&!sfxOff&&st.charge)||0;if(c>=1&&prevC<1)play('full',st.p.x);if(c>0&&prevC<=0)play('charge',st.p.x);prevC=c;
     if(c>0&&!chargeOsc){chargeOsc=ac.createOscillator();chargeOsc.setPeriodicWave(pulses[.25]);chargeGn=ac.createGain();chargeGn.gain.value=0;chargeOsc.connect(chargeGn);chargeGn.connect(out);chargeOsc.start();}
     if(chargeOsc){chargeOsc.frequency.setTargetAtTime(220+c*900,t,.03);chargeGn.gain.setTargetAtTime(c>0?.025+c*.03:0,t,.03);if(c<=0){const o=chargeOsc;setTimeout(()=>o.stop(),200);chargeOsc=null;}}
     const b=!muted&&!sfxOff&&st.beam;
