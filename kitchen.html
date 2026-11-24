@@ -989,11 +989,11 @@ let last=performance.now(),acc=0,fadeIn=1;
 const sfxOn=()=>{SFX.init();SFX.loadSamples();};addEventListener('keydown',sfxOn);addEventListener('pointerdown',sfxOn);
 /* the kitchen waits until its art is in before it starts, so nothing shows half-drawn. Inside the game it is loaded early,
    hidden, and starts when the game hands over (window.kitchenGo) */
-let kGo=!EMBED;window.kitchenGo=()=>{if(kGo)return;kGo=true;reset();last=performance.now();acc=0;fadeIn=1;cv.focus();};
+let kGo=!EMBED,kPaused=false;window.kitchenPause=v=>{kPaused=!!v;};window.kitchenGo=()=>{if(kGo)return;kGo=true;reset();last=performance.now();acc=0;fadeIn=1;cv.focus();};
 function kReady(){return [ART.sr,...Object.values(SPR)].every(im=>im.complete);}
 window.kitchenReady=kReady;
 function frame(now){if(!kGo||!kReady()){last=now;g.fillStyle='#fff6e4';g.fillRect(0,0,W,H);requestAnimationFrame(frame);return;}
-  acc+=Math.min(100,now-last);last=now;while(acc>=1000/60){step();acc-=1000/60;}draw();if(fadeIn>0){fadeIn=Math.max(0,fadeIn-.012);g.fillStyle=`rgba(255,246,228,${fadeIn})`;g.fillRect(0,0,W,H);}requestAnimationFrame(frame);}
+  acc+=Math.min(100,now-last);last=now;if(kPaused)acc=0;while(acc>=1000/60){step();acc-=1000/60;}draw();if(fadeIn>0){fadeIn=Math.max(0,fadeIn-.012);g.fillStyle=`rgba(255,246,228,${fadeIn})`;g.fillRect(0,0,W,H);}requestAnimationFrame(frame);}
 requestAnimationFrame(frame);cv.focus();
 /* inside the game, Play again restarts the game page itself */
 document.getElementById('again').addEventListener('click',e=>{if(EMBED&&parent!==window){e.preventDefault();try{parent.location.reload();}catch(_){location.href='./';}}});

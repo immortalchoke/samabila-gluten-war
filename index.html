@@ -49,9 +49,16 @@ canvas{display:block;width:100%;height:100%;touch-action:none;user-select:none;-
 /* settings cog (top left, beside the score) and the pause menu it opens */
 .cog{position:absolute;z-index:7;left:1.4%;top:.3%;width:5.4%;height:auto;aspect-ratio:1;padding:0;border:0;background:none;cursor:pointer;visibility:hidden;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
 .cog svg,.cog img{width:100%;height:100%;display:block}
-.menu{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(18,12,8,.78);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.menu{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;pointer-events:auto;background:rgba(18,12,8,0);-webkit-backdrop-filter:blur(0);backdrop-filter:blur(0);transition:background .45s ease,backdrop-filter .45s ease,-webkit-backdrop-filter .45s ease}
+.menu.open{background:rgba(18,12,8,.78);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.menu .menu-card{transform:translateY(calc(50vh + 100%));transition:transform .38s cubic-bezier(.55,0,.75,.2)}
+.menu.open .menu-card{transform:none;transition:transform .55s cubic-bezier(.16,1,.3,1)}
+.menu .menu-credits{opacity:0;transition:opacity .3s ease}
+.menu.open .menu-credits{opacity:1;transition:opacity .45s ease .2s}
+@media (prefers-reduced-motion:reduce){.menu .menu-card,.menu.open .menu-card{transition:opacity .2s;transform:none;opacity:0}.menu.open .menu-card{opacity:1}}
+.cog{pointer-events:auto}
 .menu[hidden]{display:none}
-.menu-card{position:relative;display:flex;flex-direction:column;gap:8px;width:min(80%,310px);box-sizing:border-box;padding:22px 26px 28px;border:0;border-image:url(art/ui/panel.webp) 92 fill / 44px stretch;filter:drop-shadow(0 10px 18px rgba(0,0,0,.55))}
+.menu-card{position:relative;display:flex;flex-direction:column;gap:12px;width:min(86%,330px);box-sizing:border-box;padding:30px 36px 38px;border:0;border-image:url(art/ui/panel.webp) 92 fill / 44px stretch;filter:drop-shadow(0 10px 18px rgba(0,0,0,.55))}
 .menu h2{margin:0 0 2px;text-align:center;font:900 26px Gooper,Georgia,serif;color:#fff}
 .menu .tog,.menu .tog[aria-pressed]{display:flex;align-items:center;gap:8px;padding:2px 0;border:0;background:none!important;color:#fff;cursor:pointer}
 .tog .ic{width:30px;height:30px;object-fit:contain;flex:none}
@@ -64,7 +71,8 @@ canvas{display:block;width:100%;height:100%;touch-action:none;user-select:none;-
 .mbtn.shop:active{border-image-source:url(art/ui/btn-red-down.webp)}
 .mbtn:active>*{transform:translateY(2px)}
 .mbtn:focus-visible,.tog:focus-visible,.mclose:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:999px}
-.mclose{position:absolute;top:-14px;right:-14px;width:42px;height:42px;padding:0;border:0;background:url(art/ui/close.webp) center/contain no-repeat;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.menu-card:focus{outline:none}
+.mclose{position:absolute;top:-12px;right:-12px;width:42px;height:42px;padding:0;border:0;background:url(art/ui/close.webp) center/contain no-repeat;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .mclose:active{transform:scale(.92)}
 .menu-credits{position:absolute;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom,0px));margin:0;text-align:center;font:500 12px/1.6 Figtree,system-ui,sans-serif;color:#d9cab6}
 .menu-credits a,.credits a{color:inherit;text-decoration:underline;text-underline-offset:2px}
@@ -125,7 +133,7 @@ label input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--broth)}
     <button class="bombbtn" id="bombbtn" aria-label="Drop bomb">BOMB</button>
     <button class="cog" id="cog" aria-label="Settings"><img src="art/cog.webp" alt=""></button>
     <div class="menu" id="menu" hidden role="dialog" aria-label="Settings">
-      <div class="menu-card"><button class="mclose" id="mclose" aria-label="Close"></button><h2 id="menu-title">Paused</h2>
+      <div class="menu-card" tabindex="-1"><button class="mclose" id="mclose" aria-label="Close"></button><h2 id="menu-title">Paused</h2>
         <button class="tog" id="t-music" aria-pressed="true" aria-label="Music"><img class="ic" alt="" src="art/ui/music.webp"><span class="lbl">Music</span><img class="sw" alt="" src="art/ui/tog-on.webp"></button>
         <button class="tog" id="t-sfx" aria-pressed="true" aria-label="Sound effects"><img class="ic" alt="" src="art/ui/sound.webp"><span class="lbl">Sound effects</span><img class="sw" alt="" src="art/ui/tog-on.webp"></button>
         <a class="mbtn shop" id="m-shop" href="https://www.samabila.com/" target="_blank" rel="noopener">Shop Samabila</a>
@@ -1691,13 +1699,21 @@ function draw(){
 const BOMBBTN=document.getElementById('bombbtn');BOMBBTN.style.visibility='hidden';
 /* ---------- settings menu: pauses the game, music and sound effects toggles (remembered), shop link, credits ---------- */
 const COG=document.getElementById('cog'),MENU=document.getElementById('menu');let menuWasPaused=false;
-const COG_MODES=['play','intro','feast','tofeast'];
+const COG_MODES=['title','play','intro','feast','tofeast','leaving'];
 feltHTML(document.getElementById('menu-title'),'Paused','r',34);
 for(const [id,t,h] of [['t-music','Music',15],['t-sfx','Sound effects',15]])feltHTML(document.getElementById(id).querySelector('.lbl'),t,'k',h);
 feltHTML(document.getElementById('m-shop'),'Shop Samabila','k',16);feltHTML(document.getElementById('resume'),'Resume','k',16);
 for(const n of ['music-off','sound-off','tog-off','btn-red-down','btn-brown-down'])new Image().src='art/ui/'+n+'.webp';
-function menuOpen(){if(!COG_MODES.includes(mode)||!MENU.hidden)return;if(ENDSONG.on&&ENDSONG.el&&!ENDSONG.el.paused){ENDSONG.el.pause();MENU.endsong=true;}menuWasPaused=paused;paused=true;MENU.hidden=false;syncToggles();document.getElementById('resume').focus();}
-function menuClose(){if(MENU.hidden)return;MENU.hidden=true;paused=menuWasPaused;if(MENU.endsong){MENU.endsong=false;ENDSONG.el.play().catch(()=>{});}last=performance.now();cv.focus();}
+let menuShut=null;
+function menuOpen(){if(!COG_MODES.includes(mode))return;if(menuShut){clearTimeout(menuShut);menuShut=null;MENU.classList.add('open');return;}if(!MENU.hidden)return;
+  for(const a of [ENDSONG.el,WHISTLE.el])if(a&&!a.paused&&(a!==ENDSONG.el||ENDSONG.on)){a.pause();a._menu=true;}
+  if(mode==='leaving')try{KFRAME.contentWindow.kitchenPause(true);}catch(e){}
+  menuWasPaused=paused;paused=true;MENU.hidden=false;syncToggles();void MENU.offsetWidth;MENU.classList.add('open');MENU.querySelector('.menu-card').focus({preventScroll:true});}
+/* the card drops away first; the game picks up again once it is gone */
+function menuClose(){if(MENU.hidden||menuShut)return;MENU.classList.remove('open');
+  menuShut=setTimeout(()=>{menuShut=null;MENU.hidden=true;paused=menuWasPaused;
+    for(const a of [ENDSONG.el,WHISTLE.el])if(a&&a._menu){a._menu=false;a.play().catch(()=>{});}
+    if(mode==='leaving'){try{KFRAME.contentWindow.kitchenPause(false);KFRAME.focus();}catch(e){}}else cv.focus();last=performance.now();},400);}
 function syncToggles(){for(const [id,off] of [['t-music',SFX.musOff],['t-sfx',SFX.sfxOff]]){const b=document.getElementById(id);b.setAttribute('aria-pressed',!off);const k=id==='t-music'?'music':'sound';b.querySelector('.ic').src='art/ui/'+k+(off?'-off':'')+'.webp';b.querySelector('.sw').src='art/ui/tog-'+(off?'off':'on')+'.webp';}}
 COG.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();menuOpen();});
 MENU.addEventListener('pointerdown',e=>e.stopPropagation());
@@ -1774,10 +1790,10 @@ const IN={shot:0,t:0,typed:0,fade:1,out:0,dust:[],steam:[],now:0};
 /* If the browser blocks sound on arrival (phones always do), the title waits behind a "tap to begin": that first tap
    unlocks audio, starts the whistle and plays the title's entrance, and only the next tap starts the game */
 let TGATE=true,gateHit=false;window.__tg=()=>TGATE;
-addEventListener('pointerdown',e=>{if(TOUCH0&&TGATE&&mode==='title'){gateHit=true;e.stopImmediatePropagation();e.preventDefault();}},true);
+addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('#cog,#menu'))return;if(TOUCH0&&TGATE&&mode==='title'){gateHit=true;e.stopImmediatePropagation();e.preventDefault();}},true);
 /* desktop has no Begin button: the splash holds a moment once the art is in, then the title builds on its own */
 function openGateAuto(){if(!TGATE||mode!=='title')return;TGATE=false;WHISTLE.go();}
-function openGate(e){if(!TOUCH0)return;if(!TGATE||mode!=='title')return;if(e.type==='keydown'){e.stopImmediatePropagation();e.preventDefault();}else if(!gateHit)return;
+function openGate(e){if(!TOUCH0)return;if(!MENU.hidden||e.target&&e.target.closest&&e.target.closest('#cog,#menu'))return;if(!TGATE||mode!=='title')return;if(e.type==='keydown'){e.stopImmediatePropagation();e.preventDefault();}else if(!gateHit)return;
   TGATE=false;gateHit=false;try{SFX.init();SFX.unlock&&SFX.unlock();}catch(_){}WHISTLE.go();}
 for(const ev of ['pointerup','touchend','click','keydown'])addEventListener(ev,openGate,true);
 const WHISTLE=(()=>{let el=null,done=false,want=false;
@@ -1785,7 +1801,7 @@ const WHISTLE=(()=>{let el=null,done=false,want=false;
     el.muted=!!SFX.musMuted;const p=el.play();if(p&&p.then)p.then(()=>{done=true;want=false;TGATE=false;}).catch(()=>{want=true;});else{done=true;TGATE=false;}}
   function stop(){want=false;done=true;if(!el||el.paused)return;const v0=el.volume,t0=performance.now();
     const f=()=>{const k=Math.min(1,(performance.now()-t0)/900);el.volume=v0*(1-k);if(k<1)requestAnimationFrame(f);else el.pause();};f();}
-  const kick=()=>setTimeout(()=>{if(want&&mode==='title')go();},0);for(const ev of ['pointerup','click','keydown'])addEventListener(ev,kick,true);
+  const kick=()=>setTimeout(()=>{if(want&&mode==='title'&&MENU.hidden)go();},0);for(const ev of ['pointerup','click','keydown'])addEventListener(ev,kick,true);
   setInterval(()=>{if(el&&!el.paused)el.muted=!!SFX.musMuted;},300);
   return{go,stop,get el(){return el}};})();window.WHISTLE=WHISTLE;
 addEventListener('load',()=>{if(TOUCH0)WHISTLE.go();});
@@ -1989,6 +2005,10 @@ function kitchenPreload(){if(KFRAME)return;KFRAME=document.createElement('iframe
   KFRAME.setAttribute('allow','autoplay');Object.assign(KFRAME.style,{position:'fixed',inset:'0',width:'100%',height:'100%',border:'0',zIndex:'50',background:'#191614',opacity:'0',pointerEvents:'none',transition:'opacity .5s'});
   document.body.appendChild(KFRAME);}
 window.__kshow=()=>kitchenShow();
+/* once the kitchen is showing, the cog and menu move into a layer above it, lined up with the kitchen's own screen */
+let KHOST=null;function menuHost(){if(!KFRAME||KFRAME.style.opacity!=='1')return;let kc=null;try{kc=KFRAME.contentDocument.querySelector('.cab');}catch(e){}if(!kc)return;
+  if(!KHOST){KHOST=document.createElement('div');Object.assign(KHOST.style,{position:'fixed',zIndex:'60',pointerEvents:'none',borderRadius:'6px',overflow:'hidden'});document.body.appendChild(KHOST);KHOST.append(COG,MENU);}
+  const r=kc.getBoundingClientRect();Object.assign(KHOST.style,{left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px'});}
 function kitchenShow(){mode='leaving';kitchenPreload();const go=()=>{let w=null;try{w=KFRAME.contentWindow;}catch(e){}
     if(w&&w.kitchenGo&&w.kitchenReady&&w.kitchenReady()){w.kitchenGo();KFRAME.style.opacity='1';KFRAME.style.pointerEvents='auto';try{KFRAME.focus();}catch(e){}}
     else setTimeout(go,100);};go();}
@@ -2001,8 +2021,8 @@ function frame(ts){
   if(menu&&mode==='intro'){drawIntro();requestAnimationFrame(frame);return;}
   if(menu&&mode==='feast'){drawFeast();requestAnimationFrame(frame);return;}
   if((mode==='play'||mode==='kitchen'||mode==='tofeast')&&!paused){acc+=dt;while(acc>=1000/60){step();acc-=1000/60;}}
-  else if(mode==='title'){acc+=dt;while(acc>=1000/60){S.tick++;acc-=1000/60;}}
-  if(mode==='leaving'){requestAnimationFrame(frame);return;}
+  else if(mode==='title'&&!menu){acc+=dt;while(acc>=1000/60){S.tick++;acc-=1000/60;}}
+  if(mode==='leaving'){menuHost();requestAnimationFrame(frame);return;}
   if(mode==='intro'){introStep(dt);drawIntro();requestAnimationFrame(frame);return;}
   if(mode==='feast'){feastStep(dt);drawFeast();requestAnimationFrame(frame);return;}
   draw();
