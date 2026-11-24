@@ -4,6 +4,8 @@
 <title>The Gluten Conflict</title>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
+<script>/* ?embed=1: the game alone, filling its frame (for the Samabila site). The tuning bench shows everywhere except the public addresses, where ?tune=1 brings it back */
+(function(){const q=location.search,c=document.documentElement.classList;if(/[?&]embed=1/.test(q))c.add('embed');if(/[?&]tune=1/.test(q)||!/(github\.io|samabila\.com)$/.test(location.hostname))c.add('tune');})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;600&family=Special+Elite&display=swap">
 <style>
@@ -46,6 +48,13 @@ canvas{display:block;width:100%;height:100%;touch-action:none;user-select:none;-
 }
 
 @media (pointer:coarse){.bombbtn{display:block}}
+/* the tuning bench is a dev tool: hidden unless the address ends in ?tune=1 */
+html:not(.tune) .bench{display:none!important}
+html.embed,html.embed body{margin:0!important;padding:0!important;height:100%;overflow:hidden;background:#0e0b09}
+html.embed body{display:flex;align-items:center;justify-content:center}
+html.embed .wrap{gap:0!important;padding:0!important;width:100%;max-width:none!important;align-items:center}
+html.embed .cab,html.embed .stack{border-radius:0!important;outline:none!important}
+html.embed .bench,html.embed #hint{display:none!important}
 /* settings cog (top left, beside the score) and the pause menu it opens */
 .cog{position:absolute;z-index:7;left:1.4%;top:.3%;width:5.4%;height:auto;aspect-ratio:1;padding:0;border:0;background:none;cursor:pointer;visibility:hidden;filter:drop-shadow(0 2px 2px rgba(0,0,0,.5))}
 .cog svg,.cog img{width:100%;height:100%;display:block}
@@ -2151,7 +2160,7 @@ requestAnimationFrame(t=>{last=t;frame(t);});
 <script>
 /* Phones: size the screen in plain pixels from the real window, fitted to the 2:3 game and centered, so no browser can
    end up showing it at the canvas's own (much larger) size */
-(function(){if(!matchMedia('(pointer:coarse)').matches)return;
+(function(){if(!matchMedia('(pointer:coarse)').matches&&!document.documentElement.classList.contains('embed'))return;
   function fit(){const cab=document.querySelector('.cab'),cv=cab&&cab.querySelector('canvas');if(!cv)return;
     const vw=document.documentElement.clientWidth||innerWidth,vh=innerHeight,w=Math.floor(Math.min(vw,vh*2/3)),h=Math.floor(w*1.5);
     for(const el of [cab,cv]){el.style.width=w+'px';el.style.height=h+'px';}cab.style.aspectRatio='auto';cab.style.margin='0 auto';
