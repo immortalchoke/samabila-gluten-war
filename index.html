@@ -51,13 +51,21 @@ canvas{display:block;width:100%;height:100%;touch-action:none;user-select:none;-
 .cog svg,.cog img{width:100%;height:100%;display:block}
 .menu{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(18,12,8,.78);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 .menu[hidden]{display:none}
-.menu-card{display:flex;flex-direction:column;gap:10px;width:min(78%,300px);padding:20px 18px;border-radius:18px;background:#2a211b;border:2px dashed rgba(214,170,110,.55);box-shadow:0 10px 30px rgba(0,0,0,.5)}
-.menu h2{margin:0 0 4px;text-align:center;font:900 26px Gooper,Georgia,serif;color:#fff}
-.menu .tog,.menu .tog[aria-pressed]{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;border-radius:12px;border:0;background:#3a2f27!important;color:var(--ink);font:700 15px Figtree,system-ui,sans-serif;cursor:pointer}
-.tog b{min-width:46px;padding:4px 0;border-radius:999px;background:#5f8f3a;color:#fff;font-size:13px;text-align:center}
-.tog[aria-pressed="false"] b{background:#6b5a4e}
-.mbtn{display:block;text-align:center;padding:11px 14px;border-radius:999px;border:0;background:#3a2f27;color:var(--ink);font:700 15px Figtree,system-ui,sans-serif;text-decoration:none;cursor:pointer}
-.mbtn.shop{background:#e23200;color:#fff}
+.menu-card{position:relative;display:flex;flex-direction:column;gap:8px;width:min(80%,310px);box-sizing:border-box;padding:22px 26px 28px;border:0;border-image:url(art/ui/panel.webp) 92 fill / 44px stretch;filter:drop-shadow(0 10px 18px rgba(0,0,0,.55))}
+.menu h2{margin:0 0 2px;text-align:center;font:900 26px Gooper,Georgia,serif;color:#fff}
+.menu .tog,.menu .tog[aria-pressed]{display:flex;align-items:center;gap:8px;padding:2px 0;border:0;background:none!important;color:#fff;cursor:pointer}
+.tog .ic{width:30px;height:30px;object-fit:contain;flex:none}
+.tog .lbl{flex:1;display:flex;justify-content:flex-start}
+.tog .lbl img{margin:0!important}
+.tog .sw{width:60px;height:auto;flex:none}
+.mbtn{display:flex;align-items:center;justify-content:center;height:52px;box-sizing:border-box;padding:0 20px 3px;border:0;background:none;border-image:url(art/ui/btn-brown.webp) 50% 31% fill / 50% 28px round;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mbtn:active{border-image-source:url(art/ui/btn-brown-down.webp)}
+.mbtn.shop{border-image-source:url(art/ui/btn-red.webp);margin-top:4px}
+.mbtn.shop:active{border-image-source:url(art/ui/btn-red-down.webp)}
+.mbtn:active>*{transform:translateY(2px)}
+.mbtn:focus-visible,.tog:focus-visible,.mclose:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:999px}
+.mclose{position:absolute;top:-14px;right:-14px;width:42px;height:42px;padding:0;border:0;background:url(art/ui/close.webp) center/contain no-repeat;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mclose:active{transform:scale(.92)}
 .menu-credits{position:absolute;left:0;right:0;bottom:max(14px,env(safe-area-inset-bottom,0px));margin:0;text-align:center;font:500 12px/1.6 Figtree,system-ui,sans-serif;color:#d9cab6}
 .menu-credits a,.credits a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 .haspad .bombbtn{display:none!important}
@@ -117,10 +125,10 @@ label input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--broth)}
     <button class="bombbtn" id="bombbtn" aria-label="Drop bomb">BOMB</button>
     <button class="cog" id="cog" aria-label="Settings"><img src="art/cog.webp" alt=""></button>
     <div class="menu" id="menu" hidden role="dialog" aria-label="Settings">
-      <div class="menu-card"><h2 id="menu-title">Paused</h2>
-        <button class="tog" id="t-music" aria-pressed="true"><span>Music</span><b>On</b></button>
-        <button class="tog" id="t-sfx" aria-pressed="true"><span>Sound effects</span><b>On</b></button>
-        <a class="mbtn shop" href="https://www.samabila.com/" target="_blank" rel="noopener">Shop Samabila</a>
+      <div class="menu-card"><button class="mclose" id="mclose" aria-label="Close"></button><h2 id="menu-title">Paused</h2>
+        <button class="tog" id="t-music" aria-pressed="true" aria-label="Music"><img class="ic" alt="" src="art/ui/music.webp"><span class="lbl">Music</span><img class="sw" alt="" src="art/ui/tog-on.webp"></button>
+        <button class="tog" id="t-sfx" aria-pressed="true" aria-label="Sound effects"><img class="ic" alt="" src="art/ui/sound.webp"><span class="lbl">Sound effects</span><img class="sw" alt="" src="art/ui/tog-on.webp"></button>
+        <a class="mbtn shop" id="m-shop" href="https://www.samabila.com/" target="_blank" rel="noopener">Shop Samabila</a>
         <button class="mbtn" id="resume">Resume</button></div>
       <p class="menu-credits">Made for Samabila<br>by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a><br>Sound effects and music by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a> and Jack Hong</p>
     </div>
@@ -1685,12 +1693,15 @@ const BOMBBTN=document.getElementById('bombbtn');BOMBBTN.style.visibility='hidde
 const COG=document.getElementById('cog'),MENU=document.getElementById('menu');let menuWasPaused=false;
 const COG_MODES=['play','intro','feast','tofeast'];
 feltHTML(document.getElementById('menu-title'),'Paused','r',34);
+for(const [id,t,h] of [['t-music','Music',15],['t-sfx','Sound effects',15]])feltHTML(document.getElementById(id).querySelector('.lbl'),t,'k',h);
+feltHTML(document.getElementById('m-shop'),'Shop Samabila','k',16);feltHTML(document.getElementById('resume'),'Resume','k',16);
+for(const n of ['music-off','sound-off','tog-off','btn-red-down','btn-brown-down'])new Image().src='art/ui/'+n+'.webp';
 function menuOpen(){if(!COG_MODES.includes(mode)||!MENU.hidden)return;if(ENDSONG.on&&ENDSONG.el&&!ENDSONG.el.paused){ENDSONG.el.pause();MENU.endsong=true;}menuWasPaused=paused;paused=true;MENU.hidden=false;syncToggles();document.getElementById('resume').focus();}
 function menuClose(){if(MENU.hidden)return;MENU.hidden=true;paused=menuWasPaused;if(MENU.endsong){MENU.endsong=false;ENDSONG.el.play().catch(()=>{});}last=performance.now();cv.focus();}
-function syncToggles(){for(const [id,off] of [['t-music',SFX.musOff],['t-sfx',SFX.sfxOff]]){const b=document.getElementById(id);b.setAttribute('aria-pressed',!off);b.querySelector('b').textContent=off?'Off':'On';}}
+function syncToggles(){for(const [id,off] of [['t-music',SFX.musOff],['t-sfx',SFX.sfxOff]]){const b=document.getElementById(id);b.setAttribute('aria-pressed',!off);const k=id==='t-music'?'music':'sound';b.querySelector('.ic').src='art/ui/'+k+(off?'-off':'')+'.webp';b.querySelector('.sw').src='art/ui/tog-'+(off?'off':'on')+'.webp';}}
 COG.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();menuOpen();});
 MENU.addEventListener('pointerdown',e=>e.stopPropagation());
-document.getElementById('resume').onclick=menuClose;
+document.getElementById('resume').onclick=menuClose;document.getElementById('mclose').onclick=menuClose;
 document.getElementById('t-music').onclick=()=>{SFX.setMusicOff(!SFX.musOff);syncToggles();};
 document.getElementById('t-sfx').onclick=()=>{SFX.setSfxOff(!SFX.sfxOff);syncToggles();};
 addEventListener('keydown',e=>{if(MENU.hidden)return;if(e.code==='Tab'||e.code==='Space'&&e.target.tagName==='BUTTON'||e.code==='Enter'&&e.target.tagName==='BUTTON')return;e.preventDefault();e.stopImmediatePropagation();if(e.code==='Escape'||e.code==='KeyP')menuClose();},true);
