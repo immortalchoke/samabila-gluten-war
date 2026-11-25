@@ -4,7 +4,7 @@
 <title>The Gluten Conflict</title>
 <meta name="description" content="A felted vertical shooter made for SAMABILA. Feed the dragon, then cook your own ramen.">
 <meta property="og:type" content="website">
-<meta property="og:title" content="The Gluten Conflict">
+<meta property="og:title" content="SAMABILA: The Gluten Conflict">
 <meta property="og:description" content="A felted vertical shooter made for SAMABILA. Feed the dragon, then cook your own ramen.">
 <meta property="og:url" content="https://immortalchoke.github.io/samabila-gluten-war/">
 <meta property="og:image" content="https://immortalchoke.github.io/samabila-gluten-war/art/og.jpg">
@@ -1927,10 +1927,10 @@ document.getElementById('go').onclick=start;
 /* sharing: the phone's share sheet where there is one, otherwise copy the link. The link unfurls with art/og.jpg */
 const GAME_URL='https://immortalchoke.github.io/samabila-gluten-war/';
 function btnSay(b,txt,lbl){feltHTML(b,txt,'k',16);clearTimeout(b._t);b._t=setTimeout(()=>feltHTML(b,lbl,'k',16),1800);}
-async function shareGame(b,text,lbl){try{if(navigator.share){await navigator.share({title:'The Gluten Conflict',text,url:GAME_URL});return;}}catch(e){if(e&&e.name==='AbortError')return;}
+async function shareGame(b,text,lbl){try{if(navigator.share){await navigator.share({title:'SAMABILA: The Gluten Conflict',text,url:GAME_URL});return;}}catch(e){if(e&&e.name==='AbortError')return;}
   try{await navigator.clipboard.writeText(text+' '+GAME_URL);btnSay(b,'Link copied',lbl);}catch(e){btnSay(b,'Copy failed',lbl);}}
-document.getElementById('o-share').onclick=e=>shareGame(e.currentTarget,`I scored ${S.score.toLocaleString('en-US')} in The Gluten Conflict, a felted shooter made for SAMABILA. Can you beat it?`,'Share');
-document.getElementById('m-share').onclick=e=>shareGame(e.currentTarget,'Play The Gluten Conflict, a felted shooter made for SAMABILA.','Share the game');
+document.getElementById('o-share').onclick=e=>shareGame(e.currentTarget,`I scored ${S.score.toLocaleString('en-US')} feeding a gluten-free dragon in SAMABILA: The Gluten Conflict. Can you beat it?`,'Share');
+document.getElementById('m-share').onclick=e=>shareGame(e.currentTarget,'Feed a hungry dragon gluten-free ramen in SAMABILA: The Gluten Conflict.','Share the game');
 let last=0,acc=0,kitchenT=0;
 /* ---------- Ending: the feast ----------
    After the dragon flies off, a felt diorama of him feasting among piles of SAMABILA pots, holding a giant bitten

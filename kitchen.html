@@ -1032,8 +1032,8 @@ for(const n of ['btn-red-down','btn-brown-down'])new Image().src='art/ui/'+n+'.w
 async function savePhoto(){const b=await polBlob(),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='my-samabila-ramen.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
 document.getElementById('share').onclick=async e=>{const btn=e.currentTarget;if(!S.polaroid)return;
   try{const f=new File([await polBlob()],'my-samabila-ramen.png',{type:'image/png'});
-    if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'My SAMABILA ramen',text:'I cooked this in The Gluten Conflict',url:GAME_URL});return;}
-    if(navigator.share){await navigator.share({title:'The Gluten Conflict',text:'I cooked ramen in The Gluten Conflict',url:GAME_URL});return;}}
+    if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:'My SAMABILA ramen',text:'I cooked this in SAMABILA: The Gluten Conflict',url:GAME_URL});return;}
+    if(navigator.share){await navigator.share({title:'SAMABILA: The Gluten Conflict',text:'I cooked gluten-free ramen in SAMABILA: The Gluten Conflict',url:GAME_URL});return;}}
   catch(err){if(err&&err.name==='AbortError')return;}
   /* no share sheet (most desktops): save the photo and copy the game link instead */
   await savePhoto();try{await navigator.clipboard.writeText(GAME_URL);say(btn,'Saved, link copied');}catch(err){say(btn,'Photo saved');}};
