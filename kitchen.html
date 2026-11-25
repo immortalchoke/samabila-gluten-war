@@ -31,6 +31,8 @@ button:focus-visible,.btn:focus-visible{outline:2px solid #e69000;outline-offset
 #endbar .row .btn.shop:active{border-image-source:url(art/ui/btn-red-down.webp)}
 #endbar .row :active>img{transform:translateY(2px)}
 #endbar .row img{flex:0 1 auto;min-width:0;max-width:100%}
+#endbar .row .bic{height:18px;width:auto;flex:none;margin-right:5px}
+#endbar .row .fl{display:flex;align-items:center;min-width:0}
 #endbar .row .btn.shop{flex-grow:1.4}
 #endbar .credits a{color:inherit;text-decoration:underline;text-underline-offset:2px}
 #endbar .credits{color:#e9dccb;margin:0;font-size:clamp(10px,2.9vw,12px);line-height:1.5}
@@ -71,7 +73,7 @@ p{margin:0;color:var(--muted);font-size:13px;max-width:480px;text-align:center}
 <div class="wrap">
 <style>.haspad .wrap .pad{width:min(100%,calc((100dvh - 110px - 160px)*.6667),480px)}</style>
   <div class="cab"><canvas id="c" width="960" height="1440" tabindex="0" aria-label="Ramen cooking ending: shoot the kettle, burner, noodle box and seasoning to cook ramen"></canvas>
-  <div id="endbar" hidden><div class="row" id="polrow"><button id="share">Share</button><a class="btn shop" id="shop" href="https://www.samabila.com/" target="_blank" rel="noopener">Shop SAMABILA</a><a class="btn" id="again" href="./">Play again</a></div>
+  <div id="endbar" hidden><div class="row" id="polrow"><button id="share"><img class="bic" alt="" src="art/ui/share.webp"><span class="fl"></span></button><a class="btn shop" id="shop" href="https://www.samabila.com/" target="_blank" rel="noopener"><img class="bic" alt="" src="art/ui/shop.webp"><span class="fl"></span></a><a class="btn" id="again" href="./">Play again</a></div>
   <p class="credits" id="credits">Made for SAMABILA<br>by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a><br><a href="https://on.soundcloud.com/MNlJb0WDa1mZvuwBQ3" target="_blank" rel="noopener">Sound effects and music</a> by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a> and Jack Hong</p></div></div>
   <div class="pad" id="pad" aria-label="Controller"><div class="joy" id="joy"><div class="knob"></div></div><div class="pbtns"><button class="pbtn fire" id="pfire">FIRE</button></div></div>
   
@@ -1026,8 +1028,9 @@ function feltHTML(el,txt,col,h){el.setAttribute('aria-label',txt);const T=String
     const im=new Image();im.src=cv2.toDataURL();im.alt='';im.style.width=(w+pad*2)+'px';im.style.maxWidth='100%';im.style.height='auto';im.style.display='block';im.style.margin='0 auto';el.replaceChildren(im);};
   paint();Promise.all(ims.map(i=>i.complete?0:new Promise(r=>{i.addEventListener('load',r,{once:true});i.addEventListener('error',r,{once:true});}))).then(paint);
   if(document.fonts)document.fonts.load('900 40px Gooper').then(paint);}
-function say(btn,txt){const o=btn.dataset.o||(btn.dataset.o=btn.getAttribute('aria-label'));feltHTML(btn,txt,'k',12);setTimeout(()=>feltHTML(btn,o,'k',12),1800);}
-for(const [id,t] of [['share','Share'],['shop','Shop SAMABILA'],['again','Play again']])feltHTML(document.getElementById(id),t,'k',12);
+function feltBtn(b,txt){b.setAttribute('aria-label',txt);feltHTML(b.querySelector('.fl')||b,txt,'k',12);}
+function say(btn,txt){const o=btn.dataset.o||(btn.dataset.o=btn.getAttribute('aria-label'));feltBtn(btn,txt);setTimeout(()=>feltBtn(btn,o),1800);}
+for(const [id,t] of [['share','Share'],['shop','Shop SAMABILA'],['again','Play again']])feltBtn(document.getElementById(id),t);
 for(const n of ['btn-red-down','btn-brown-down'])new Image().src='art/ui/'+n+'.webp';
 async function savePhoto(){const b=await polBlob(),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='my-samabila-ramen.png';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
 document.getElementById('share').onclick=async e=>{const btn=e.currentTarget;if(!S.polaroid)return;

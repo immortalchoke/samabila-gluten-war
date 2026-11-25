@@ -89,6 +89,9 @@ html.embed .bench,html.embed #hint{display:none!important}
 .tog .sw{width:60px;height:auto;flex:none}
 .mbtn{display:flex;align-items:center;justify-content:center;height:52px;box-sizing:border-box;padding:0 20px 3px;border:0;background:none;border-image:url(art/ui/btn-brown.webp) 50% 31% fill / 50% 28px round;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .mbtn:active{border-image-source:url(art/ui/btn-brown-down.webp)}
+.mbtn .bic{height:24px;width:auto;flex:none;margin-right:8px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+.mbtn .fl{display:flex;align-items:center;min-width:0}
+.mbtn .fl img{max-width:100%}
 .mbtn.shop{border-image-source:url(art/ui/btn-red.webp);margin-top:4px}
 .mbtn.shop:active{border-image-source:url(art/ui/btn-red-down.webp)}
 .mbtn:active>*{transform:translateY(2px)}
@@ -150,7 +153,7 @@ label input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--broth)}
       <h1 id="ot">The Gluten Conflict</h1>
       <p id="om">The rocket, dragon, packets, bags and explosions are felt. So are the tofu, wheat, gold pots, gochujang tubs, sesame oil and every enemy bullet.</p>
       <p class="keys" id="ok">Move: arrows or WASD, or drag. Auto-fire is on. With it off, tap Z as fast as you can, or hold it for a slower stream. Bomb: Space. Pause: P.</p>
-      <div class="ov-row"><button class="mbtn shop" id="go">Start</button><button class="mbtn" id="o-share">Share</button></div>
+      <div class="ov-row"><button class="mbtn shop" id="go">Start</button><button class="mbtn" id="o-share"><img class="bic" alt="" src="art/ui/share.webp"><span class="fl"></span></button></div>
       <p class="menu-credits">Made for SAMABILA<br>by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a><br><a href="https://on.soundcloud.com/MNlJb0WDa1mZvuwBQ3" target="_blank" rel="noopener">Sound effects and music</a> by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a> and Jack Hong</p>
     </div>
     <button class="bombbtn" id="bombbtn" aria-label="Drop bomb">BOMB</button>
@@ -159,8 +162,8 @@ label input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--broth)}
       <div class="menu-card" tabindex="-1"><button class="mclose" id="mclose" aria-label="Close"></button><h2 id="menu-title">Paused</h2>
         <button class="tog" id="t-music" aria-pressed="true" aria-label="Music"><img class="ic" alt="" src="art/ui/music.webp"><span class="lbl">Music</span><img class="sw" alt="" src="art/ui/tog-on.webp"></button>
         <button class="tog" id="t-sfx" aria-pressed="true" aria-label="Sound effects"><img class="ic" alt="" src="art/ui/sound.webp"><span class="lbl">Sound effects</span><img class="sw" alt="" src="art/ui/tog-on.webp"></button>
-        <button class="mbtn" id="m-share">Share the game</button>
-        <a class="mbtn shop" id="m-shop" href="https://www.samabila.com/" target="_blank" rel="noopener">Shop SAMABILA</a>
+        <button class="mbtn" id="m-share"><img class="bic" alt="" src="art/ui/share.webp"><span class="fl"></span></button>
+        <a class="mbtn shop" id="m-shop" href="https://www.samabila.com/" target="_blank" rel="noopener"><img class="bic" alt="" src="art/ui/shop.webp"><span class="fl"></span></a>
         <button class="mbtn" id="resume">Resume</button></div>
       <p class="menu-credits">Made for SAMABILA<br>by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a><br><a href="https://on.soundcloud.com/MNlJb0WDa1mZvuwBQ3" target="_blank" rel="noopener">Sound effects and music</a> by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a> and Jack Hong</p>
     </div>
@@ -1365,6 +1368,8 @@ function feltText(txt,x,y,h,col='k',align='center',c=g){txt=String(txt).toUpperC
         c.strokeText(ch,cx+adv/2,top+h);c.fillStyle='#fff';c.fillText(ch,cx+adv/2,top+h);c.restore();}}
     cx+=adv;}}
 /* the same lettering for page elements (headline, buttons): drawn to a small canvas and dropped in as an image */
+/* a felt button label beside an optional felt icon (.bic) */
+function feltBtn(b,txt,h=16){b.setAttribute('aria-label',txt);feltHTML(b.querySelector('.fl')||b,txt,'k',h);}
 function feltHTML(el,txt,col,h){el.setAttribute('aria-label',txt);const T=String(txt).toUpperCase(),ims=[...new Set([...T].map(ch=>feltIm(col,ch)).filter(Boolean))];
   const paint=()=>{const sc=2,pad=h*.3,cv2=document.createElement('canvas');let c=cv2.getContext('2d');const w=feltWidth(T,h,col,c);
     cv2.width=Math.ceil((w+pad*2)*sc);cv2.height=Math.ceil((h+pad*2)*sc);c=cv2.getContext('2d');c.scale(sc,sc);feltText(T,pad,pad+h/2,h,col,'left',c);
@@ -1727,7 +1732,7 @@ const COG=document.getElementById('cog'),MENU=document.getElementById('menu');le
 const COG_MODES=['title','play','intro','feast','tofeast','leaving'];
 feltHTML(document.getElementById('menu-title'),'Paused','r',34);
 for(const [id,t,h] of [['t-music','Music',15],['t-sfx','Sound effects',15]])feltHTML(document.getElementById(id).querySelector('.lbl'),t,'k',h);
-feltHTML(document.getElementById('m-shop'),'Shop SAMABILA','k',16);feltHTML(document.getElementById('m-share'),'Share the game','k',16);feltHTML(document.getElementById('resume'),'Resume','k',16);
+feltBtn(document.getElementById('m-shop'),'Shop SAMABILA');feltBtn(document.getElementById('m-share'),'Share the game');feltHTML(document.getElementById('resume'),'Resume','k',16);
 for(const n of ['music-off','sound-off','tog-off','btn-red-down','btn-brown-down'])new Image().src='art/ui/'+n+'.webp';
 let menuShut=null;
 function menuOpen(){if(!COG_MODES.includes(mode))return;if(menuShut){clearTimeout(menuShut);menuShut=null;MENU.classList.add('open');return;}if(!MENU.hidden)return;
@@ -1921,12 +1926,12 @@ function end(win){
   feltHTML(ot,win?'Stage clear':'Game over','r',46);
   om.textContent=win?`Score ${S.score.toLocaleString('en-US')}, including a ${bonus.toLocaleString('en-US')} bonus for medals and unused bombs.`:`Score ${S.score.toLocaleString('en-US')}`;
   ok.textContent='';
-  feltHTML(document.getElementById('go'),'Play again','k',16);feltHTML(document.getElementById('o-share'),'Share','k',16);
+  feltHTML(document.getElementById('go'),'Play again','k',16);feltBtn(document.getElementById('o-share'),'Share');
 }
 document.getElementById('go').onclick=start;
 /* sharing: the phone's share sheet where there is one, otherwise copy the link. The link unfurls with art/og.jpg */
 const GAME_URL='https://immortalchoke.github.io/samabila-gluten-war/';
-function btnSay(b,txt,lbl){feltHTML(b,txt,'k',16);clearTimeout(b._t);b._t=setTimeout(()=>feltHTML(b,lbl,'k',16),1800);}
+function btnSay(b,txt,lbl){feltBtn(b,txt);clearTimeout(b._t);b._t=setTimeout(()=>feltBtn(b,lbl),1800);}
 async function shareGame(b,text,lbl){try{if(navigator.share){await navigator.share({title:'SAMABILA: The Gluten Conflict',text,url:GAME_URL});return;}}catch(e){if(e&&e.name==='AbortError')return;}
   try{await navigator.clipboard.writeText(text+' '+GAME_URL);btnSay(b,'Link copied',lbl);}catch(e){btnSay(b,'Copy failed',lbl);}}
 document.getElementById('o-share').onclick=e=>shareGame(e.currentTarget,`I scored ${S.score.toLocaleString('en-US')} feeding a gluten-free dragon in SAMABILA: The Gluten Conflict. Can you beat it?`,'Share');
