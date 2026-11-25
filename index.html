@@ -1932,8 +1932,9 @@ document.getElementById('go').onclick=start;
 /* sharing: the phone's share sheet where there is one, otherwise copy the link. The link unfurls with art/og.jpg */
 const GAME_URL='https://immortalchoke.github.io/samabila-gluten-war/';
 function btnSay(b,txt,lbl){feltBtn(b,txt);clearTimeout(b._t);b._t=setTimeout(()=>feltBtn(b,lbl),1800);}
+function copyText(t){/* the clipboard API is often blocked inside other sites' frames; the old copy command still works on a tap */try{const a=document.createElement('textarea');a.value=t;a.setAttribute('readonly','');a.style.cssText='position:fixed;left:-9999px;top:0';document.body.appendChild(a);a.select();const ok=document.execCommand('copy');a.remove();return ok;}catch(e){return false;}}
 async function shareGame(b,text,lbl){try{if(navigator.share){await navigator.share({title:'SAMABILA: The Gluten Conflict',text,url:GAME_URL});return;}}catch(e){if(e&&e.name==='AbortError')return;}
-  try{await navigator.clipboard.writeText(text+' '+GAME_URL);btnSay(b,'Link copied',lbl);}catch(e){btnSay(b,'Copy failed',lbl);}}
+  try{await navigator.clipboard.writeText(text+' '+GAME_URL);btnSay(b,'Link copied',lbl);}catch(e){btnSay(b,copyText(text+' '+GAME_URL)?'Link copied':'Copy failed',lbl);}}
 document.getElementById('o-share').onclick=e=>shareGame(e.currentTarget,`I scored ${S.score.toLocaleString('en-US')} feeding a gluten-free dragon in SAMABILA: The Gluten Conflict. Can you beat it?`,'Share');
 document.getElementById('m-share').onclick=e=>shareGame(e.currentTarget,'Feed a hungry dragon gluten-free ramen in SAMABILA: The Gluten Conflict.','Share the game');
 let last=0,acc=0,kitchenT=0;
