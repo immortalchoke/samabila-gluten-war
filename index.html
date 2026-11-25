@@ -2,6 +2,15 @@
 <html lang="en">
 <meta charset="utf-8">
 <title>The Gluten Conflict</title>
+<meta name="description" content="A felted vertical shooter made for SAMABILA. Feed the dragon, then cook your own ramen.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="The Gluten Conflict">
+<meta property="og:description" content="A felted vertical shooter made for SAMABILA. Feed the dragon, then cook your own ramen.">
+<meta property="og:url" content="https://immortalchoke.github.io/samabila-gluten-war/">
+<meta property="og:image" content="https://immortalchoke.github.io/samabila-gluten-war/art/og.jpg">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Felted scenes from The Gluten Conflict: the dragon boss, the title screen and a bowl of ramen">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
 <script>/* ?embed=1: the game alone, filling its frame (for the SAMABILA site). The tuning bench shows everywhere except the public addresses, where ?tune=1 brings it back */
@@ -36,6 +45,10 @@ canvas{display:block;width:100%;height:100%;touch-action:none;user-select:none;-
 .over h1{font:900 clamp(34px,10vw,52px)/1.15 var(--display);margin:0;color:var(--sam-white);-webkit-text-stroke:.2em var(--sam-red);paint-order:stroke fill;letter-spacing:.02em;text-wrap:balance}
 .over p{margin:0;max-width:34ch;color:var(--ink)}
 .over .keys{color:var(--muted);font-size:13px}
+.ov-row{display:flex;align-items:center;gap:8px;width:min(94%,380px);margin-top:4px}
+.ov-row .mbtn{flex:1 1 0;min-width:0;padding-left:14px;padding-right:14px}
+.ov-row .mbtn img{max-width:100%}
+.over .menu-credits{padding:0 12px}
 .bombbtn{position:absolute;z-index:6;right:calc(10px + env(safe-area-inset-right,0px));bottom:calc(34px + env(safe-area-inset-bottom,0px));width:72px;height:72px;border:0;border-radius:50%;background:url(art/pad/bomb.webp) center/100% 100% no-repeat;color:#fff;font:900 14px Gooper,Georgia,serif;-webkit-text-stroke:4px #231f20;paint-order:stroke fill;filter:drop-shadow(0 4px 3px rgba(0,0,0,.45));touch-action:none;display:none}
 .bombbtn:active,.bombbtn.on{background-image:url(art/pad/bomb-on.webp);transform:translateY(2px)}
 /* Phones: the game fills the screen edge to edge, nothing zooms, selects or pops up on fast taps, and the tuning bench is hidden */
@@ -137,7 +150,8 @@ label input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--broth)}
       <h1 id="ot">The Gluten Conflict</h1>
       <p id="om">The rocket, dragon, packets, bags and explosions are felt. So are the tofu, wheat, gold pots, gochujang tubs, sesame oil and every enemy bullet.</p>
       <p class="keys" id="ok">Move: arrows or WASD, or drag. Auto-fire is on. With it off, tap Z as fast as you can, or hold it for a slower stream. Bomb: Space. Pause: P.</p>
-      <button class="go" id="go">Start</button>
+      <div class="ov-row"><button class="mbtn shop" id="go">Start</button><button class="mbtn" id="o-share">Share</button></div>
+      <p class="menu-credits">Made for SAMABILA<br>by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a><br>Sound effects and music by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a> and Jack Hong</p>
     </div>
     <button class="bombbtn" id="bombbtn" aria-label="Drop bomb">BOMB</button>
     <button class="cog" id="cog" aria-label="Settings"><img src="art/cog.webp" alt=""></button>
@@ -145,6 +159,7 @@ label input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--broth)}
       <div class="menu-card" tabindex="-1"><button class="mclose" id="mclose" aria-label="Close"></button><h2 id="menu-title">Paused</h2>
         <button class="tog" id="t-music" aria-pressed="true" aria-label="Music"><img class="ic" alt="" src="art/ui/music.webp"><span class="lbl">Music</span><img class="sw" alt="" src="art/ui/tog-on.webp"></button>
         <button class="tog" id="t-sfx" aria-pressed="true" aria-label="Sound effects"><img class="ic" alt="" src="art/ui/sound.webp"><span class="lbl">Sound effects</span><img class="sw" alt="" src="art/ui/tog-on.webp"></button>
+        <button class="mbtn" id="m-share">Share the game</button>
         <a class="mbtn shop" id="m-shop" href="https://www.samabila.com/" target="_blank" rel="noopener">Shop SAMABILA</a>
         <button class="mbtn" id="resume">Resume</button></div>
       <p class="menu-credits">Made for SAMABILA<br>by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a><br>Sound effects and music by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a> and Jack Hong</p>
@@ -1712,7 +1727,7 @@ const COG=document.getElementById('cog'),MENU=document.getElementById('menu');le
 const COG_MODES=['title','play','intro','feast','tofeast','leaving'];
 feltHTML(document.getElementById('menu-title'),'Paused','r',34);
 for(const [id,t,h] of [['t-music','Music',15],['t-sfx','Sound effects',15]])feltHTML(document.getElementById(id).querySelector('.lbl'),t,'k',h);
-feltHTML(document.getElementById('m-shop'),'Shop SAMABILA','k',16);feltHTML(document.getElementById('resume'),'Resume','k',16);
+feltHTML(document.getElementById('m-shop'),'Shop SAMABILA','k',16);feltHTML(document.getElementById('m-share'),'Share the game','k',16);feltHTML(document.getElementById('resume'),'Resume','k',16);
 for(const n of ['music-off','sound-off','tog-off','btn-red-down','btn-brown-down'])new Image().src='art/ui/'+n+'.webp';
 let menuShut=null;
 function menuOpen(){if(!COG_MODES.includes(mode))return;if(menuShut){clearTimeout(menuShut);menuShut=null;MENU.classList.add('open');return;}if(!MENU.hidden)return;
@@ -1904,11 +1919,18 @@ function end(win){
   if(win){try{sessionStorage.setItem('gw-score',S.score);sessionStorage.setItem('gw-wi',S.p.wi);sessionStorage.setItem('gw-lvl',S.p.lvl);}catch(e){}mode='tofeast';over.hidden=true;kitchenT=0;return;}
   mode='over';over.hidden=false;
   feltHTML(ot,win?'Stage clear':'Game over','r',46);
-  om.textContent=win?`Score ${S.score}, including a ${bonus} bonus for medals and unused bombs.`:`Score ${S.score}.`;
+  om.textContent=win?`Score ${S.score.toLocaleString('en-US')}, including a ${bonus.toLocaleString('en-US')} bonus for medals and unused bombs.`:`Score ${S.score.toLocaleString('en-US')}`;
   ok.textContent='';
-  feltHTML(document.getElementById('go'),'Play again','k',18);
+  feltHTML(document.getElementById('go'),'Play again','k',16);feltHTML(document.getElementById('o-share'),'Share','k',16);
 }
 document.getElementById('go').onclick=start;
+/* sharing: the phone's share sheet where there is one, otherwise copy the link. The link unfurls with art/og.jpg */
+const GAME_URL='https://immortalchoke.github.io/samabila-gluten-war/';
+function btnSay(b,txt,lbl){feltHTML(b,txt,'k',16);clearTimeout(b._t);b._t=setTimeout(()=>feltHTML(b,lbl,'k',16),1800);}
+async function shareGame(b,text,lbl){try{if(navigator.share){await navigator.share({title:'The Gluten Conflict',text,url:GAME_URL});return;}}catch(e){if(e&&e.name==='AbortError')return;}
+  try{await navigator.clipboard.writeText(text+' '+GAME_URL);btnSay(b,'Link copied',lbl);}catch(e){btnSay(b,'Copy failed',lbl);}}
+document.getElementById('o-share').onclick=e=>shareGame(e.currentTarget,`I scored ${S.score.toLocaleString('en-US')} in The Gluten Conflict, a felted shooter made for SAMABILA. Can you beat it?`,'Share');
+document.getElementById('m-share').onclick=e=>shareGame(e.currentTarget,'Play The Gluten Conflict, a felted shooter made for SAMABILA.','Share the game');
 let last=0,acc=0,kitchenT=0;
 /* ---------- Ending: the feast ----------
    After the dragon flies off, a felt diorama of him feasting among piles of SAMABILA pots, holding a giant bitten
@@ -2013,7 +2035,7 @@ function feastSteam(){
 /* The kitchen ending lives in its own page. It is loaded early, hidden, in a frame laid over the game while the ending
    shots play, then revealed in place: no page load, the ending song keeps playing, and a refresh still starts the game */
 let KFRAME=null;
-function kitchenPreload(){if(KFRAME)return;KFRAME=document.createElement('iframe');KFRAME.src='kitchen.html?embed=1';KFRAME.title='Ramen kitchen';
+function kitchenPreload(){if(KFRAME)return;KFRAME=document.createElement('iframe');KFRAME.src='kitchen.html?embed=1';KFRAME.allow='autoplay; web-share; clipboard-write';KFRAME.title='Ramen kitchen';
   KFRAME.setAttribute('allow','autoplay');Object.assign(KFRAME.style,{position:'fixed',inset:'0',width:'100%',height:'100%',border:'0',zIndex:'50',background:'#191614',opacity:'0',pointerEvents:'none',transition:'opacity .5s'});
   document.body.appendChild(KFRAME);}
 window.__kshow=()=>kitchenShow();
