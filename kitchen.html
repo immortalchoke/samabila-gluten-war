@@ -1005,7 +1005,7 @@ function frame(now){if(!kGo||!kReady()){last=now;g.fillStyle='#fff6e4';g.fillRec
 requestAnimationFrame(frame);cv.focus();
 /* inside the game, Play again restarts the game page itself */
 document.getElementById('again').addEventListener('click',e=>{if(EMBED&&parent!==window){e.preventDefault();try{parent.location.reload();}catch(_){location.href='./';}}});
-const GAME_URL='https://immortalchoke.github.io/samabila-gluten-war/';
+const GAME_URL='https://play.samabila.com/';
 function polBlob(){return new Promise(r=>S.polaroid.toBlob(r,'image/png'));}
 /* felt lettering, shared with the game (white felt letters with a black or red outline) */
 const loadedF=im=>im&&im.complete&&im.naturalWidth>0;
