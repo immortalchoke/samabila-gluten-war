@@ -45,6 +45,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;user-select:none;-
 .over h1{font:900 clamp(34px,10vw,52px)/1.15 var(--display);margin:0;color:var(--sam-white);-webkit-text-stroke:.2em var(--sam-red);paint-order:stroke fill;letter-spacing:.02em;text-wrap:balance}
 .over p{margin:0;max-width:34ch;color:var(--ink)}
 .over .keys{color:var(--muted);font-size:13px}
+.lb-link{background:none;border:0;padding:4px 8px;color:#fff6e8;font:600 13px/1.3 Figtree,system-ui,sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent}.lb-link u{text-underline-offset:2px}.lb-link:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:6px}
 .ov-row{display:flex;align-items:center;gap:8px;width:min(94%,380px);margin-top:4px}
 .ov-row .mbtn{flex:1 1 0;min-width:0;padding-left:14px;padding-right:14px}
 .ov-row .mbtn img{max-width:100%}
@@ -89,6 +90,10 @@ html.embed .bench,html.embed #hint{display:none!important}
 .tog .sw{width:60px;height:auto;flex:none}
 .mbtn{display:flex;align-items:center;justify-content:center;height:52px;box-sizing:border-box;padding:0 20px 3px;border:0;background:none;border-image:url(art/ui/btn-brown.webp) 50% 31% fill / 50% 28px round;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .mbtn:active{border-image-source:url(art/ui/btn-brown-down.webp)}
+.mrow{display:flex;gap:8px}
+/* keep the card in the space above the credits; tighter on short phones */
+.menu{padding-bottom:92px;box-sizing:border-box}
+@media (max-height:720px){.menu-card{gap:7px;padding:24px 30px 28px}.menu .mbtn{height:44px}.menu .tog{padding:0}.menu{padding-bottom:96px}}.mrow .mbtn{flex:1 1 0;min-width:0;padding-left:12px;padding-right:12px}.mrow .mbtn img{max-width:100%}
 .mbtn .bic{height:24px;width:auto;flex:none;margin-right:8px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
 .mbtn .fl{display:flex;align-items:center;min-width:0}
 .mbtn .fl img{max-width:100%}
@@ -141,6 +146,7 @@ label input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--broth)}
 .bpair{display:inline-block;white-space:nowrap}.b-billy{background:#b9851a}.b-jack{background:#5e8a5c}
 a.badge{cursor:pointer;transition:filter .15s,transform .15s}a.badge:hover{filter:brightness(1.12)}a.badge:active{transform:scale(.96)}
 </style>
+<script src="lb.js"></script>
 <script>
 /* stop double-tap zoom, pinch zoom and long-press menus on phones */
 (function(){if(!matchMedia('(pointer:coarse)').matches)return;let lt=0;
@@ -157,6 +163,7 @@ a.badge{cursor:pointer;transition:filter .15s,transform .15s}a.badge:hover{filte
       <h1 id="ot">The Gluten Conflict</h1>
       <p id="om">The rocket, dragon, packets, bags and explosions are felt. So are the tofu, wheat, gold pots, gochujang tubs, sesame oil and every enemy bullet.</p>
       <p class="keys" id="ok">Move: arrows or WASD, or drag. Auto-fire is on. With it off, tap Z as fast as you can, or hold it for a slower stream. Bomb: Space. Pause: P.</p>
+      <button class="lb-link" id="o-lb" hidden></button>
       <div class="ov-row"><button class="mbtn shop" id="go">Start</button><button class="mbtn" id="o-share"><img class="bic" alt="" src="art/ui/share.webp"><span class="fl"></span></button></div>
       <p class="menu-credits">Made for SAMABILA by <a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a><br><a href="https://on.soundcloud.com/MNlJb0WDa1mZvuwBQ3" target="_blank" rel="noopener">Sound effects and music</a> by <span class="bpair"><a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a> <span class="badge b-jack"><img src="art/ui/av-jack.webp" alt="">Jack Hong</span></span></p>
     </div>
@@ -166,8 +173,8 @@ a.badge{cursor:pointer;transition:filter .15s,transform .15s}a.badge:hover{filte
       <div class="menu-card" tabindex="-1"><button class="mclose" id="mclose" aria-label="Close"></button><h2 id="menu-title">Paused</h2>
         <button class="tog" id="t-music" aria-pressed="true" aria-label="Music"><img class="ic" alt="" src="art/ui/music.webp"><span class="lbl">Music</span><img class="sw" alt="" src="art/ui/tog-on.webp"></button>
         <button class="tog" id="t-sfx" aria-pressed="true" aria-label="Sound effects"><img class="ic" alt="" src="art/ui/sound.webp"><span class="lbl">Sound effects</span><img class="sw" alt="" src="art/ui/tog-on.webp"></button>
-        <button class="mbtn" id="m-share"><img class="bic" alt="" src="art/ui/share.webp"><span class="fl"></span></button>
         <a class="mbtn shop" id="m-shop" href="https://www.samabila.com/" target="_blank" rel="noopener"><img class="bic" alt="" src="art/ui/shop.webp"><span class="fl"></span></a>
+        <div class="mrow"><button class="mbtn" id="m-share"><img class="bic" alt="" src="art/ui/share.webp"><span class="fl"></span></button><button class="mbtn" id="m-lb">Top scores</button></div>
         <button class="mbtn" id="resume">Resume</button></div>
       <p class="menu-credits">Made for SAMABILA by <a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a><br><a href="https://on.soundcloud.com/MNlJb0WDa1mZvuwBQ3" target="_blank" rel="noopener">Sound effects and music</a> by <span class="bpair"><a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a> <span class="badge b-jack"><img src="art/ui/av-jack.webp" alt="">Jack Hong</span></span></p>
     </div>
@@ -1733,10 +1740,11 @@ function draw(){
 const BOMBBTN=document.getElementById('bombbtn');BOMBBTN.style.visibility='hidden';
 /* ---------- settings menu: pauses the game, music and sound effects toggles (remembered), shop link, credits ---------- */
 const COG=document.getElementById('cog'),MENU=document.getElementById('menu');let menuWasPaused=false;
+LB.init({host:()=>MENU.parentElement,felt:feltHTML});
 const COG_MODES=['title','play','intro','feast','tofeast','leaving'];
 feltHTML(document.getElementById('menu-title'),'Paused','r',34);
 for(const [id,t,h] of [['t-music','Music',15],['t-sfx','Sound effects',15]])feltHTML(document.getElementById(id).querySelector('.lbl'),t,'k',h);
-feltBtn(document.getElementById('m-shop'),'Shop SAMABILA');feltBtn(document.getElementById('m-share'),'Share the game');feltHTML(document.getElementById('resume'),'Resume','k',16);
+feltBtn(document.getElementById('m-shop'),'Shop SAMABILA');feltBtn(document.getElementById('m-share'),'Share');feltHTML(document.getElementById('resume'),'Resume','k',16);feltHTML(document.getElementById('m-lb'),'Scores','k',16);document.getElementById('m-lb').setAttribute('aria-label','Top scores');
 for(const n of ['music-off','sound-off','tog-off','btn-red-down','btn-brown-down'])new Image().src='art/ui/'+n+'.webp';
 let menuShut=null;
 function menuOpen(){if(!COG_MODES.includes(mode))return;if(menuShut){clearTimeout(menuShut);menuShut=null;MENU.classList.add('open');return;}if(!MENU.hidden)return;
@@ -1744,7 +1752,7 @@ function menuOpen(){if(!COG_MODES.includes(mode))return;if(menuShut){clearTimeou
   if(mode==='leaving')try{KFRAME.contentWindow.kitchenPause(true);}catch(e){}
   menuWasPaused=paused;paused=true;MENU.hidden=false;syncToggles();void MENU.offsetWidth;MENU.classList.add('open');MENU.querySelector('.menu-card').focus({preventScroll:true});}
 /* the card drops away first; the game picks up again once it is gone */
-function menuClose(){if(MENU.hidden||menuShut)return;MENU.classList.remove('open');
+function menuClose(){if(MENU.hidden||menuShut)return;LB.close();MENU.classList.remove('open');
   menuShut=setTimeout(()=>{menuShut=null;MENU.hidden=true;paused=menuWasPaused;
     for(const a of [ENDSONG.el,WHISTLE.el])if(a&&a._menu){a._menu=false;a.play().catch(()=>{});}
     if(mode==='leaving'){try{KFRAME.contentWindow.kitchenPause(false);KFRAME.focus();}catch(e){}}else cv.focus();last=performance.now();},400);}
@@ -1756,7 +1764,7 @@ MENU.addEventListener('click',e=>{if(e.target===MENU||e.target.classList.contain
 document.getElementById('resume').onclick=menuClose;document.getElementById('mclose').onclick=menuClose;
 document.getElementById('t-music').onclick=()=>{SFX.setMusicOff(!SFX.musOff);syncToggles();};
 document.getElementById('t-sfx').onclick=()=>{SFX.setSfxOff(!SFX.sfxOff);syncToggles();};
-addEventListener('keydown',e=>{if(MENU.hidden)return;if(e.code==='Tab'||e.code==='Space'&&e.target.tagName==='BUTTON'||e.code==='Enter'&&e.target.tagName==='BUTTON')return;e.preventDefault();e.stopImmediatePropagation();if(e.code==='Escape'||e.code==='KeyP')menuClose();},true);
+addEventListener('keydown',e=>{if(MENU.hidden||LB.isOpen())return;if(e.code==='Tab'||e.code==='Space'&&e.target.tagName==='BUTTON'||e.code==='Enter'&&e.target.tagName==='BUTTON')return;e.preventDefault();e.stopImmediatePropagation();if(e.code==='Escape'||e.code==='KeyP')menuClose();},true);
 /* On phones, a "drag to move" cue hangs under the jet whenever no finger is on the screen; it fades out the moment
    you start steering and comes back if you let go */
 let hintA=0;
@@ -1915,7 +1923,7 @@ window.__setReady=()=>SET&&SET.ready;window.__intro={IN,get FE(){return FE},get 
 /* ---------- Flow ---------- */
 const over=document.getElementById('over'),ot=document.getElementById('ot'),om=document.getElementById('om'),ok=document.getElementById('ok');
 feltHTML(ot,'The Gluten Conflict','r',46);feltHTML(document.getElementById('go'),'Start','k',18);
-function start(){WHISTLE.stop();ENDSONG.stop();SFX.init();SFX.loadMusic();SFX.loadSamples();SFX.music(false,.3);SFX.stage(true);S=fresh();mode='play';paused=false;over.hidden=true;syncBench();
+function start(){LB.close(true);lbRun++;WHISTLE.stop();ENDSONG.stop();SFX.init();SFX.loadMusic();SFX.loadSamples();SFX.music(false,.3);SFX.stage(true);S=fresh();mode='play';paused=false;over.hidden=true;syncBench();
   /* Strike the set: the rocket is already in place, so no blink-in */
   if(SET&&!SET.striking){SET.striking=true;SET.t=0;S.p.inv=0;}}
 function end(win){
@@ -1925,13 +1933,25 @@ function end(win){
   const bonus=S.medals*500+S.p.bombs*2000;
   if(win)S.score+=bonus;
   /* Winning leads into the ending: the screen fades to warm cream and the ramen kitchen opens */
-  if(win){try{sessionStorage.setItem('gw-score',S.score);sessionStorage.setItem('gw-wi',S.p.wi);sessionStorage.setItem('gw-lvl',S.p.lvl);}catch(e){}mode='tofeast';over.hidden=true;kitchenT=0;return;}
+  if(win){try{sessionStorage.setItem('gw-ms',Math.round(S.tick*1000/60));sessionStorage.setItem('gw-score',S.score);sessionStorage.setItem('gw-wi',S.p.wi);sessionStorage.setItem('gw-lvl',S.p.lvl);}catch(e){}mode='tofeast';over.hidden=true;kitchenT=0;return;}
   mode='over';over.hidden=false;
   feltHTML(ot,win?'Stage clear':'Game over','r',46);
   om.textContent=win?`Score ${S.score.toLocaleString('en-US')}, including a ${bonus.toLocaleString('en-US')} bonus for medals and unused bombs.`:`Score ${S.score.toLocaleString('en-US')}`;
   ok.textContent='';
   feltHTML(document.getElementById('go'),'Play again','k',16);feltBtn(document.getElementById('o-share'),'Share');
+  /* scoreboard: top-10 scores get the initials screen; everyone else gets a link to see the board */
+  const sc=S.score,ms=Math.round(S.tick*1000/60),fl=['korean','chicken','pho','multigrain'][S.p.wi]||'korean',runId=++lbRun;
+  OLB.hidden=true;
+  LB.check(sc,ms).then(r=>{if(runId!==lbRun||mode!=='over')return;
+    if(r.qualifies)setTimeout(()=>{if(runId!==lbRun||mode!=='over')return;LB.openEntry({score:sc,flavor:fl,playMs:ms,onDone:res=>lbLink(res&&res.rank>=0?'You placed #'+(res.rank+1):null,r.rows)});},650);
+    else lbLink(null,r.rows,r.ok);});
 }
+let lbRun=0;const OLB=document.getElementById('o-lb');
+function lbLink(lead,rows,ok=true){if(!ok){OLB.hidden=true;return;}
+  const best=rows&&rows.length?'Top score '+Number(rows[0].score).toLocaleString('en-US'):'No scores yet';
+  OLB.innerHTML=(lead||best)+' \u00b7 <u>See top scores</u>';OLB.hidden=false;}
+OLB.onclick=()=>LB.openBoard({fresh:true});
+document.getElementById('m-lb').onclick=()=>LB.openBoard({fresh:true,onClose:()=>{try{document.getElementById('m-lb').focus({preventScroll:true});}catch(e){}}});
 document.getElementById('go').onclick=start;
 /* sharing: the phone's share sheet where there is one, otherwise copy the link. The link unfurls with art/og.jpg */
 const GAME_URL='https://play.samabila.com/';
@@ -1940,7 +1960,7 @@ function copyText(t){/* the clipboard API is often blocked inside other sites' f
 async function shareGame(b,text,lbl){try{if(navigator.share){await navigator.share({title:'SAMABILA: The Gluten Conflict',text,url:GAME_URL});return;}}catch(e){if(e&&e.name==='AbortError')return;}
   try{await navigator.clipboard.writeText(text+' '+GAME_URL);btnSay(b,'Link copied',lbl);}catch(e){btnSay(b,copyText(text+' '+GAME_URL)?'Link copied':'Copy failed',lbl);}}
 document.getElementById('o-share').onclick=e=>shareGame(e.currentTarget,`I scored ${S.score.toLocaleString('en-US')} feeding a gluten-free dragon in SAMABILA: The Gluten Conflict. Can you beat it?`,'Share');
-document.getElementById('m-share').onclick=e=>shareGame(e.currentTarget,'Feed a hungry dragon gluten-free ramen in SAMABILA: The Gluten Conflict.','Share the game');
+document.getElementById('m-share').onclick=e=>shareGame(e.currentTarget,'Feed a hungry dragon gluten-free ramen in SAMABILA: The Gluten Conflict.','Share');
 let last=0,acc=0,kitchenT=0;
 /* ---------- Ending: the feast ----------
    After the dragon flies off, a felt diorama of him feasting among piles of SAMABILA pots, holding a giant bitten
