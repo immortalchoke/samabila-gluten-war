@@ -136,6 +136,10 @@ label input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--broth)}
 .stack{display:flex;flex-direction:column;gap:10px}
 .note{margin:0;color:var(--muted);font-size:13px}
 .bench button.mini{font-size:12px;padding:7px 4px}
+.badge{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px 0 2px;margin:3px 1px;border-radius:999px;color:#fff!important;text-decoration:none!important;font:700 12px/1 Figtree,system-ui,sans-serif;vertical-align:middle;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),0 2px 6px rgba(0,0,0,.35);white-space:nowrap}
+.badge img{width:20px;height:20px;border-radius:50%;object-fit:cover;flex:none}
+.bpair{display:inline-block;white-space:nowrap}.b-billy{background:#b9851a}.b-jack{background:#5e8a5c}
+a.badge{cursor:pointer;transition:filter .15s,transform .15s}a.badge:hover{filter:brightness(1.12)}a.badge:active{transform:scale(.96)}
 </style>
 <script>
 /* stop double-tap zoom, pinch zoom and long-press menus on phones */
@@ -154,7 +158,7 @@ label input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--broth)}
       <p id="om">The rocket, dragon, packets, bags and explosions are felt. So are the tofu, wheat, gold pots, gochujang tubs, sesame oil and every enemy bullet.</p>
       <p class="keys" id="ok">Move: arrows or WASD, or drag. Auto-fire is on. With it off, tap Z as fast as you can, or hold it for a slower stream. Bomb: Space. Pause: P.</p>
       <div class="ov-row"><button class="mbtn shop" id="go">Start</button><button class="mbtn" id="o-share"><img class="bic" alt="" src="art/ui/share.webp"><span class="fl"></span></button></div>
-      <p class="menu-credits">Made for SAMABILA<br>by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a><br><a href="https://on.soundcloud.com/MNlJb0WDa1mZvuwBQ3" target="_blank" rel="noopener">Sound effects and music</a> by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a> and Jack Hong</p>
+      <p class="menu-credits">Made for SAMABILA by <a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a><br><a href="https://on.soundcloud.com/MNlJb0WDa1mZvuwBQ3" target="_blank" rel="noopener">Sound effects and music</a> by <span class="bpair"><a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a> <span class="badge b-jack"><img src="art/ui/av-jack.webp" alt="">Jack Hong</span></span></p>
     </div>
     <button class="bombbtn" id="bombbtn" aria-label="Drop bomb">BOMB</button>
     <button class="cog" id="cog" aria-label="Settings"><img src="art/cog.webp" alt=""></button>
@@ -165,7 +169,7 @@ label input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--broth)}
         <button class="mbtn" id="m-share"><img class="bic" alt="" src="art/ui/share.webp"><span class="fl"></span></button>
         <a class="mbtn shop" id="m-shop" href="https://www.samabila.com/" target="_blank" rel="noopener"><img class="bic" alt="" src="art/ui/shop.webp"><span class="fl"></span></a>
         <button class="mbtn" id="resume">Resume</button></div>
-      <p class="menu-credits">Made for SAMABILA<br>by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a><br><a href="https://on.soundcloud.com/MNlJb0WDa1mZvuwBQ3" target="_blank" rel="noopener">Sound effects and music</a> by <a href="https://billyhongdesign.com/" target="_blank" rel="noopener">Billy Hong</a> and Jack Hong</p>
+      <p class="menu-credits">Made for SAMABILA by <a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a><br><a href="https://on.soundcloud.com/MNlJb0WDa1mZvuwBQ3" target="_blank" rel="noopener">Sound effects and music</a> by <span class="bpair"><a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a> <span class="badge b-jack"><img src="art/ui/av-jack.webp" alt="">Jack Hong</span></span></p>
     </div>
   </div>
   <div class="pad" id="pad" aria-label="Controller"><div class="joy" id="joy"><div class="knob"></div></div><div class="pbtns"><button class="pbtn small" id="ppause" aria-label="Pause">II</button><button class="pbtn fire" id="pfire">FIRE</button><button class="pbtn bomb" id="pbomb">BOMB</button></div></div>
