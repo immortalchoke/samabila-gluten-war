@@ -47,7 +47,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none;user-select:none;-
 .over .keys{color:var(--muted);font-size:13px}
 .lb-link{background:none;border:0;padding:4px 8px;color:#fff6e8;font:600 13px/1.3 Figtree,system-ui,sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent}.lb-link u{text-underline-offset:2px}.lb-link:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:6px}
 .ov-row{display:flex;align-items:center;gap:8px;width:min(94%,380px);margin-top:4px}
-.ov-row .mbtn{flex:1 1 0;min-width:0;padding-left:14px;padding-right:14px}
+.ov-row .mbtn{flex:1 1 0;min-width:0;padding-left:20px;padding-right:20px}
 .ov-row .mbtn img{max-width:100%}
 .over .menu-credits{padding:0 12px;max-width:none}
 .bombbtn{position:absolute;z-index:6;right:calc(10px + env(safe-area-inset-right,0px));bottom:calc(34px + env(safe-area-inset-bottom,0px));width:72px;height:72px;border:0;border-radius:50%;background:url(art/pad/bomb.webp) center/100% 100% no-repeat;color:#fff;font:900 14px Gooper,Georgia,serif;-webkit-text-stroke:4px #231f20;paint-order:stroke fill;filter:drop-shadow(0 4px 3px rgba(0,0,0,.45));touch-action:none;display:none}
@@ -93,8 +93,8 @@ html.embed .bench,html.embed #hint{display:none!important}
 .mrow{display:flex;gap:8px}
 /* keep the card in the space above the credits; tighter on short phones */
 .menu{padding-bottom:92px;box-sizing:border-box}
-@media (max-height:720px){.menu-card{gap:7px;padding:24px 30px 28px}.menu .mbtn{height:44px}.menu .tog{padding:0}.menu{padding-bottom:96px}}.mrow .mbtn{flex:1 1 0;min-width:0;padding-left:12px;padding-right:12px}.mrow .mbtn img{max-width:100%}
-.mbtn .bic{height:24px;width:auto;flex:none;margin-right:8px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
+@media (max-height:720px){.menu-card{gap:7px;padding:24px 30px 28px}.menu .mbtn{height:44px}.menu .tog{padding:0}.menu{padding-bottom:96px}}.mrow .mbtn{flex:1 1 0;min-width:0;padding-left:20px;padding-right:20px}.mrow .mbtn .bic{height:21px;margin-right:4px}@media (max-height:720px),(max-width:360px){.mrow .mbtn{padding-left:15px;padding-right:15px}.mrow .mbtn .bic{height:19px}}.mrow .mbtn img{max-width:100%}
+.mbtn .bic{height:24px;width:auto;flex:none;margin-right:5px;filter:drop-shadow(0 1px 1px rgba(0,0,0,.35))}
 .mbtn .fl{display:flex;align-items:center;min-width:0}
 .mbtn .fl img{max-width:100%}
 .mbtn.shop{border-image-source:url(art/ui/btn-red.webp);margin-top:4px}
@@ -165,18 +165,18 @@ a.badge{cursor:pointer;transition:filter .15s,transform .15s}a.badge:hover{filte
       <p class="keys" id="ok">Move: arrows or WASD, or drag. Auto-fire is on. With it off, tap Z as fast as you can, or hold it for a slower stream. Bomb: Space. Pause: P.</p>
       <button class="lb-link" id="o-lb" hidden></button>
       <div class="ov-row"><button class="mbtn shop" id="go">Start</button><button class="mbtn" id="o-share"><img class="bic" alt="" src="art/ui/share.webp"><span class="fl"></span></button></div>
-      <p class="menu-credits">Made for SAMABILA by <a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a><br><a href="https://on.soundcloud.com/MNlJb0WDa1mZvuwBQ3" target="_blank" rel="noopener">Sound effects and music</a> by <span class="bpair"><a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a> <span class="badge b-jack"><img src="art/ui/av-jack.webp" alt="">Jack Hong</span></span></p>
+      <p class="menu-credits">Made for SAMABILA by <a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a><br><a href="https://on.soundcloud.com/MNlJb0WDa1mZvuwBQ3" target="_blank" rel="noopener">Sound FX and music</a> by <span class="bpair"><a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a> <span class="badge b-jack"><img src="art/ui/av-jack.webp" alt="">Jack Hong</span></span></p>
     </div>
     <button class="bombbtn" id="bombbtn" aria-label="Drop bomb">BOMB</button>
     <button class="cog" id="cog" aria-label="Settings"><img src="art/cog.webp" alt=""></button>
     <div class="menu" id="menu" hidden role="dialog" aria-label="Settings">
       <div class="menu-card" tabindex="-1"><button class="mclose" id="mclose" aria-label="Close"></button><h2 id="menu-title">Paused</h2>
         <button class="tog" id="t-music" aria-pressed="true" aria-label="Music"><img class="ic" alt="" src="art/ui/music.webp"><span class="lbl">Music</span><img class="sw" alt="" src="art/ui/tog-on.webp"></button>
-        <button class="tog" id="t-sfx" aria-pressed="true" aria-label="Sound effects"><img class="ic" alt="" src="art/ui/sound.webp"><span class="lbl">Sound effects</span><img class="sw" alt="" src="art/ui/tog-on.webp"></button>
+        <button class="tog" id="t-sfx" aria-pressed="true" aria-label="Sound FX"><img class="ic" alt="" src="art/ui/sound.webp"><span class="lbl">Sound FX</span><img class="sw" alt="" src="art/ui/tog-on.webp"></button>
         <a class="mbtn shop" id="m-shop" href="https://www.samabila.com/" target="_blank" rel="noopener"><img class="bic" alt="" src="art/ui/shop.webp"><span class="fl"></span></a>
-        <div class="mrow"><button class="mbtn" id="m-share"><img class="bic" alt="" src="art/ui/share.webp"><span class="fl"></span></button><button class="mbtn" id="m-lb">Top scores</button></div>
+        <div class="mrow"><button class="mbtn" id="m-share"><img class="bic" alt="" src="art/ui/share.webp"><span class="fl"></span></button><button class="mbtn" id="m-lb"><img class="bic" alt="" src="art/ui/trophy.webp" onerror="this.remove()"><span class="fl"></span></button></div>
         <button class="mbtn" id="resume">Resume</button></div>
-      <p class="menu-credits">Made for SAMABILA by <a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a><br><a href="https://on.soundcloud.com/MNlJb0WDa1mZvuwBQ3" target="_blank" rel="noopener">Sound effects and music</a> by <span class="bpair"><a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a> <span class="badge b-jack"><img src="art/ui/av-jack.webp" alt="">Jack Hong</span></span></p>
+      <p class="menu-credits">Made for SAMABILA by <a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a><br><a href="https://on.soundcloud.com/MNlJb0WDa1mZvuwBQ3" target="_blank" rel="noopener">Sound FX and music</a> by <span class="bpair"><a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a> <span class="badge b-jack"><img src="art/ui/av-jack.webp" alt="">Jack Hong</span></span></p>
     </div>
   </div>
   <div class="pad" id="pad" aria-label="Controller"><div class="joy" id="joy"><div class="knob"></div></div><div class="pbtns"><button class="pbtn small" id="ppause" aria-label="Pause">II</button><button class="pbtn fire" id="pfire">FIRE</button><button class="pbtn bomb" id="pbomb">BOMB</button></div></div>
@@ -1743,8 +1743,8 @@ const COG=document.getElementById('cog'),MENU=document.getElementById('menu');le
 LB.init({host:()=>MENU.parentElement,felt:feltHTML});
 const COG_MODES=['title','play','intro','feast','tofeast','leaving'];
 feltHTML(document.getElementById('menu-title'),'Paused','r',34);
-for(const [id,t,h] of [['t-music','Music',15],['t-sfx','Sound effects',15]])feltHTML(document.getElementById(id).querySelector('.lbl'),t,'k',h);
-feltBtn(document.getElementById('m-shop'),'Shop SAMABILA');feltBtn(document.getElementById('m-share'),'Share');feltHTML(document.getElementById('resume'),'Resume','k',16);feltHTML(document.getElementById('m-lb'),'Scores','k',16);document.getElementById('m-lb').setAttribute('aria-label','Top scores');
+for(const [id,t,h] of [['t-music','Music',15],['t-sfx','Sound FX',15]])feltHTML(document.getElementById(id).querySelector('.lbl'),t,'k',h);
+feltBtn(document.getElementById('m-shop'),'Shop SAMABILA');feltBtn(document.getElementById('m-share'),'Share');feltHTML(document.getElementById('resume'),'Resume','k',16);feltBtn(document.getElementById('m-lb'),'Scores');
 for(const n of ['music-off','sound-off','tog-off','btn-red-down','btn-brown-down'])new Image().src='art/ui/'+n+'.webp';
 let menuShut=null;
 function menuOpen(){if(!COG_MODES.includes(mode))return;if(menuShut){clearTimeout(menuShut);menuShut=null;MENU.classList.add('open');return;}if(!MENU.hidden)return;

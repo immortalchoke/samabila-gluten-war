@@ -25,13 +25,13 @@ button:focus-visible,.btn:focus-visible{outline:2px solid #e69000;outline-offset
 .cab{position:relative}
 #endbar{position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding:28px 10px max(12px,env(safe-area-inset-bottom,0px));background:linear-gradient(rgba(20,14,10,0),rgba(20,14,10,.82) 30%)}
 #endbar .row{flex-wrap:nowrap;gap:5px;width:100%;max-width:440px;padding:0 4px;box-sizing:border-box}
-#endbar .row button,#endbar .row .btn{display:flex;align-items:center;justify-content:center;height:42px;flex:1 1 auto;min-width:0;box-sizing:border-box;padding:0 clamp(12px,3.4vw,18px) 3px;border:0;border-radius:0;background:none;white-space:nowrap;border-image:url(art/ui/btn-brown.webp) 50% 31% fill / 50% 24px round;-webkit-tap-highlight-color:transparent}
+#endbar .row button,#endbar .row .btn{display:flex;align-items:center;justify-content:center;height:42px;flex:1 1 auto;min-width:0;box-sizing:border-box;padding:0 clamp(16px,4.4vw,20px) 3px;border:0;border-radius:0;background:none;white-space:nowrap;border-image:url(art/ui/btn-brown.webp) 50% 31% fill / 50% 24px round;-webkit-tap-highlight-color:transparent}
 #endbar .row button:active,#endbar .row .btn:active{border-image-source:url(art/ui/btn-brown-down.webp)}
 #endbar .row .btn.shop{border-image-source:url(art/ui/btn-red.webp)}
 #endbar .row .btn.shop:active{border-image-source:url(art/ui/btn-red-down.webp)}
 #endbar .row :active>img{transform:translateY(2px)}
 #endbar .row img{flex:0 1 auto;min-width:0;max-width:100%}
-#endbar .row .bic{height:18px;width:auto;flex:none;margin-right:5px}
+#endbar .row .bic{height:18px;width:auto;flex:none;margin-right:4px}
 #endbar .row .fl{display:flex;align-items:center;min-width:0}
 #endbar .row .btn.shop{flex-grow:1.4}
 .lb-link{background:none;border:0;padding:2px 8px;color:#fff6e8;font:600 13px/1.3 Figtree,system-ui,sans-serif;text-decoration:underline;text-underline-offset:2px;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -81,7 +81,7 @@ a.badge{cursor:pointer;transition:filter .15s,transform .15s}a.badge:hover{filte
   <div class="cab"><canvas id="c" width="960" height="1440" tabindex="0" aria-label="Ramen cooking ending: shoot the kettle, burner, noodle box and seasoning to cook ramen"></canvas>
   <div id="endbar" hidden><div class="row" id="polrow"><button id="share"><img class="bic" alt="" src="art/ui/share.webp"><span class="fl"></span></button><a class="btn shop" id="shop" href="https://www.samabila.com/" target="_blank" rel="noopener"><img class="bic" alt="" src="art/ui/shop.webp"><span class="fl"></span></a><a class="btn" id="again" href="./">Play again</a></div>
   <button class="lb-link" id="k-lb">See top scores</button>
-  <p class="credits" id="credits">Made for SAMABILA by <a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a><br><a href="https://on.soundcloud.com/MNlJb0WDa1mZvuwBQ3" target="_blank" rel="noopener">Sound effects and music</a> by <span class="bpair"><a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a> <span class="badge b-jack"><img src="art/ui/av-jack.webp" alt="">Jack Hong</span></span></p></div></div>
+  <p class="credits" id="credits">Made for SAMABILA by <a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a><br><a href="https://on.soundcloud.com/MNlJb0WDa1mZvuwBQ3" target="_blank" rel="noopener">Sound FX and music</a> by <span class="bpair"><a class="badge b-billy" href="https://billyhongdesign.com/" target="_blank" rel="noopener"><img src="art/ui/av-billy.webp" alt="">Billy Hong</a> <span class="badge b-jack"><img src="art/ui/av-jack.webp" alt="">Jack Hong</span></span></p></div></div>
   <div class="pad" id="pad" aria-label="Controller"><div class="joy" id="joy"><div class="knob"></div></div><div class="pbtns"><button class="pbtn fire" id="pfire">FIRE</button></div></div>
   
   <p id="hint">Arrows or WASD to fly, hold Z to fire. On a phone, drag to fly. Steady fire is neat, mashing is messy.</p>
