@@ -136,7 +136,7 @@ const need=Wf=>NEED[clamp(Math.round(Wf*50),0,50)];
 const AUTO=11,MINGAP=3,K=.007,DAMP=.1;
 /* the four SAMABILA seasonings, named as on samabila.com */
 const FLAVORS=[{n:'Korean',bw:'korean',cap:'My Korean Ramen',k:'pk-red',c:'#e0452c',b:[236,178,128]},{n:'Chicken',bw:'chicken',cap:'My Chicken Ramen',k:'pk-yellow',c:'#e9a93a',b:[236,208,140]},
-  {n:'Chicken Lite',bw:'lite',cap:'My Chicken Lite Ramen',k:'pk-green',c:'#a8c63f',b:[238,224,176]},{n:'Pho',bw:'pho',cap:'My Viet Beef Ph\u1edf',k:'pk-purple',c:'#7b3f9a',b:[218,180,132]}];
+  {n:'Chicken Lite',bw:'lite',cap:'My Chicken Lite Ramen',k:'pk-green',c:'#a8c63f',b:[238,224,176]},{n:'Pho',bw:'pho',cap:'My Viet Beef Pho',k:'pk-purple',c:'#7b3f9a',b:[218,180,132]}];
 for(const f of FLAVORS)f.pw=`rgb(${f.b.map(v=>Math.round(v*.86)).join(',')})`;
 const N=22;
 let S;
